@@ -1,0 +1,308 @@
+# Rime schema settings
+# ★★★ 詞頻重排測試方案（2026-09-07）：dictionary=xuma_L，由 gen_freq_dict.py 流水線生成
+#    與 xuma_qshare 唯一差異＝詞典指向；確認可行後可整體替換或廢棄
+# encoding: utf-8
+
+schema:
+  schema_id: xuma_L
+  name: 徐碼·L
+  version: "2021-03-26"
+  author:
+    - 發明人 徐国银先生
+    - rime schema by Q
+  description: |
+    徐碼簡繁通打
+    chinput.com/xuma
+
+    三重注解、雙重反查、屏蔽詞組、全碼後置、簡入繁出（關閉）...
+    此方案用於windows/linux，其與同文功能設置不同，詞庫共享
+    https://ace-who.github.io/rime-xuma/
+
+    本方案（xuma_L，2026-09）基於 Q 的 rime-xuma（qshare 版）演化：
+    詞頻重排＋補詞＋拼音筆畫組合反查＋非簡攔截重製；詞典自包含，
+    不再與其他方案共享。上游貢獻詳見 xuma_L.dict.yaml 頭部致謝段。
+  dependencies:
+    - xuma_spelling_pseudo
+    - luna_pinyin
+    - stroke
+
+__patch:
+  - xuma_qshare.custom:/patch?
+  - symbols:/patch?
+
+switches:
+ # - options: [ gb2312, gbk, big5, utf8 ]
+   # states: [ gb2312, GBK, BIG5, UTF-8 ]
+    #reset: 3
+  - name: ascii_mode
+    reset: 1  # 每次切换到本方案时默认西文状态
+    states: [ 中文, 西文 ]
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: simplification
+    states: [ 漢字, 汉字 ]
+  #- name: traditionalization
+    #reset: 0
+    #states: [ 简体保持, 簡入繁出 ]
+  - name: ascii_punct
+    states: [ 。，, ．， ]
+  # 字符集两档（2026-09-07）：通用=只出基本区(U+4E00–9FFF)+符号等非汉字；
+  # 全部=放开扩展区生僻字（词典中 72,866 个单字在扩展区）。Ctrl+Shift+5 可切
+  - name: extended_charset
+    states: [ 通用, 全部 ]
+  # 非簡模式（2026-09-07 修訂）：詞表只出繁體標準形；簡體僅能經 Super+F 簡化轉換輸出。
+  # 攔截集=OpenCC s2t 會轉換 ∩ Big5（繁體標準集）不可編碼，再經官方字表（臺灣地區國字標準/
+  # 大陸規範漢字表/CNS）與九部古籍（爾雅、千字文、說文、廣韻、康熙、中華大字典等）
+  # 出典白名單放行——个/号/尔/爱/欢 等古字俗形單字可出。
+  # 設計原則：俗字放行單字、不得組詞（詞級用全量簡形集，不豁免白名單）；
+  # 草體楷化偏旁（门贝见风马鱼飞）即使有出典也強制攔（BLACKLIST）。
+  # 調整字表：改 lua/codelllc09/tools/gen_no_simple_data.py 的 WHITELIST/BLACKLIST 重新生成。
+  - name: no_simple
+    states: [ 通打, 非簡 ]
+    reset: 1  # 每次進方案默認非簡
+  # 切换热键由 xuma_spelling/lua 下的 cycle_key 和 switch_key 定义。
+  # 反查中按同一热键时作用于下一组（rvlk），两组可分别设置。
+  # 默認啟用“生僻拼音”，即爲生僻字標註拼音
+  - options:
+    - xuma_spelling.off
+    - xuma_spelling.py
+    - xuma_spelling.pysp
+    - xuma_spelling.bopomofo
+    - xuma_spelling.lv1
+    - xuma_spelling.lv2
+    - xuma_spelling.lv3
+    states: [ 〇註解, 拼音, 生僻拼音, 註音符, 一重註解, 二重註解, 三重註解 ]
+    reset: 2
+  - options:
+    - xuma_spelling_rvlk.off
+    - xuma_spelling_rvlk.bopomofo
+    - xuma_spelling_rvlk.lv1
+    - xuma_spelling_rvlk.lv2
+    - xuma_spelling_rvlk.lv3
+    states: [ 〇注解(反), 注音注解(反), 一重注解(反), 二重注解(反), 三重注解(反) ]
+    reset: 0  # 反查不叠加拼音/注音注解，候选只带徐码注释（2026-09-07）
+  #- name: xuma_postpone_fullcode  # 仅作用于单字。
+    #reset: 1
+    #states: [ ＝原始排序, ↓全码后置 ]
+  - options: [ word_all, word_124, single_char_only ]
+    states: [ 全詞, 124, 單字 ]
+    reset: 1  # 默認 124 模式
+
+engine:
+  processors:
+    - lua_processor@*codelllc09/mode_hint
+    - ascii_composer
+    - recognizer
+    - lua_processor@*ace/xuma_spelling*processor
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - affix_segmentor@luna_pinyin
+    - affix_segmentor@luna_pinyin_lookup
+    - affix_segmentor@stroke_lookup
+    - affix_segmentor@reverse_lookup
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - history_translator@history
+    - table_translator@fixed
+    - table_translator
+    - script_translator@luna_pinyin
+    - script_translator@luna_pinyin_lookup
+    - table_translator@stroke_lookup
+    - lua_translator@*codelllc09/py_stroke  # 拼音+筆畫組合反查（`li,hs）
+    - lua_translator@*codelllc09/dx_amount   # /dx 金额大写（punct tag 段通道测试）
+    - lua_translator@*ace/os_tools*os_env_translator
+    - lua_translator@*ace/helper
+  filters:
+    - lua_filter@*codelllc09/datetime     # /time /date 占位候选动态替换（时间日期+农历）
+    - lua_filter@*codelllc09/word_mode  # 詞組長度過濾（全詞/124/單字三檔）
+    - lua_filter@*codelllc09/no_simple  # 非簡模式（須在 simplifier 之前：先攔原生簡形，再轉換獲存者）
+    # charset_filter@gb2312/@gbk/@big5 已移除（2026-09-06）：librime 1.16 内建
+    # charset_filter 不支持带参命名空间，这三项是纯 no-op，只会每次击键刷 3 条
+    # ERROR 日志。按字符集过滤需 librime-charset 插件（Fedora 未打包）。
+    # - charset_filter@utf8  # 同理；librime 1.6.* 以后还会错误过滤字符
+    - simplifier@simplify
+    - simplifier@traditionalize
+    - reverse_lookup_filter@luna_pinyin_reverse_lookup
+    - reverse_lookup_filter@stroke_reverse_lookup
+    - lua_filter@*codelllc09/rvlk_code  # 反查注釋只留最長碼（全碼）
+    - lua_filter@*ace/xuma_spelling*filter@xmsp
+    - lua_filter@*ace/xuma_spelling*filter@xmsp_for_rvlk
+    - lua_filter@*ace/xuma_postpone_fullcode
+    - lua_filter@*ace/os_tools*lazy_clock_filter
+    - uniquifier
+    # - lua_filter@debug_filter
+
+word_mode:
+  __include: gb2312
+
+# 防止对 punct 进行过滤
+gb2312:
+  tags: [ abc, reverse_lookup, luna_pinyin_lookup, stroke_lookup ]
+gbk:
+  __include: gb2312
+big5:
+  __include: gb2312
+
+simplify:
+  __include: gb2312
+  option_name: simplification
+  tips: all
+
+traditionalize:
+  __include: gb2312
+  opencc_config: s2t.json
+  option_name: traditionalization
+  tips: all
+  comment_format:
+    - xform/^/（/
+    - xform/$/）/
+
+lua_reverse_db:
+  spelling: xuma_spelling_pseudo
+  code: xuma_L  # 詞典已改名 xuma_L（build/xuma_L.reverse.bin）；曾誤寫 xuma 致反查碼注/詞組編碼注/全碼后置三功能靜默失效（2026-09-08 日志 414 次 open 失敗）
+
+xuma_spelling:
+  lua:
+    switch_key: 'Control+c'
+    cycle_key: 'Shift+Control+C'
+    # 注意写法：Shift 在前，Control 在后。
+
+xmsp:
+  tags: [ abc, punct ]
+
+xmsp_for_rvlk:
+  tags:
+    __include: reverse_lookup/extra_tags
+
+xuma_postpone_fullcode:
+  tags: [ abc ]
+  lua:
+    # max_index: 6  # 最大后置位置，默认为 4
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  delimiter: " `'"
+  max_code_length: 4
+  # auto_select: true
+  algebra:
+    - xform/^\*//  # 特码以星号开头，以便在全码后置脚本中区分，以防识别为全码
+
+fixed:
+  __include: translator
+  enable_user_dict: false
+  enable_sentence: false
+  initial_quality: 1000
+
+translator:
+  dictionary: xuma_L
+  prism: xuma_L
+  enable_charset_filter: true  # 字符集两档闸门（2026-09-07），随 switches 的 extended_charset 联动
+  enable_sentence: false
+  enable_user_dict: false
+  enable_encoder: true
+  encode_commit_history: false  # 对连续上屏的词自动成词
+  max_phrase_length: 5  # 自动成词的最大词长
+  preedit_format:
+    - 'xform/^([a-z]*)$/$1\t（\U$1\E）/'
+    - "xlit|ABCDEFGHIJKLMNOPQRSTUVWXYZ|糸阝女尸王扌石艹木土日虫山目口⺮魚禾月亻忄金宀火言氵|"
+
+history:
+  input: dl
+  size: 1
+  initial_quality: 2000
+
+# 用于混输
+luna_pinyin:
+  tag: luna_pinyin
+  dictionary: luna_pinyin.extended
+  initial_quality: 0.2
+
+# 拼音混输。不使用 luna_pinyin_lookup，是因为那样做会导致所有常规编码段和常规候
+# 选被同时打上 abc 和 luna_pinyin_lookup 标签，从而同时被 xmsp 和 xmsp_for_rvlk
+# 接收，被添加两次注释。
+# abc_segmentor:
+  # extra_tags: [ luna_pinyin ]
+
+reverse_lookup:
+  tag: reverse_lookup
+  prefix: "`"    # 反查引导符「`」
+  # suffix:   # 反查关闭符，暂不定义
+  tips: 【反查：拼音+筆畫】
+  closing_tips: 【反查关闭】
+  # preedit_format:
+    # - xform/([nljqxy])v/$1ü/
+  extra_tags:
+    - luna_pinyin_lookup
+    - stroke_lookup
+
+luna_pinyin_lookup:
+  tag: luna_pinyin_lookup
+  dictionary: luna_pinyin.extended
+  prefix: '`P'
+  tips: 【朙月拼音反查】
+  closing_tips: 【反查关闭】
+  initial_quality: 0.2
+
+stroke_lookup:
+  tag: stroke_lookup
+  dictionary: stroke
+  prefix: '`B'
+  tips: 【五筆畫反查】
+  closing_tips: 【反查关闭】
+  initial_quality: 0.5
+  preedit_format:
+    - 'xform/^([hspnz]+)$/$1\t（\U$1\E）/'
+    - xlit/HSPNZ/一丨丿丶乙/
+
+luna_pinyin_reverse_lookup:
+  tags: [ luna_pinyin, luna_pinyin_lookup ]
+  dictionary: xuma_L
+  # 注釋由 lua_filter@*codelllc09/rvlk_code 統一改寫爲「最長碼」（2026-09-07）
+
+stroke_reverse_lookup:
+  __include: luna_pinyin_reverse_lookup
+  tags: [ stroke_lookup ]
+
+punctuator:
+  import_preset: symbols   # 官方 symbols preset：常用标点（兼容 default）+ /xx 符号组（/jt 几何 /xz 序号 /rq 日期 /sj 时间 /hb 货币…200 余组）
+
+# 本节点仅用于被 __patch 指令引用
+key_bindings:
+  __append:
+    - { when: always, accept: "Super+f", toggle: simplification }  # 原 Control+Shift+F，已让给 WezTerm 搜索
+    # - { when: composing, accept: "Control+Shift+S", toggle: single_char_only }  # 已注释:基本不用,且与终端快捷键冲突
+    - { when: composing, accept: "Control+t", toggle: lazy_clock }
+    - { when: has_menu, accept: semicolon, send: 2 }  # 分号次选
+    - { when: has_menu, accept: apostrophe, send: 3 }  # 引号三选
+
+key_binder:
+  bindings:
+    __patch:
+      - key_bindings:/emacs_editing?
+      - key_bindings:/move_by_word_with_tab?
+      - key_bindings:/paging_with_minus_equal?
+      - key_bindings:/numbered_mode_switch?
+      - key_bindings
+      # 方案用户可仿照 key_bindings 节点在 *.custom.yaml 文件中添加按键绑定：
+      - xuma_qshare.custom:/key_bindings?
+
+recognizer:
+  patterns:
+    uppercase: "^(?![`;]).*[A-Z][-_+.'0-9A-Za-z]*$"
+    reverse_lookup:     "^`([a-z]+'?)*$"
+    pystroke:           "^`([a-z']+)(?:[,.;']|[,.;']?/)([hspnz]*)$"   # 反查+聲調筆畫；| /time /date 借道本 tag（菜單通路已驗證）
+    luna_pinyin_lookup: "^`P([a-z]+'?)*$"
+    stroke_lookup:      "^`B([a-z]+'?)*$"
+    os_env: '^env/\w+'
+    helper: '^help/$'
+    punct: '^/(dx[0-9]{1,16}(?:[.][0-9]{0,2})?|[0-9]0?|[A-Za-z]+)$'  # 行首 / 符号组；dx 数字可带两位小数（金额大写）

@@ -1,0 +1,52 @@
+# 運行時與編譯產物
+/build/
+*.userdb/
+user.yaml
+installation.yaml
+tmp.md
+*.save
+
+# 備份快照
+bak.*/
+
+# 大數據（語料與出典字表；待清洗精簡後另行收編，工具註釋含下載源）
+lua/codelllc09/tools/std_tables/*
+# download/ 可检索文本入库存档（数字资产；PDF/zip/影印等大件仍忽略）
+!lua/codelllc09/tools/std_tables/download/
+lua/codelllc09/tools/std_tables/download/**
+!lua/codelllc09/tools/std_tables/download/**/
+!lua/codelllc09/tools/std_tables/download/**/*.txt
+!lua/codelllc09/tools/std_tables/download/**/*.md
+!lua/codelllc09/tools/std_tables/download/**/*.html
+!lua/codelllc09/tools/std_tables/download/**/*.json
+!lua/codelllc09/tools/std_tables/download/**/*.epub
+!lua/codelllc09/tools/std_tables/.gitkeep
+!lua/codelllc09/tools/std_tables/README.md
+!lua/codelllc09/tools/std_tables/SHA256SUMS
+!lua/codelllc09/tools/std_tables/*.txt
+lua/codelllc09/tools/dict_pipeline/*
+!lua/codelllc09/tools/dict_pipeline/archive/
+lua/codelllc09/tools/dict_pipeline/archive/*
+!lua/codelllc09/tools/dict_pipeline/corpus/
+lua/codelllc09/tools/dict_pipeline/corpus/*
+!lua/codelllc09/tools/dict_pipeline/corpus/.gitkeep
+!lua/codelllc09/tools/dict_pipeline/log/
+lua/codelllc09/tools/dict_pipeline/log/*
+!lua/codelllc09/tools/dict_pipeline/log/.gitkeep
+# 例外：規則補丁（方案運行必需）與審定積累（長期勿失）入庫
+!lua/codelllc09/tools/dict_pipeline/manual_overrides.txt
+!lua/codelllc09/tools/dict_pipeline/archive/reviewed.txt
+!lua/codelllc09/tools/dict_pipeline/archive/reviewed_done.txt
+!lua/codelllc09/tools/dict_pipeline/archive/審查結果.md
+!lua/codelllc09/tools/dict_pipeline/archive/測試詞表.md
+__pycache__/
+
+# 舊方案歸檔（純本機保留，不入庫）
+/legacy/*
+
+# 流水线生成物（审计表，可由 gen_freq_dict.py 重现）
+xuma.addon.dict.yaml
+
+# 本机个人配置（全局方案表/切键/独立朙月拼音定制），不入库
+default.custom.yaml
+luna_pinyin.custom.yaml

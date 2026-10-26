@@ -1,0 +1,947 @@
+[
+  {
+    "path": "README.md",
+    "bytes": 4679,
+    "sha256": "7f048cd6173a5bddb8163fff31c0c8fad668ef682872f7275c92cc96056cc9af"
+  },
+  {
+    "path": "hanyu_dazidian/HanyuDaZidian_Unihan_index.tsv",
+    "bytes": 1982334,
+    "sha256": "a3d32b10150cd5b83719d796d23eedddcf61a998bf0358dc64ac484a98e36c1d"
+  },
+  {
+    "path": "hanyu_dazidian/Unihan-17.0.0.zip",
+    "bytes": 8518517,
+    "sha256": "f7a48b2b545acfaa77b2d607ae28747404ce02baefee16396c5d2d7a8ef34b5e"
+  },
+  {
+    "path": "hanyu_dazidian/classics_hanyudazidian.txt",
+    "bytes": 196350,
+    "sha256": "2b58678537a932bf66eeb9925bf172bea163c71409b37f7ca9a45863d77da695"
+  },
+  {
+    "path": "hong_kong/1990_常用字字形表修订本.pdf",
+    "bytes": 28300823,
+    "sha256": "0fe41faaca62599db1633948a7494f6ef1304810eaba487702c9b42407edbf02"
+  },
+  {
+    "path": "hong_kong/2000_常用字字形表_标准字体表.pdf",
+    "bytes": 4053445,
+    "sha256": "6e996a22e4f8fc7756c6c6b17a3eeec14c3fcffe3c76e331cf3827263d635653"
+  },
+  {
+    "path": "hong_kong/2005_常用字字形表_异体字表.pdf",
+    "bytes": 830688,
+    "sha256": "214ee271499ce48d5101f25906fa402f15d118591864e9e42613f5f5aa91e75f"
+  },
+  {
+    "path": "hong_kong/2012_常用字字形表_官方简介.pdf",
+    "bytes": 277160,
+    "sha256": "b0c9b24c0f1d5553232090a3485559a85509875296670a1bd83013c329f2a5c0"
+  },
+  {
+    "path": "hong_kong/常用字字形表_4759字带序号.txt",
+    "bytes": 43717,
+    "sha256": "079604aa2095fa9e6c3c797d9a4bee337836e13272a26fc0618934aa3b9b9fa1"
+  },
+  {
+    "path": "hong_kong/常用字表_4762字_开源整理.txt",
+    "bytes": 21938,
+    "sha256": "18f42fb2c8e57fae5fa79d4f185a23abbc0f64d3d9b8e5cb3fc083640e14f3e4"
+  },
+  {
+    "path": "mainland/1955_第一批异体字整理表.pdf",
+    "bytes": 3172080,
+    "sha256": "3ec0171d62044cb1a72481c036e1a00cff71a56add880f98f1e144a606d40470"
+  },
+  {
+    "path": "mainland/1955_第一批异体字整理表_开源整理_原版.txt",
+    "bytes": 17010,
+    "sha256": "e443590df918b240e8b29ca9b4f638bd650272a671cfe84f9b9738e202c0893b"
+  },
+  {
+    "path": "mainland/1955_第一批异体字整理表_开源整理_更新版.txt",
+    "bytes": 12028,
+    "sha256": "32b8afce0805cd887a9eb6c144ffda231cd260338eb19b39f5d5f49f1c742529"
+  },
+  {
+    "path": "mainland/1955_第一批异体字整理表_补充.txt",
+    "bytes": 614,
+    "sha256": "4fef5321c26783e24af5a24c32a2293cb58b133b6a99f9a09c9367e688631ef4"
+  },
+  {
+    "path": "mainland/GBZ_40637-2021_古籍印刷通用字规范字形表.pdf",
+    "bytes": 19909696,
+    "sha256": "c8f63f9aadc3257fb9c91f3013bc0e9e7e6eb49c6c81bdd3f1902014e90c9211"
+  },
+  {
+    "path": "mainland/GBZ_40637-2021_字符集_开源整理.txt",
+    "bytes": 57999,
+    "sha256": "e01f44e37ae28adcdce037fdaa78f7505b9805f9167f52cc9ee64ea4c0c9b85f"
+  },
+  {
+    "path": "mainland/GBZ_40637-2021_規範字表_14250字.json",
+    "bytes": 1258333,
+    "sha256": "b8e0eff5d2cc89650af5dc6b348aeacb4c5fc032416c973537ef886225887bc2"
+  },
+  {
+    "path": "mainland/GBZ_40637-2021_規範字表_14250字.txt",
+    "bytes": 57912,
+    "sha256": "3ede0499f4a508b1eb8fdb10bf22db3fca0f1cd71e0e5002239dbcaf3905290a"
+  },
+  {
+    "path": "mainland/GBZ_40637-2021_規範字表_序號_Unicode_14250字.tsv",
+    "bytes": 260582,
+    "sha256": "56cffe19a2a5a9e922d535f731457710fc7b8258d97f2bf3f4fc2810d61570ac"
+  },
+  {
+    "path": "mainland/README_可編輯字表.md",
+    "bytes": 653,
+    "sha256": "14f988c55e1f25f43e4fa4296d6b838c96ee0b82e649a10b03e96da8a971e18c"
+  },
+  {
+    "path": "mainland/copyable_1955_variants/index.html",
+    "bytes": 7336,
+    "sha256": "4dceb2580277b5497892b895b10fa49e3b1dc43184eea689010e719b64f67560"
+  },
+  {
+    "path": "mainland/copyable_1955_variants/index.txt",
+    "bytes": 4693,
+    "sha256": "e74266cfed7ff71e23eb4c76be9f694ec939232aa6c0b3229a15ac991bb8efa0"
+  },
+  {
+    "path": "mainland/copyable_1955_variants/yitizi_1955.html",
+    "bytes": 28149,
+    "sha256": "980bc6f12641bf7f4656049594cd756c561d9d16ca69c94fd27b6945e928722e"
+  },
+  {
+    "path": "mainland/copyable_1955_variants/yitizi_1955.txt",
+    "bytes": 15747,
+    "sha256": "6b9b6b4048cf2d885ec72fdac8762469b81ac71375628466447ec8a2178734ca"
+  },
+  {
+    "path": "mainland/copyable_1955_variants/yitizi_1989.html",
+    "bytes": 26953,
+    "sha256": "09cf75b05bcd667d49f4d98b8b97d1cbec941a552b8315c8d128f4ee7176872d"
+  },
+  {
+    "path": "mainland/copyable_1955_variants/yitizi_1989.txt",
+    "bytes": 14962,
+    "sha256": "285937d09dd19d1c9e869d0febfaffbd40ac24ba8963b5b9c0e1f79ae72b81a8"
+  },
+  {
+    "path": "mainland/通规表_附表一_GBZ40637_Unicode整理.xlsx",
+    "bytes": 3301727,
+    "sha256": "184c83f6f692e9e25a8864b3feab98949d86c7bb997327bffe87136354585a34"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/01_宋元以來俗字譜.html",
+    "bytes": 202176,
+    "sha256": "2c8382a5cdd16dac1419cbad024cb887f8e78ab230ffe5881a6b0bd2ca7ff682"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/01_宋元以來俗字譜.md",
+    "bytes": 63231,
+    "sha256": "32ddf9b97a7257ea38ef979303fd590dd1e3a1feba68b35c77e98f9f424a78fa"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/02_宋元以來俗字譜_⼈部至⼥部.html",
+    "bytes": 191633,
+    "sha256": "fc7658c8bad89ceb761f5dd7634401d52ec6c3ccb8e3504cc4bfe56c7e0a7532"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/02_宋元以來俗字譜_⼈部至⼥部.md",
+    "bytes": 46899,
+    "sha256": "edbc4ccc31f890b24f0003edf559bd3c20c4d94a5b3b84f7b5707b2ce9565fe7"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/03_宋元以來俗字譜_⼟部至⺼部.html",
+    "bytes": 156710,
+    "sha256": "5e392945c45b6b2fe3c1a11f9897176cbda668948c9bdbb7b6caa197ec00baa1"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/03_宋元以來俗字譜_⼟部至⺼部.md",
+    "bytes": 37667,
+    "sha256": "b4a378dfe5f3fc5e0394e46e061375e50b518469255c6871e260857a3d771321"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/04_宋元以來俗字譜_⽊部至⽋部.html",
+    "bytes": 188109,
+    "sha256": "b9c239afad32d4034128acfa999669fed530705fb0aa2cadd6444f1f96ab3af1"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/04_宋元以來俗字譜_⽊部至⽋部.md",
+    "bytes": 46448,
+    "sha256": "05e3fe8aa87765c069fcac75e67467a2b7b6911c2333a707ba0842d53a607894"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/05_宋元以來俗字譜_⽔部至⽲部.html",
+    "bytes": 180071,
+    "sha256": "6c833e7a32dc9ede49678f9bdf37c0780f792055aec4822f079b65cb7a098b34"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/05_宋元以來俗字譜_⽔部至⽲部.md",
+    "bytes": 44379,
+    "sha256": "64b54fa8ff1362bd89d2f47ee3ee6e99140f73025c13aa136040d1a7d9168527"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/06_宋元以來俗字譜_⽳部至⾐部.html",
+    "bytes": 175785,
+    "sha256": "e1265f81eec9a22c666a732076ba95b9dc62532d60e2fdb4c43edc26ff9a9eab"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/06_宋元以來俗字譜_⽳部至⾐部.md",
+    "bytes": 44227,
+    "sha256": "028c13c48eff8be1f22dca5a44e6522fbadddf0e5339f9637fefd58d9887db4d"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/07_宋元以來俗字譜_⾋部至⾛部.html",
+    "bytes": 223695,
+    "sha256": "dbac96614e397e4c979555306c647d453e46478356b19bd69e2698eb855255a5"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/07_宋元以來俗字譜_⾋部至⾛部.md",
+    "bytes": 57034,
+    "sha256": "e93c1c1efbd3e3dac873e48738d19282d4d2602d688a49cbee6a1d0ff22df184"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/08_宋元以來俗字譜_⾜部至⾬部.html",
+    "bytes": 190056,
+    "sha256": "a081669e6fa55dfa00e10650b3981a38356c8c86ce55632d2aaca124f5723e7e"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/08_宋元以來俗字譜_⾜部至⾬部.md",
+    "bytes": 47957,
+    "sha256": "9f7466ef62b8f0e6979c78599d4e35ff458a3a7506ec3172790fb3ad6ec8cae2"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/09_宋元以來俗字譜_⾰部至⿓部.html",
+    "bytes": 170808,
+    "sha256": "a123a179e0fadff615dc2db919bff6fd9cc0d223ae80197144f3a25d942cdb83"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/09_宋元以來俗字譜_⾰部至⿓部.md",
+    "bytes": 43974,
+    "sha256": "c3dde789836e3ca7971671305b35bb721e055adc8958a1f26ebd8f40808e0dd3"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/10_宋元以來俗字譜_三畫至十二畫.html",
+    "bytes": 165373,
+    "sha256": "cf50ae373232f42f3776a1484faa622062567dbc611d7ab01d60374ae6cf9b5e"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/10_宋元以來俗字譜_三畫至十二畫.md",
+    "bytes": 40299,
+    "sha256": "ab6b2315f7c3f0e5dcb1046b0eda2cb17de467229fc4b4c931655cfcd960e355"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/11_宋元以來俗字譜_勘誤表.html",
+    "bytes": 65669,
+    "sha256": "6a3e2eff6fbfafc94d7492747ac16719fc8a5ea288d10ff94859f38cd7065304"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/11_宋元以來俗字譜_勘誤表.md",
+    "bytes": 11592,
+    "sha256": "24b9ef25edd5c0042248a1d69545efab34c7013662a3005df97058bf70aa5ebd"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/12_宋元以來俗字譜_十三畫至二五畫.html",
+    "bytes": 154251,
+    "sha256": "b145d690b5c3234d012e21266a5974c96fef67797e8e89497a1e97aad79418a4"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/12_宋元以來俗字譜_十三畫至二五畫.md",
+    "bytes": 38702,
+    "sha256": "65ada8ee1508da791267bb4bbbbd27ca77e7c8b1b89c4a5051dd1ca2c4c78cc5"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/13_宋元以來俗字譜_圖.html",
+    "bytes": 71124,
+    "sha256": "8d3ba2eb0c0d43f0e9a2f1b19cbffe0886ab9e843a282e6d69778bb515d72e48"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/13_宋元以來俗字譜_圖.md",
+    "bytes": 14828,
+    "sha256": "c8a162553701d412b7eb8607a47cc9d7b9cfd73d2e2520f6e426a8fc0f2718f6"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/全文_可複製_含表格.md",
+    "bytes": 539439,
+    "sha256": "e51ff734201d86c2ab8fed62feea9418d575dc771ab7d80d4450de6228fcc4bc"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/全部頁面_原始維基文字.json",
+    "bytes": 10255,
+    "sha256": "f0a2aad5b28939552fcb336cf047e54b38046457374e1b8821d9dc3abd7d461a"
+  },
+  {
+    "path": "songyuan_suzipu_1930/copyable_wikisource/宋元以來俗字譜_維基文庫.epub",
+    "bytes": 1203257,
+    "sha256": "ec9edb326cd71f6bd8cc2a6b269c2e86116daffbfbf4e9cc88918c12cb3d3090"
+  },
+  {
+    "path": "source_notes/cdtym_glyph_comparison_README.md",
+    "bytes": 13513,
+    "sha256": "a791cb8e290f744757ab1875b3f611168dec72a70d1025141c6d99efb92446fb"
+  },
+  {
+    "path": "source_notes/zispace_hanzi-chars_README.md",
+    "bytes": 8170,
+    "sha256": "5bfe927c724ffefcf70978980289fa6ff5e581277e5f586ec2cb1918e36bccc8"
+  },
+  {
+    "path": "taiwan_moe_variants/LICENSE_CC_BY_ND_3.0.txt",
+    "bytes": 15679,
+    "sha256": "c8e653bd1b1605f3bc29ee53222f461cdba31d6951a9af427f825bb504372ad0"
+  },
+  {
+    "path": "taiwan_moe_variants/LICENSE_非商业_禁止改作.txt",
+    "bytes": 11888,
+    "sha256": "804bba7dc7668fc768748cc72ec0b1d97da0efac5b3697bd21dee18e9124ac80"
+  },
+  {
+    "path": "taiwan_moe_variants/README_upstream.md",
+    "bytes": 62573,
+    "sha256": "803bc071ec3edfebfb2ea3f826fb9d4d8c30cb72930258cf4b9cc340ddaab313"
+  },
+  {
+    "path": "taiwan_moe_variants/README_正字異體對應字表.md",
+    "bytes": 1541,
+    "sha256": "a09da318aaae1d20f917ed639098823c3cf8e52d2ad75ecec411a0d61bf4e55a"
+  },
+  {
+    "path": "taiwan_moe_variants/cjkvi_twedu-dict_上游可編輯字表.txt",
+    "bytes": 1956324,
+    "sha256": "bf5aae2c68ad254dc4897e2924cf5a099837ed7a5e467e32b8c47808bded3aa7"
+  },
+  {
+    "path": "taiwan_moe_variants/教育部异体字索引字典_98023条.zip",
+    "bytes": 19459802,
+    "sha256": "ae945a3063c99b1469a8cae9ca53251707ee5e37557c7fe8f52b6160093abfa8"
+  },
+  {
+    "path": "taiwan_moe_variants/教育部異體字索引字典_正字-異體_Unicode非PUA_22776.txt",
+    "bytes": 200769,
+    "sha256": "48125fabbfb99ec06367918cb09e56a07220fd6915726ddfb07a3c5df3e04b66"
+  },
+  {
+    "path": "taiwan_moe_variants/教育部異體字索引字典_正字-異體_全部_66232.json",
+    "bytes": 24430973,
+    "sha256": "0dcc29ffe4d100b4b211c22878c6df70ad5ff8e8b52f0784e3cfd0a8b92fcbfd"
+  },
+  {
+    "path": "taiwan_moe_variants/教育部異體字索引字典_正字-異體_全部_66232.tsv",
+    "bytes": 9925882,
+    "sha256": "63ec68892f56c224ca9c892badddf854ebee3e093ecfd61c5b26ec226271fed7"
+  },
+  {
+    "path": "taiwan_moe_variants/教育部異體字索引字典_正字-異體_可複製_52762.tsv",
+    "bytes": 7690972,
+    "sha256": "ad6a9a13fed595f6db6563d20e5de736de1563c073142071859503ff21841f9e"
+  },
+  {
+    "path": "taiwan_moe_variants/教育部異體字索引字典_正字-異體_可複製_52762.txt",
+    "bytes": 470885,
+    "sha256": "aa7bfa634c38425c8fa71e2aba6c6758edddaaa54c18624433fa057a11fd971f"
+  },
+  {
+    "path": "wuyin_jiyun/juan_01.txt",
+    "bytes": 147244,
+    "sha256": "bfdad7fb535b6573690bf5e7c17a9d234952e2b82204ff3a524516f3ce7ae63b"
+  },
+  {
+    "path": "wuyin_jiyun/juan_02.txt",
+    "bytes": 119777,
+    "sha256": "de8cb1218965d34b2a293f5525a724b0844ebe79e0b9b0d0c329aa5317a4a66b"
+  },
+  {
+    "path": "wuyin_jiyun/juan_03.txt",
+    "bytes": 63352,
+    "sha256": "692c8687be46cc5dc2243ab6acb1e68ed98ff95ebb032431f4e7a09ff051640a"
+  },
+  {
+    "path": "wuyin_jiyun/juan_04.txt",
+    "bytes": 159826,
+    "sha256": "033a37e9545e6f8dadd1625ecd278c2eef1b09387237d0dac798938cb31df4e7"
+  },
+  {
+    "path": "wuyin_jiyun/juan_05.txt",
+    "bytes": 99787,
+    "sha256": "91372c62e949c8aa526346e531c2ff9846c9125aade33079e6ffe53b7ca45e78"
+  },
+  {
+    "path": "wuyin_jiyun/juan_06.txt",
+    "bytes": 100992,
+    "sha256": "288a3e18bb8198ca860649e065eb5496ae8e07b4f03c63e1ca6fe238c7862d2b"
+  },
+  {
+    "path": "wuyin_jiyun/juan_07.txt",
+    "bytes": 126686,
+    "sha256": "39d9030c58a08fe22cc5e56de47410696edaf29975bf0398842bf8678b4a62c2"
+  },
+  {
+    "path": "wuyin_jiyun/juan_08.txt",
+    "bytes": 123231,
+    "sha256": "3119d1e8d876a8d8375e84f2a8e4cb2d28623e26091f54a02ca15d36e2aed179"
+  },
+  {
+    "path": "wuyin_jiyun/wuyinjiyun_raw.txt",
+    "bytes": 1797,
+    "sha256": "eccb291dc5001d2f36aacf21bbe8eeb3e18aa7a742bd0ebf6a5d5ef95dc0f395"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/CATALOG.json",
+    "bytes": 5444,
+    "sha256": "cc6df207c2e914b849f37860b1b3ece78375833cdcb7459bf4eb6df2451c2b5a"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_全文_OCR_合併.txt",
+    "bytes": 4814764,
+    "sha256": "688528d8df1c6345e01c2a0a23af76d822c7a69a8d60c78eede1bb33a983c964"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第01冊.epub",
+    "bytes": 571370,
+    "sha256": "9fa754f4fca95a54737637359bec55dcfbf2ee1567a90ab6c2b4c366b4ba2948"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第01冊_OCR.txt",
+    "bytes": 546512,
+    "sha256": "23c43e1b9cb89dafb8ebb097a08dbd6b1a6573e56f7dc8644303153ee2679e73"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第01冊_可搜尋.pdf",
+    "bytes": 21172415,
+    "sha256": "a9bc26e55cee0efd201bc33108085ccec3ede574f37ff8761ae81b71f0081b92"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第02冊_OCR.txt",
+    "bytes": 488886,
+    "sha256": "5bc63541e6bedf82706275777f14198dc84eb367cbc7e1d5c803e2cc5a8ddaa8"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第02冊_可搜尋.pdf",
+    "bytes": 19978739,
+    "sha256": "254404bad2e4c7a831008d0b34cf38e6c3e1c99904fb5937f5465878402f2176"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第03冊_OCR.txt",
+    "bytes": 314220,
+    "sha256": "0b72e5513f6dcd3f281a4a1a4b3b245a744b4f7365e094609ce7a431aa9e5799"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第03冊_可搜尋.pdf",
+    "bytes": 14733682,
+    "sha256": "531a310de0483b4b5a02e49d8728c2141217067e22f8ef180deb6f12251f3e42"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第04冊_OCR.txt",
+    "bytes": 326844,
+    "sha256": "ecbb00a0fa5b52181611ff686fabd484d47c9d3a8b6f2166f57163e7ab639adc"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第04冊_可搜尋.pdf",
+    "bytes": 15506609,
+    "sha256": "217f9d71c953f7c8dfe781c88357addd1f74d89b9ed1161856f56d3227dae47b"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第05冊_OCR.txt",
+    "bytes": 360977,
+    "sha256": "7a57d1340cf0cab262a86cdfc287776b55f0c9f4b1b318d964ff5e242772615f"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第05冊_可搜尋.pdf",
+    "bytes": 17198732,
+    "sha256": "af1448467fdaa387594445abe5ff68e9bb9aa8e5b4947a72338c051707379f1f"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第06冊_OCR.txt",
+    "bytes": 311053,
+    "sha256": "8e601e8827ca220cf538f03a35d2d5b0f54c6716524a45e05d24f8403b7fe2a8"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第06冊_可搜尋.pdf",
+    "bytes": 14527204,
+    "sha256": "7c2f9b674f3ad78ba644e3598603e37f01fb86c5304918774b4214e7bae17550"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第07冊_OCR.txt",
+    "bytes": 311795,
+    "sha256": "fa228b8df3a718222e4097dd5402ce9766081b89a585ac8a6d6a69a22036fcb6"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第07冊_可搜尋.pdf",
+    "bytes": 18553182,
+    "sha256": "f381a29f749fdc3e84af5fa2977d7f58ed827b82d6424f4f8b9e6dc028879b34"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第08冊_OCR.txt",
+    "bytes": 287192,
+    "sha256": "808af62c8b6adf30ec08f060c8b6601ce0c3e6ab1f841dbf6201e96b0df33fa4"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第08冊_可搜尋.pdf",
+    "bytes": 17979425,
+    "sha256": "5681d97b94b90455e39771ad7026dc9b05b1884b7a775a25e7acfcaa52bc5295"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第09冊_OCR.txt",
+    "bytes": 593039,
+    "sha256": "07a11dd026ddf39957b543f640a9f5b407002e0a4509192df4b65962221ec00b"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第09冊_可搜尋.pdf",
+    "bytes": 21154309,
+    "sha256": "4133a406b05cf3e448567950aa6f6cfbda51f2dd0a68a486e4ab4f89cbecf5e3"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第10冊_OCR.txt",
+    "bytes": 594567,
+    "sha256": "8743b5e637801c60f63fbb5074f08f82e536400f78f7df2869cb4d8cdebe5cbb"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第10冊_可搜尋.pdf",
+    "bytes": 23886825,
+    "sha256": "79f1587ff550c7a560388980ebc0c80b991b44394b44ea5c53cb99d7053467b9"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第11冊_OCR.txt",
+    "bytes": 352791,
+    "sha256": "32018cf664ff793fce3b2f47695f98713b648047de9a954bd170e21074b538ac"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第11冊_可搜尋.pdf",
+    "bytes": 18205364,
+    "sha256": "0ba9487e91eab1fbae5651648b1eacafc1fca168e736b77e18e62c35ab250c8f"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第12冊_OCR.txt",
+    "bytes": 297945,
+    "sha256": "8707c9af71f378a9e80b3843eb4a36e334f1410ef2db82940ba52b7adfbc8c80"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第12冊_可搜尋.pdf",
+    "bytes": 16661929,
+    "sha256": "c6d76d2fb2473c7b52307e2a4db185cac331ed4334bdc246e931752246e17b94"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第13冊_OCR.txt",
+    "bytes": 28148,
+    "sha256": "41a6a931e85addcc76c9e1729158b093e25c0cd8ac9cabcb79eaaf02e55ecc55"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/正字通_北大藏本_第13冊_可搜尋.pdf",
+    "bytes": 2459195,
+    "sha256": "11b37d7751a31a88763ae96e774c407d2ad706388a976de0f3af9c223c896cab"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第01冊_metadata.json",
+    "bytes": 99869,
+    "sha256": "0e41b565a37b5e46440b346c80ad4cb37359414428ab18d433e6d6500e52eb57"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第02冊_metadata.json",
+    "bytes": 69787,
+    "sha256": "0f12869ef8746716fb9ea3a1a08a39ab583654a928ea9b8e33491c9521a50830"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第03冊_metadata.json",
+    "bytes": 66671,
+    "sha256": "757a1ace746a913f626023a09623617ef44ae1b55fc11d218ab4acd1114e465a"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第04冊_metadata.json",
+    "bytes": 68807,
+    "sha256": "f37b28420d4e3423ea41d5f8b7943093772793f4f5b749153b4efa633c5e10d2"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第05冊_metadata.json",
+    "bytes": 75872,
+    "sha256": "7413f1f7fc3eb781931e69a262b48bc3db7efae97b29ab0e31e533278f673cad"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第06冊_metadata.json",
+    "bytes": 65504,
+    "sha256": "b4274fa166b4d1be31388679abc73e43e7d0bfba9597e22b727f83798fa76574"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第07冊_metadata.json",
+    "bytes": 79226,
+    "sha256": "b0507bd07b3058d9c48b6a9612a6018e72c654868b0e6b77827cb65e42ef777f"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第08冊_metadata.json",
+    "bytes": 76453,
+    "sha256": "ce494ad1f6a6d2600bb9d5be90abbfbfe7d1cfbcbb5fbdcebc56efe44bc303e1"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第09冊_metadata.json",
+    "bytes": 74258,
+    "sha256": "297c5abb27388e2ed8d387620da62478cdd9fbde6093d3b94567414f0c2fccc7"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第10冊_metadata.json",
+    "bytes": 94914,
+    "sha256": "3b3a868ac078683064a41c2ba85651b15f85e30c1511c1d3677a3b90e06118cb"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第11冊_metadata.json",
+    "bytes": 78403,
+    "sha256": "e7085aa64a59e66ccd3ce2c7867e2fb8f7e61723a3a1fde37ea9648bcdd301a4"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第12冊_metadata.json",
+    "bytes": 72222,
+    "sha256": "906da33af643d2db8227fb5b922d415ac60fc83e47eaaa7385eff3db8c5dd4a5"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_internet_archive/第13冊_metadata.json",
+    "bytes": 22571,
+    "sha256": "522e8793ac52aa86fb15bd204d0a1012400e9efc24433703e5ae7f69bd666b1a"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/01_正字通叙.txt",
+    "bytes": 4681,
+    "sha256": "7d22ce5dc9974b3e9420a1c9ee7a9f193e16a6b2695981f5e6b3fb91bbe05e6a"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/02_正字通叙.txt",
+    "bytes": 2237,
+    "sha256": "5452f1a6b126a5caa6f3be2f63927bd7a599d96609c08e6128ebc9669025ebcb"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/03_正字通凡例.txt",
+    "bytes": 10152,
+    "sha256": "6af7cb3ec76c6a21e04dcf202be9a432f27177e0b997a7cfa8ce4117020ec776"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/04_正字通引證書目.txt",
+    "bytes": 4610,
+    "sha256": "b20a80815ce770b59e7ff0124b6823db5dce11820bcef8dc1fe784256769cffb"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/05_正字通總目.txt",
+    "bytes": 10200,
+    "sha256": "fe7762231695fbe4e880dc7cae0f9c6e0549d2b16fcbd56916741aff74c8006d"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/06_字彚舊本首卷.txt",
+    "bytes": 54198,
+    "sha256": "2ced99d1aa53ebfe69df69988bcca23a53d42ddaa39a34709158ad5d8fa066a7"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/07_鹵部.txt",
+    "bytes": 12243,
+    "sha256": "24c876322b87026fa2bee0725ec0629964110030cda4b257c2d6bb857585de8e"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/08_鹿部.txt",
+    "bytes": 24176,
+    "sha256": "9e2b783a51932799cbba9b6e8005117610c896cdc8751e4202d728769603b57c"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/09_麥部.txt",
+    "bytes": 14351,
+    "sha256": "fedb5dc448e9f298624d60e8a0f71adf0195b434d9809c162bf09d835a83f4aa"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/10_麻部.txt",
+    "bytes": 7514,
+    "sha256": "b969fd305c825eb0b6eca4835d75f6318ac1300ad8f9843fc2ad92e6f06affe6"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/11_黃部.txt",
+    "bytes": 7863,
+    "sha256": "327b6506f84de416db69e7e861ad7cde5eb9b3baa10b6e8632c1c97199678f85"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/12_黍部.txt",
+    "bytes": 6045,
+    "sha256": "d89ed9edbe5c6c8d6a68c6d211d0ffe2449e5e1268deea413f36e845e893b792"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/13_黑部.txt",
+    "bytes": 19608,
+    "sha256": "4ff286414099d494630748b9cd0796fa3a1f19ad1a6bc0d2ed21248197136362"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/14_黹部.txt",
+    "bytes": 2402,
+    "sha256": "dd4d38d2a6f05d5f276682866c43cd5f3f706496847675fb81da4772e9daaf91"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/15_黽部.txt",
+    "bytes": 9900,
+    "sha256": "9975a89513b759dccbc643d2ac56ad7cd75156251a866f514e781cc514a9fd0f"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/16_鼎部.txt",
+    "bytes": 3920,
+    "sha256": "2c604ce7f8ba3b488323d326aafdd66aed17f92a6cb4871609df32c79f98d971"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/17_鼓部.txt",
+    "bytes": 21432,
+    "sha256": "b5ea45896a6ca212eade4410166f1c1da5e875ec9b0c1ee08558eb7d74ce1f67"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/18_鼻部.txt",
+    "bytes": 4334,
+    "sha256": "2a7fdef75b1ecaeab1d0b3501648a44697d84f2132c3c0d4bf7af450e5286d2c"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/19_齊部.txt",
+    "bytes": 5453,
+    "sha256": "818a6a5e84ab0f1293503fd3b9556f1191e68b38e2ae67d45ca4adcb2f5b032a"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/20_齒部.txt",
+    "bytes": 16247,
+    "sha256": "a1bea42cb50526931df851953ab10dcf0771d0f71e5e47785b0f56e052ce32bf"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/21_龍部.txt",
+    "bytes": 7309,
+    "sha256": "1d6441e28ace3c9cfb95ba11054283c9d3ef30b5abd25d18518c0f1e2feb5cde"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/22_龜部.txt",
+    "bytes": 6597,
+    "sha256": "732f6cf759786203b1faacf2b96148c3777acc286ec6e64976c6fb440bb20444"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/23_龠部.txt",
+    "bytes": 2648,
+    "sha256": "9683213a7520dede16172651fb80c33529f35e7103b06d41b9a48e08476a08b1"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/CATALOG.json",
+    "bytes": 8190,
+    "sha256": "6039d7e4e591918787604fa4e657b4e135ad04a776a74cb974205a5886b77a3a"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/全文_保留段落結構.jsonl",
+    "bytes": 1894092,
+    "sha256": "12528c30a96740f8d7a883edabd06637956ded2199d45c8264ae2cbd5a760056"
+  },
+  {
+    "path": "zhengzitong_kangxi/copyable_shidian/全文_可複製.txt",
+    "bytes": 258429,
+    "sha256": "3890a67fc5f76593cffee95c471188d8801cf283d59515fbba4c2a93b3ab470a"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第01冊.pdf",
+    "bytes": 107360943,
+    "sha256": "40b041fc31abb88fc6ecee3ea0eae43349d0b349a07eb6f2002ab0ec53d70fed"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第02冊.pdf",
+    "bytes": 95336184,
+    "sha256": "c3f6e7f838be2de7e0e7206a8a4cfbc40b61662ff7f5892800a464f137f9b9da"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第03冊.pdf",
+    "bytes": 92515933,
+    "sha256": "3a72ba013707f495538be48d01a759f86b3f87b5dd91090850cc5437fe4a127a"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第04冊.pdf",
+    "bytes": 79820640,
+    "sha256": "d26086bc429546aad02e1f9592c20b1bc8c9d7b73a63dbc3d547adcd2228360c"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第05冊.pdf",
+    "bytes": 104503724,
+    "sha256": "12291d71b37179e8bbdfb1550536ac44a3b83e6d3228c6eff33a26786680593a"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第06冊.pdf",
+    "bytes": 51610418,
+    "sha256": "4bcc714be8122aedf99df0081263600a821b10bd8b4934d9180660eb3d115d1a"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第07冊.pdf",
+    "bytes": 93926241,
+    "sha256": "203b9b18e5bf5a0a9a46430a86a434826058fdfc82bf7d1682a7721603b1b196"
+  },
+  {
+    "path": "zhengzitong_kangxi/正字通_清康熙間刻本_第08冊.pdf",
+    "bytes": 49494696,
+    "sha256": "b1729f37f48411cb461eef72acd82e2ee4bab29de7d17d16aa5cc9e6ddf1f98d"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/01_序.txt",
+    "bytes": 6644,
+    "sha256": "e47c9366f5bdf8aacc0a57678900d5518f49997644aae927272bfeb264f9c792"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/02_目錄.txt",
+    "bytes": 6011,
+    "sha256": "f5370db582bc7efa4b2146428962e7c92eaebdfaa1bb4f46409dc7ff3f7e8661"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/03_首卷.txt",
+    "bytes": 37186,
+    "sha256": "903cd8dcfe89ba2c62a92fbb150c37ee010518820b24036208efb2b88f72e1db"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/04_子集.txt",
+    "bytes": 226309,
+    "sha256": "47321ce5a08dc1155478a6928e07e6fc1a60b646b8a49a3cddbf134edecf6eef"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/05_丑集.txt",
+    "bytes": 165706,
+    "sha256": "98d0334b9e5e6ed3e5c4f4e425cacebb1bccd12cfa733ac474eb860fbcfda573"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/06_寅集.txt",
+    "bytes": 208324,
+    "sha256": "ed185b6754f366d547b59d3900ca3f518cfdb4d7c799ec59ba8f70a9263f5a21"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/07_卯集.txt",
+    "bytes": 207319,
+    "sha256": "22e872cf0ac6c5ae952f3b1fdd496b571a753e5eb88b88d64dbea47ce9facbcb"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/08_辰集.txt",
+    "bytes": 212066,
+    "sha256": "330a00c7e00324a2fb439535e38914d21bb3f3482a9d1bdde9f473a4069d670a"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/09_巳集.txt",
+    "bytes": 167482,
+    "sha256": "603a39c1b707984f3d456af2e3bec1567baac529ae00c34b7738d1650caf9f42"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/10_午集.txt",
+    "bytes": 213944,
+    "sha256": "fcd1d909964bdbf87b29ffae99906876e4eb7d7c073c4ab64329c64d27ea6f15"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/11_未集.txt",
+    "bytes": 206946,
+    "sha256": "e28df7f9c9f2e383539491f9cf14032d8903781fb695cb0d2959fd9bf0330289"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/12_申集.txt",
+    "bytes": 202673,
+    "sha256": "0c2663f30a61715004c1254371af752e6eb5518bbe433d07d84f5a8e60a4b6f5"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/13_酉集.txt",
+    "bytes": 231844,
+    "sha256": "d5e807eaebe8e880dc24254c1ed386fa8252546c98c34d60cff4276e70fb9532"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/14_戌集.txt",
+    "bytes": 222138,
+    "sha256": "254fd8ef1d03f2abc7cf8ddc682737d56309048ef6a7015f198a948a3bb04c0a"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/15_亥集.txt",
+    "bytes": 208961,
+    "sha256": "8c25b4e0a43830965931f3d9feae3c97c633fade8f81081bac2b77a8195e7eda"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/16_卷末.txt",
+    "bytes": 14889,
+    "sha256": "6f0c9960d989b6fa159ffafc7ea461207a9498b85c0747711585a912ba001dfa"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/17_韻法直圖.txt",
+    "bytes": 25219,
+    "sha256": "e7f1392d5280c00b16ca542386cb74e9d1170445ecbbd233eda511bd032f548b"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/18_韻法橫圖.txt",
+    "bytes": 12491,
+    "sha256": "e9825f385012d0986d07ebecb1446135ad17eb8c5b5f9ea8023c33cc7edb5da7"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/CATALOG.json",
+    "bytes": 6467,
+    "sha256": "d45839fbae80dd9620a82055e01f8487129ef6ca484e9bc889f25759f48e72d1"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/全文_保留段落結構.jsonl",
+    "bytes": 20372230,
+    "sha256": "a89e60be58fe0a25a71ef070a4c71d8b8d95e343e9ac4956b72da47342009526"
+  },
+  {
+    "path": "zihui_1679/copyable_shidian/全文_可複製.txt",
+    "bytes": 2576358,
+    "sha256": "ae6ba672350f2096b63cd3dd222afd2f74268ddaf0cce3d7d7f997f94d7cb660"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第01冊.pdf",
+    "bytes": 48269985,
+    "sha256": "4cab2c850ff3b6528fba4e3cbf8fc00b5ec8d66baacde2cadb1653106d96441d"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第02冊.pdf",
+    "bytes": 61038173,
+    "sha256": "bfbe7590f6711e6d2a6ba64921cb07aadfc5a4a32c6f050d97e7e5d3af11a6b4"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第03冊.pdf",
+    "bytes": 57182494,
+    "sha256": "a7e881e2753abe64d0b60080998c0ca9a4681973c994fac9296ca1fd126ceeaf"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第04冊.pdf",
+    "bytes": 57839624,
+    "sha256": "8c962eb03ef5f872dbdc0ec30a1eadc1852b78d6e185de027a1c706f03ae4258"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第05冊.pdf",
+    "bytes": 57203021,
+    "sha256": "45b53661cc73d3c0a6dc4a379870e203f13e91d22cc1e146d4af02da0a820129"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第06冊.pdf",
+    "bytes": 59126847,
+    "sha256": "f440ab7696331a1302dec2d69ca4d6935ffc30efc1f4ad70e01a095b112537e3"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第07冊.pdf",
+    "bytes": 59766990,
+    "sha256": "830ba2788952da9182413f8172961444b96b9431ed7c60753bab123248583b0e"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第08冊.pdf",
+    "bytes": 73241657,
+    "sha256": "93fd8236abe43960ca494f84180bedc6caabb6e2e1c9c2b87196b50874984c01"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第09冊.pdf",
+    "bytes": 70670947,
+    "sha256": "c4138f2c3527cdead9e2c087b57ef57961721ac00f3ae14c3fe94a7536029680"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第10冊.pdf",
+    "bytes": 68750353,
+    "sha256": "315fa6270207773fe0538121f342ec8286a636b3837b138a36a16e658cd5f436"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第11冊.pdf",
+    "bytes": 78375299,
+    "sha256": "f791b38a2c1372331c0ef49b64d846dd8f48ff2841c67d38c0506d8b84fbc752"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第12冊.pdf",
+    "bytes": 61693239,
+    "sha256": "744062bbd51cc304defdbd2f82eaac28813110d8b015c7450c8b7a9084972985"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第13冊.pdf",
+    "bytes": 59127237,
+    "sha256": "7b587c2b92db4443b34d18253084ba0f1b9047e0244cf27f6774ab938e38e513"
+  },
+  {
+    "path": "zihui_1679/字彙_康熙十八年刻本_第14冊.pdf",
+    "bytes": 45015240,
+    "sha256": "86f25084250218e811c7c68cec5db9e3d03ad925ac6dc8cd5749d35a358e599d"
+  }
+]

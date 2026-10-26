@@ -1,0 +1,244 @@
+{
+  "source": "識典古籍（北京大學－字節跳動數字人文開放實驗室）",
+  "source_url": "https://www.shidianguji.com/book/7414832345078824996",
+  "book_id": "7414832345078824996",
+  "book_name": "正字通",
+  "edition": "康熙二十四年秀水吴源起清畏堂刊本",
+  "library": "哈佛大学燕京图书馆",
+  "check_type": 1,
+  "reported_paragraphs": 753,
+  "reported_pages": 378,
+  "coverage_note": "章節表所列內容全部擷取；識典資料為 OCR 後經平台整理的可複製文字，罕見字仍可能以圖片或替代標記呈現，使用時應與影印本校勘。",
+  "chapters": [
+    {
+      "chapter_id": "1l7ymio42pvzm",
+      "chapter_name": "正字通叙",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7ymio42pvzm",
+      "expected_paragraphs": 8,
+      "extracted_paragraphs": 8,
+      "nonempty_paragraphs": 8,
+      "start_page": 4,
+      "end_page": 50
+    },
+    {
+      "chapter_id": "1l7ymio42q8mq",
+      "chapter_name": "正字通叙",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7ymio42q8mq",
+      "expected_paragraphs": 6,
+      "extracted_paragraphs": 6,
+      "nonempty_paragraphs": 6,
+      "start_page": 51,
+      "end_page": 66
+    },
+    {
+      "chapter_id": "1l7ymio42ql9u",
+      "chapter_name": "正字通凡例",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7ymio42ql9u",
+      "expected_paragraphs": 16,
+      "extracted_paragraphs": 16,
+      "nonempty_paragraphs": 16,
+      "start_page": 67,
+      "end_page": 94
+    },
+    {
+      "chapter_id": "1l7ymio42qxwy",
+      "chapter_name": "正字通引證書目",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7ymio42qxwy",
+      "expected_paragraphs": 8,
+      "extracted_paragraphs": 8,
+      "nonempty_paragraphs": 8,
+      "start_page": 95,
+      "end_page": 112
+    },
+    {
+      "chapter_id": "1l7ymio42rak2",
+      "chapter_name": "正字通總目",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7ymio42rak2",
+      "expected_paragraphs": 241,
+      "extracted_paragraphs": 241,
+      "nonempty_paragraphs": 241,
+      "start_page": 113,
+      "end_page": 148
+    },
+    {
+      "chapter_id": "1l7ymio42rn76",
+      "chapter_name": "字彚舊本首卷",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7ymio42rn76",
+      "expected_paragraphs": 136,
+      "extracted_paragraphs": 136,
+      "nonempty_paragraphs": 136,
+      "start_page": 149,
+      "end_page": 240
+    },
+    {
+      "chapter_id": "1l7gdtyvz0074",
+      "chapter_name": "鹵部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz0074",
+      "expected_paragraphs": 28,
+      "extracted_paragraphs": 28,
+      "nonempty_paragraphs": 28,
+      "start_page": 245,
+      "end_page": 253
+    },
+    {
+      "chapter_id": "1l7gdtyvz0cu8",
+      "chapter_name": "鹿部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz0cu8",
+      "expected_paragraphs": 36,
+      "extracted_paragraphs": 36,
+      "nonempty_paragraphs": 36,
+      "start_page": 254,
+      "end_page": 271
+    },
+    {
+      "chapter_id": "1l7gdtyvz0phc",
+      "chapter_name": "麥部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz0phc",
+      "expected_paragraphs": 27,
+      "extracted_paragraphs": 27,
+      "nonempty_paragraphs": 27,
+      "start_page": 271,
+      "end_page": 282
+    },
+    {
+      "chapter_id": "1l7gdtyvz124g",
+      "chapter_name": "麻部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz124g",
+      "expected_paragraphs": 17,
+      "extracted_paragraphs": 17,
+      "nonempty_paragraphs": 17,
+      "start_page": 282,
+      "end_page": 288
+    },
+    {
+      "chapter_id": "1l7gdtyvz1erk",
+      "chapter_name": "黃部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz1erk",
+      "expected_paragraphs": 14,
+      "extracted_paragraphs": 14,
+      "nonempty_paragraphs": 14,
+      "start_page": 288,
+      "end_page": 294
+    },
+    {
+      "chapter_id": "1l7gdtyvz1reo",
+      "chapter_name": "黍部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz1reo",
+      "expected_paragraphs": 14,
+      "extracted_paragraphs": 14,
+      "nonempty_paragraphs": 14,
+      "start_page": 294,
+      "end_page": 298
+    },
+    {
+      "chapter_id": "1l7gdtyvz241s",
+      "chapter_name": "黑部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz241s",
+      "expected_paragraphs": 30,
+      "extracted_paragraphs": 30,
+      "nonempty_paragraphs": 30,
+      "start_page": 299,
+      "end_page": 313
+    },
+    {
+      "chapter_id": "1l7gdtyvz2gow",
+      "chapter_name": "黹部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz2gow",
+      "expected_paragraphs": 8,
+      "extracted_paragraphs": 8,
+      "nonempty_paragraphs": 8,
+      "start_page": 314,
+      "end_page": 315
+    },
+    {
+      "chapter_id": "1l7gdtyvz2tc0",
+      "chapter_name": "黽部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz2tc0",
+      "expected_paragraphs": 16,
+      "extracted_paragraphs": 16,
+      "nonempty_paragraphs": 16,
+      "start_page": 315,
+      "end_page": 323
+    },
+    {
+      "chapter_id": "1l7gdtyvz35z4",
+      "chapter_name": "鼎部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz35z4",
+      "expected_paragraphs": 8,
+      "extracted_paragraphs": 8,
+      "nonempty_paragraphs": 8,
+      "start_page": 323,
+      "end_page": 326
+    },
+    {
+      "chapter_id": "1l7gdtyvz3im8",
+      "chapter_name": "鼓部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz3im8",
+      "expected_paragraphs": 38,
+      "extracted_paragraphs": 38,
+      "nonempty_paragraphs": 38,
+      "start_page": 326,
+      "end_page": 342
+    },
+    {
+      "chapter_id": "1l7gdtyvz3v9c",
+      "chapter_name": "鼻部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz3v9c",
+      "expected_paragraphs": 21,
+      "extracted_paragraphs": 21,
+      "nonempty_paragraphs": 21,
+      "start_page": 342,
+      "end_page": 346
+    },
+    {
+      "chapter_id": "1l7gdtyvz47wg",
+      "chapter_name": "齊部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz47wg",
+      "expected_paragraphs": 6,
+      "extracted_paragraphs": 6,
+      "nonempty_paragraphs": 6,
+      "start_page": 346,
+      "end_page": 350
+    },
+    {
+      "chapter_id": "1l7gdtyvz4kjk",
+      "chapter_name": "齒部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz4kjk",
+      "expected_paragraphs": 33,
+      "extracted_paragraphs": 33,
+      "nonempty_paragraphs": 33,
+      "start_page": 350,
+      "end_page": 362
+    },
+    {
+      "chapter_id": "1l7gdtyvz4x6o",
+      "chapter_name": "龍部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz4x6o",
+      "expected_paragraphs": 15,
+      "extracted_paragraphs": 15,
+      "nonempty_paragraphs": 15,
+      "start_page": 363,
+      "end_page": 368
+    },
+    {
+      "chapter_id": "1l7gdtyvz59ts",
+      "chapter_name": "龜部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz59ts",
+      "expected_paragraphs": 15,
+      "extracted_paragraphs": 15,
+      "nonempty_paragraphs": 15,
+      "start_page": 368,
+      "end_page": 373
+    },
+    {
+      "chapter_id": "1l7gdtyvz5mgw",
+      "chapter_name": "龠部",
+      "source_url": "https://www.shidianguji.com/book/7414832345078824996/chapter/1l7gdtyvz5mgw",
+      "expected_paragraphs": 10,
+      "extracted_paragraphs": 10,
+      "nonempty_paragraphs": 10,
+      "start_page": 373,
+      "end_page": 378
+    }
+  ]
+}

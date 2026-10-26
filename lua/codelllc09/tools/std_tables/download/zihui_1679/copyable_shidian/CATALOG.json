@@ -1,0 +1,194 @@
+{
+  "source": "識典古籍（北京大學－字節跳動數字人文開放實驗室）",
+  "source_url": "https://www.shidianguji.com/book/JINANLIB03572",
+  "book_id": "JINANLIB03572",
+  "book_name": "字彙十二集",
+  "edition": "康熙晋祁書業成刻本",
+  "library": "濟南市圖書館",
+  "check_type": 3,
+  "reported_paragraphs": 10973,
+  "reported_pages": 2597,
+  "coverage_note": "章節表所列內容全部擷取；識典資料為 OCR 後經平台整理的可複製文字，罕見字仍可能以圖片或替代標記呈現，使用時應與影印本校勘。",
+  "chapters": [
+    {
+      "chapter_id": "1lx02uhn80y06",
+      "chapter_name": "序",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02uhn80y06",
+      "expected_paragraphs": 27,
+      "extracted_paragraphs": 27,
+      "nonempty_paragraphs": 27,
+      "start_page": 1,
+      "end_page": 26
+    },
+    {
+      "chapter_id": "1lx02ui4xfj7u",
+      "chapter_name": "目錄",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02ui4xfj7u",
+      "expected_paragraphs": 198,
+      "extracted_paragraphs": 198,
+      "nonempty_paragraphs": 198,
+      "start_page": 27,
+      "end_page": 57
+    },
+    {
+      "chapter_id": "1lx02ujzxx79m",
+      "chapter_name": "首卷",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02ujzxx79m",
+      "expected_paragraphs": 166,
+      "extracted_paragraphs": 166,
+      "nonempty_paragraphs": 165,
+      "start_page": 58,
+      "end_page": 145
+    },
+    {
+      "chapter_id": "1lx02uqp463ou",
+      "chapter_name": "子集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02uqp463ou",
+      "expected_paragraphs": 587,
+      "extracted_paragraphs": 587,
+      "nonempty_paragraphs": 586,
+      "start_page": 146,
+      "end_page": 331
+    },
+    {
+      "chapter_id": "1lx02ux3a3h9u",
+      "chapter_name": "丑集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02ux3a3h9u",
+      "expected_paragraphs": 148,
+      "extracted_paragraphs": 148,
+      "nonempty_paragraphs": 148,
+      "start_page": 332,
+      "end_page": 501
+    },
+    {
+      "chapter_id": "1lx02v3dyhcm2",
+      "chapter_name": "寅集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02v3dyhcm2",
+      "expected_paragraphs": 145,
+      "extracted_paragraphs": 145,
+      "nonempty_paragraphs": 145,
+      "start_page": 502,
+      "end_page": 671
+    },
+    {
+      "chapter_id": "1lx02v9hnkhej",
+      "chapter_name": "卯集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02v9hnkhej",
+      "expected_paragraphs": 117,
+      "extracted_paragraphs": 117,
+      "nonempty_paragraphs": 116,
+      "start_page": 672,
+      "end_page": 842
+    },
+    {
+      "chapter_id": "1lx02vfrsbgga",
+      "chapter_name": "辰集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02vfrsbgga",
+      "expected_paragraphs": 291,
+      "extracted_paragraphs": 291,
+      "nonempty_paragraphs": 290,
+      "start_page": 843,
+      "end_page": 1016
+    },
+    {
+      "chapter_id": "1lx02vlprs0fa",
+      "chapter_name": "巳集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02vlprs0fa",
+      "expected_paragraphs": 1360,
+      "extracted_paragraphs": 1360,
+      "nonempty_paragraphs": 1360,
+      "start_page": 1017,
+      "end_page": 1187
+    },
+    {
+      "chapter_id": "1lx02vu3l6bd5",
+      "chapter_name": "午集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02vu3l6bd5",
+      "expected_paragraphs": 1785,
+      "extracted_paragraphs": 1785,
+      "nonempty_paragraphs": 1785,
+      "start_page": 1188,
+      "end_page": 1409
+    },
+    {
+      "chapter_id": "1lx02w1a6nw36",
+      "chapter_name": "未集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02w1a6nw36",
+      "expected_paragraphs": 1687,
+      "extracted_paragraphs": 1687,
+      "nonempty_paragraphs": 1687,
+      "start_page": 1410,
+      "end_page": 1621
+    },
+    {
+      "chapter_id": "1lx02w88e8vmj",
+      "chapter_name": "申集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02w88e8vmj",
+      "expected_paragraphs": 1610,
+      "extracted_paragraphs": 1610,
+      "nonempty_paragraphs": 1610,
+      "start_page": 1622,
+      "end_page": 1823
+    },
+    {
+      "chapter_id": "1lx02wgf4bewi",
+      "chapter_name": "酉集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02wgf4bewi",
+      "expected_paragraphs": 1890,
+      "extracted_paragraphs": 1890,
+      "nonempty_paragraphs": 1890,
+      "start_page": 1824,
+      "end_page": 2059
+    },
+    {
+      "chapter_id": "1lx02wnryw55m",
+      "chapter_name": "戌集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02wnryw55m",
+      "expected_paragraphs": 182,
+      "extracted_paragraphs": 182,
+      "nonempty_paragraphs": 182,
+      "start_page": 2060,
+      "end_page": 2245
+    },
+    {
+      "chapter_id": "1lx02wuj8i5ft",
+      "chapter_name": "亥集",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02wuj8i5ft",
+      "expected_paragraphs": 263,
+      "extracted_paragraphs": 263,
+      "nonempty_paragraphs": 263,
+      "start_page": 2246,
+      "end_page": 2423
+    },
+    {
+      "chapter_id": "1lx02ww7g92cy",
+      "chapter_name": "卷末",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02ww7g92cy",
+      "expected_paragraphs": 177,
+      "extracted_paragraphs": 177,
+      "nonempty_paragraphs": 177,
+      "start_page": 2424,
+      "end_page": 2465
+    },
+    {
+      "chapter_id": "1lx02wxg8vh22",
+      "chapter_name": "韻法直圖",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02wxg8vh22",
+      "expected_paragraphs": 204,
+      "extracted_paragraphs": 204,
+      "nonempty_paragraphs": 204,
+      "start_page": 2466,
+      "end_page": 2563
+    },
+    {
+      "chapter_id": "1lx02wyzlssha",
+      "chapter_name": "韻法橫圖",
+      "source_url": "https://www.shidianguji.com/book/JINANLIB03572/chapter/1lx02wyzlssha",
+      "expected_paragraphs": 136,
+      "extracted_paragraphs": 136,
+      "nonempty_paragraphs": 136,
+      "start_page": 2564,
+      "end_page": 2597
+    }
+  ]
+}
