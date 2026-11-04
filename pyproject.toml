@@ -1,0 +1,21 @@
+[project]
+name = "rime-xuma-L-toolchain"
+version = "0.0.0"
+description = "徐碼·L 輸入法方案（Rime）的詞頻管道、字表生成與機檢工具鏈"
+readme = "README.md"
+# 本倉庫不是可安裝的包，pyproject 只承擔兩件事：釘 Python 版本、聲明可選依賴。
+# 環境約定見 AGENTS.md：禁用 pip/pip3，一律 uv。
+requires-python = ">=3.10"
+
+# 核心工具鏈（gen_freq_dict / check_* / _ledger / _provenance）只用標準庫，無必需依賴。
+dependencies = []
+
+[project.optional-dependencies]
+# 僅 build_sources.py 的 L 源（國家語委 .xls）需要讀 xls：
+#   cd lua/codelllc09/tools/dict_pipeline/corpus/sources
+#   uv run --with xlrd python build_sources.py
+corpus = ["xlrd>=2.0"]
+
+[tool.uv]
+# 不把本目錄當可安裝項目處理（純腳本集）
+package = false

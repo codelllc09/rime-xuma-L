@@ -1,0 +1,77 @@
+name: gate
+
+# 機械門禁（2026-11-05 加固）
+#
+# 能在遠端跑的是「結構性錯誤」那一類：白名單是否生效、日期是否穿越、
+# 生成物與輸入是否對得上、台賬格式與雙檔是否同步、留痕是否覆蓋所有寫盤腳本。
+# 語料不在 git 裏，故 ③corpus／⑤tendency 會 SKIP——這不是缺陷，是設計：
+# 需要活庫語料的檢查留給本機（pre-commit 鉤子＋backup.sh drill）。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  consistency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # ④HEAD煙測 與 diff_report 需要歷史
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 工具鏈自檢（Python 語法）
+        run: |
+          python - <<'PY'
+          import ast, glob, sys
+          bad = []
+          for f in glob.glob('lua/**/*.py', recursive=True):
+              try:
+                  ast.parse(open(f, encoding='utf-8').read())
+              except SyntaxError as e:
+                  bad.append(f'{f}: {e}')
+          print('\n'.join(bad) if bad else f'語法 OK（{len(glob.glob("lua/**/*.py", recursive=True))} 個 .py）')
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: 全電池十項
+        working-directory: lua/codelllc09/tools
+        run: python3 check_consistency.py
+
+      - name: 台賬衛生
+        working-directory: lua/codelllc09/tools
+        run: python3 _ledger.py --selfcheck
+
+      - name: 溯源對賬
+        working-directory: lua/codelllc09/tools
+        run: python3 _provenance.py --verify
+
+  privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: 提交作者與郵箱白名單
+        run: |
+          # 退役身份／上游作者郵箱不得再出現（2026-11-05 隱私清洗的機械兜底）
+          BAD='***@|***@|example\.com|noreply@anthropic'
+          if git log --format='%an <%ae>%n%cn <%ce>' | sort -u | grep -Ei "$BAD"; then
+            echo "✗ 提交歷史含白名單外身份"; exit 1
+          fi
+          echo "✓ 提交身份全在白名單內"
+      - name: 不該入庫的路徑
+        run: |
+          PAT='(^|/)(userdb|\.git|cache|download)/|default\.custom\.yaml|^sync/|add_debug\.log'
+          if git ls-files | grep -E "$PAT"; then
+            echo "✗ 上述路徑不應被跟蹤"; exit 1
+          fi
+          echo "✓ 無敏感路徑被跟蹤"

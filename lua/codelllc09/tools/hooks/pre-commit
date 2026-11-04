@@ -18,6 +18,11 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "pre-commit：不�
 TOOLS="$ROOT/lua/codelllc09/tools"
 cd "$ROOT" || exit 1
 
+# 鉤子運行期間 git 會注入 GIT_DIR／GIT_INDEX_FILE 等局部環境變量；子進程裏的
+# `git worktree add`（④HEAD煙測）會被這套指向鉤子臨時索引的變量帶偏而失敗。
+# 先把它們清掉再跑門禁（git 官方建議做法）。
+while read -r _v; do unset "$_v" 2>/dev/null || true; done < <(git rev-parse --local-env-vars)
+
 if ! command -v python3 >/dev/null 2>&1; then
   echo "pre-commit：缺 python3，無法跑門禁。確保安裝或用 --no-verify 明確跳過。"
   exit 1
