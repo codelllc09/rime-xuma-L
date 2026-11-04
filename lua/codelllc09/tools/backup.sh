@@ -17,6 +17,9 @@
 #   mirror-status                 鏡像覆蓋情況（HEAD 是否有對應快照 ref）
 #   mirror-restore <目標目錄>     從鏡像克隆（鏡像是歷史改寫的最後防線）
 #
+#   offsite [目標] [--fresh]      把最新快照投遞到另一臺設備並校驗（默認 yoga:D:/Backups/rime）
+#                                 --fresh 先重造快照（確保對應當前 HEAD）
+#
 # 快照內容（--full 額外）：
 #   repo.bundle          git 全史（--all，含所有分支標籤）
 #   ignored/             不可再生區：std_tables/download、log/（含 add_debug）、tmp/、spool
@@ -417,6 +420,82 @@ cmd_mirror_restore() {
   echo "後續：cd $dest && git remote add origin https://github.com/codelllc09/rime-xuma-L.git"
 }
 
+# ── offsite：投遞到另一臺設備 ──────────────────────────────────────
+# 本地做再多，也擋不住「盤壞／整機丟」。異地是唯一真正的外部副本。
+# 本子命令把「造快照→傳→遠端校驗」串成一條命令，並兼容 Unix(sha256sum) 與
+# Windows(PowerShell Get-FileHash) 兩種遠端。
+OFFSITE_DEFAULT="yoga:D:/Backups/rime"
+
+remote_hash() {   # $1=host  $2=遠端檔案路徑
+  local h
+  h="$(ssh -o BatchMode=yes -o ConnectTimeout=15 "$1" \
+        "sha256sum '$2' 2>/dev/null | cut -d' ' -f1" 2>/dev/null | tr -d '\r')"
+  if [ -z "${h:-}" ]; then
+    h="$(ssh -o BatchMode=yes -o ConnectTimeout=15 "$1" \
+          "powershell -NoProfile -Command \"(Get-FileHash -Algorithm SHA256 '$2').Hash\"" \
+          2>/dev/null | tr -d '\r' | tail -1)"
+  fi
+  echo "$h" | tr 'A-Z' 'a-z'
+}
+
+cmd_offsite() {
+  local target="$OFFSITE_DEFAULT" fresh=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --fresh) fresh=1 ;;
+      -*) die "未知參數：$1" ;;
+      *) target="$1" ;;
+    esac
+    shift
+  done
+  local host="${target%%:*}" rdir="${target#*:}"
+  [ "$host" != "$target" ] || die "目標格式應為 host:目錄，例如 yoga:D:/Backups/rime"
+
+  if [ "$fresh" = 1 ] || [ -z "$(ls -1 "$OUT_DEFAULT"/rime-snapshot-*.tar.gz 2>/dev/null)" ]; then
+    cmd_create
+  fi
+  local snap; snap="$(ls -1t "$OUT_DEFAULT"/rime-snapshot-*.tar.gz 2>/dev/null | head -1)"
+  [ -n "$snap" ] || die "找不到快照"
+  local bn; bn="$(basename "$snap")"
+
+  # 快照落後於 HEAD 時提醒（備份只含已提交狀態）
+  local shead
+  shead="$(tar -xzOf "$snap" MANIFEST.json 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["git_head"])' 2>/dev/null || echo '')"
+  local now; now="$(git -C "$ROOT" rev-parse HEAD)"
+  if [ -n "$shead" ] && [ "$shead" != "$now" ]; then
+    c_y "⚠ 快照 HEAD ${shead:0:9} ≠ 當前 HEAD ${now:0:9}——用 --fresh 重造以對應當前狀態"
+  fi
+
+  c_g "① 校驗本地快照"
+  cmd_verify "$snap" | sed 's/^/   /' || die "本地快照未過校驗，不投遞"
+
+  c_g "② 傳輸 → $host:$rdir"
+  ssh -o BatchMode=yes -o ConnectTimeout=15 "$host" \
+      "[ -d '$rdir' ] || mkdir -p '$rdir' || powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path '$rdir' | Out-Null\"" \
+      2>/dev/null || true
+  timeout 900 scp -q "$snap" "$host:$rdir/" || die "scp 失敗"
+  echo "   $(du -h "$snap" | cut -f1)"
+
+  c_g "③ 遠端校驗"
+  local lh rh
+  lh="$(sha256sum "$snap" | cut -d' ' -f1)"
+  rh="$(remote_hash "$host" "$rdir/$bn")"
+  if [ -z "${rh:-}" ]; then
+    c_y "   ⚠ 遠端無法計算雜湊（缺 sha256sum 且 PowerShell 不可用），僅確認檔案存在"
+    ssh -o BatchMode=yes "$host" "test -f '$rdir/$bn' || powershell -NoProfile -Command \"Test-Path '$rdir/$bn'\"" >/dev/null 2>&1 \
+      && echo "   檔案在" || { echo "   ✗ 遠端找不到檔案"; return 1; }
+  elif [ "$lh" = "$rh" ]; then
+    c_g "   ✓ 雜湊一致：${lh:0:16}…"
+  else
+    c_y "   ✗ 雜湊不一致：本地 ${lh:0:16}… / 遠端 ${rh:0:16}…"
+    return 1
+  fi
+
+  python3 "$TOOLS/_ledger.py" "$target/$bn" 異地備份 \
+    "快照 $(printf '%s' "$bn") 投遞並校驗通過（HEAD ${now:0:9}）" >/dev/null
+  c_g "完成。異地副本：$host:$rdir/$bn"
+}
+
 case "${1:-}" in
   create) shift; cmd_create "$@" ;;
   list) shift; cmd_list "$@" ;;
@@ -427,5 +506,6 @@ case "${1:-}" in
   mirror-sync) cmd_mirror_sync ;;
   mirror-status) shift; cmd_mirror_status ;;
   mirror-restore) shift; cmd_mirror_restore "$@" ;;
+  offsite) shift; cmd_offsite "$@" ;;
   *) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac
