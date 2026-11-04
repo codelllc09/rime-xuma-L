@@ -20,7 +20,7 @@
                                 純漢字 2–5 字、年份求和、按總次降序（詳 aggregate_gbooks）
     L.yuwei_word_freq.txt       國家語委 xls → 詞\t頻 兩列 TSV（行序照原表）
     _mapping/TS·ST×4            OpenCC data/dictionary 原樣（master，滾動源）
-    _mapping/Unihan_*.txt       Unihan.zip 解出兩文件（latest，滾動源）
+    _mapping/Unihan_*.txt       Unihan.zip 解出兩文件（釘 17.0.0，latest 會漂）
     upstream_xuma.dict.yaml     rime-xuma schema/xuma.dict.yaml 原樣（master，滾動源）
 
 驗收：cd .. && sha256sum -c SHA256SUMS
@@ -55,8 +55,16 @@ SUBTLEX = 'https://www.lexique.org/databases/SUBTLEX-CH/SUBTLEX-CH-WF.tsv'
 GBOOKS_GZ = 'https://storage.googleapis.com/books/ngrams/books/20200217/chi_sim/1-00000-of-00001.gz'
 YUWEI_XLS = ('https://github.com/bedlate/cn-corpus/raw/master/'
              '%E7%8E%B0%E4%BB%A3%E6%B1%89%E8%AF%AD%E8%AF%AD%E6%96%99%E5%BA%93%E8%AF%8D%E9%A2%91%E8%A1%A8.xls')
-OPENCC_BASE = 'https://raw.githubusercontent.com/BYVoid/OpenCC/master/data/dictionary/'
-UNIHAN_ZIP = 'https://www.unicode.org/Public/UCD/latest/ucd/Unihan.zip'
+# OpenCC 釘版（快照考古：TS 與 ST 最後變更提交不同，分別釘住；釘 17.0.0 的 Unihan——latest 會漂）
+OPENCC_PIN = {
+    'TSCharacters.txt': '0137a24bd485',
+    'TSPhrases.txt':    '0137a24bd485',
+    'STCharacters.txt': '3acca9851846',
+    'STPhrases.txt':    '3acca9851846',
+}
+OPENCC_BASE = ('https://raw.githubusercontent.com/BYVoid/OpenCC/{}/'
+               'data/dictionary/{}')
+UNIHAN_ZIP = 'https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip'
 UPSTREAM = 'https://raw.githubusercontent.com/Ace-Who/rime-xuma/master/schema/xuma.dict.yaml'
 
 
@@ -212,7 +220,8 @@ def build_mapping():
     occ = {'TSCharacters.txt', 'TSPhrases.txt', 'STCharacters.txt', 'STPhrases.txt'}
     todo = [f for f in occ if not exists(f'_mapping/{f}')]
     for f in todo:
-        t = os.path.join(TMP, f); fetch(OPENCC_BASE + f, t)
+        t = os.path.join(TMP, f)
+        fetch(OPENCC_BASE.format(OPENCC_PIN[f], f), t)
         place(f'_mapping/{f}', open(t, 'rb').read())
     if todo or FORCE or not (exists('_mapping/Unihan_Variants.txt')
                              and exists('_mapping/Unihan_Readings.txt')):
