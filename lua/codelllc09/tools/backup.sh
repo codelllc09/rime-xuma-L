@@ -322,7 +322,7 @@ cmd_drill() {
   else
     local det=0
     ( cd "$TOOLS" && python3 check_consistency.py --determinism ) >/tmp/rime-drill-det.log 2>&1 || det=1
-    grep -E '\[.\] ?[⑥⑦]|確定性' /tmp/rime-drill-det.log | tail -2 | sed 's/^/     /'
+    grep -E '確定性' /tmp/rime-drill-det.log | tail -1 | sed 's/^/     /'
     if [ "$det" != 0 ]; then
       echo "     ✗ 確定性未過（詳見 /tmp/rime-drill-det.log）"; rc=1
     fi
