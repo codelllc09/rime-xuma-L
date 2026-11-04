@@ -23,12 +23,11 @@ end
 
 local function filter(input, env)
   local ctx = env.engine.context
-  -- punct/helper/os_env 段直通：符号组（/jt △○□…）、帮助菜单（help/）、环境变量（env/）
-  -- 与时间日期替换候选（/time /date）按 UTF-8 字符数计，会被下面的长度过滤误杀
-  -- （如 2026年9月8日=9字符、https://…=30+字符），且符号/日期本就不属词组长短管辖
+  -- punct/helper/os_env/add 段直通：符号组（/jt △○□…）、帮助菜单（help/）、环境变量（env/）、
+  -- 加词菜单（/add 橫幅/動作項為 5-20 字符的功能文案，非詞組，長度過濾必誤殺）
   local comp = ctx.composition
   local seg = comp and comp:back()
-  if seg and (seg:has_tag('punct') or seg:has_tag('helper') or seg:has_tag('os_env')) then
+  if seg and (seg:has_tag('punct') or seg:has_tag('helper') or seg:has_tag('os_env') or seg:has_tag('add')) then
     for cand in input:iter() do yield(cand) end
     return
   end

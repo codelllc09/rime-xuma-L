@@ -9,6 +9,8 @@ local data = require 'codelllc09/no_simple_data'
 local ranges = data.ranges
 local word_ranges = data.word_ranges
 
+-- 白名单俗字的组词例外硬拦截：叶 为出典白名单古字俗形（不在简形拦截集内），
+-- 「叶子」仍需按非简原则显式拦——白名单只放行单字，不得组词。
 local word_block = { ['叶子'] = true }
 
 local function in_ranges(cp, r)
@@ -51,6 +53,13 @@ end
 
 local function filter(input, env)
   if not env.engine.context:get_option('no_simple') then
+    for cand in input:iter() do yield(cand) end
+    return
+  end
+  -- add 段（/add 加詞菜單）直通：候選是功能文案與「人審即錄」的上屏原文；
+  -- 簡形警示由 add_word 自身標注（⚠含簡形），人審決定收否，非簡閘門不越位攔 UI。
+  local seg = env.engine.context.composition:back()
+  if seg and seg:has_tag('add') then
     for cand in input:iter() do yield(cand) end
     return
   end
