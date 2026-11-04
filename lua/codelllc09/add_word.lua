@@ -166,11 +166,11 @@ local function translator(input, seg, env)
   local n = 0
   for _ in pairs(seen) do n = n + 1 end
   state.menu[#state.menu + 1] = { kind = 'commit', text = '入庫重跑' }
-  local c1 = Candidate('add', seg.start, seg._end, '入庫重跑', ' 合併暫存·重跑詞頻·部署')
+  local c1 = Candidate('add', seg.start, seg._end, '入庫重跑', ' 按 s 直達（合併暫存·重跑詞頻·部署）')
   c1.preedit = input .. '\t加詞'
   yield(c1)
   state.menu[#state.menu + 1] = { kind = 'clear', text = '清空暫存' }
-  local c2 = Candidate('add', seg.start, seg._end, '清空暫存', ' 暫存 ' .. n .. ' 詞')
+  local c2 = Candidate('add', seg.start, seg._end, '清空暫存', ' 按 x 直達（暫存 ' .. n .. ' 詞）')
   c2.preedit = input .. '\t加詞'
   yield(c2)
 end

@@ -43,7 +43,6 @@ local function processor(key, env)
 
   -- 本機 librime-lua 的 KeyEvent 惯用法（同 mode_hint）：解析 repr 字符串
   local r = key:repr()                      -- 形如 "Shift+Release+space"
-  do local dbg = io.open('/tmp/addkey.log', 'a'); if dbg then dbg:write(r .. '\n'); dbg:close() end end  -- TEMP DEBUG
   if r:find('Release', 1, true) then return K_NOOP end
   if r:find('Control', 1, true) or r:find('Alt', 1, true) then return K_NOOP end
   local parts = {}
@@ -51,8 +50,20 @@ local function processor(key, env)
   local keyname = parts[#parts]
   if keyname:match('_[LR]$') or keyname == 'Caps_Lock' then return K_NOOP end
 
+  -- 固定直達鍵（2026-11-05 修）：單詞收進暫存後，1 號位會被橫幅/指引等 noop 僞候選
+  -- 頂替，「入庫重跑」位次漂移（1↔2↔3），按數字常踩空——s/x 直達動作，不受位次影響
+  local direct
+  if keyname == 's' then direct = 'commit'
+  elseif keyname == 'x' then direct = 'clear'
+  end
+
   local idx
-  if keyname == 'space' then idx = 1                    -- 空格＝首選
+  if direct then
+    for _, it in ipairs(state.menu) do
+      if it.kind == direct then idx = _ end
+    end
+    if not idx then return K_NOOP end
+  elseif keyname == 'space' then idx = 1                    -- 空格＝首選
   elseif keyname:match('^%d$') then idx = tonumber(keyname)  -- 數字
   elseif keyname == 'semicolon' then idx = 2            -- 分號＝次選（對齊 key_binder）
   elseif keyname == 'apostrophe' then idx = 3           -- 引號＝三選（對齊 key_binder）
@@ -61,7 +72,6 @@ local function processor(key, env)
   if not idx or idx == 0 then return K_NOOP end
 
   local item = state.menu[idx]
-  do local dbg = io.open('/tmp/addkey.log', 'a'); if dbg then dbg:write('idx=' .. tostring(idx) .. ' item=' .. (item and item.kind .. ':' .. item.text or 'NIL') .. '\n'); dbg:close() end end  -- TEMP DEBUG
   if not item then return K_NOOP end
 
   if item.kind == 'word' then
