@@ -60,14 +60,16 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: 提交作者與郵箱白名單
+      - name: 提交身份白名單
         run: |
-          # 退役身份／上游作者郵箱不得再出現（2026-11-05 隱私清洗的機械兜底）
-          BAD='***@|***@|example\.com|noreply@anthropic'
-          if git log --format='%an <%ae>%n%cn <%ce>' | sort -u | grep -Ei "$BAD"; then
-            echo "✗ 提交歷史含白名單外身份"; exit 1
+          # 用**白名單**而非黑名單：黑名單得把禁用字符串寫進本文件，那些字符串
+          # 本身就成了公開倉庫裏的敏感內容（2026-11-05 自查發現的烏龍）。
+          ALLOW='codelllc09@users.noreply.github.com'
+          BAD=$(git log --format='%ae%n%ce' | sort -u | grep -vxF "$ALLOW" || true)
+          if [ -n "$BAD" ]; then
+            echo "✗ 提交歷史含白名單外郵箱："; echo "$BAD"; exit 1
           fi
-          echo "✓ 提交身份全在白名單內"
+          echo "✓ 提交郵箱全在白名單內"
       - name: 不該入庫的路徑
         run: |
           PAT='(^|/)(userdb|\.git|cache|download)/|default\.custom\.yaml|^sync/|add_debug\.log'

@@ -91,7 +91,10 @@
   新克隆需一次性執行 `git config core.hooksPath lua/codelllc09/tools/hooks`。
   確需跳過用 `git commit --no-verify`，並在提交信息說明理由；**靜默跳過即違紀**。
   `post-commit` 負責把每個提交追加進本地裸鏡像（見「歷史改寫防護」）。
-  `pre-push` 在推送前重跑電池（pre-commit 可被 `--no-verify` 繞過，推送是最後一關）。
+  `pre-push` 在推送前重跑電池，並串接**隱私門禁** `tools/privacy-gate.sh`
+  （調 privacy-scrub 掃描器＋倉內白名單 `privacy-allow.txt`；白名單只存 match 的
+  sha256 前 12 位與理由，不存明文 token）。此前這一步全靠人記得跑，實測漏了 45 個提交。
+  現行樹另由電池 ⑭ 兜底：跟蹤文件不得含 `/home/<user>` 之類絕對路徑。
 - **CI**（2026-11-05 新增）：`.github/workflows/gate.yml` 在 push/PR 上跑全電池十項、
   Python 語法、提交身份白名單、敏感路徑掃描。語料不在 git，故 ③corpus／⑤tendency
   在 CI 必 SKIP——這是設計而非缺陷；需活庫語料的檢查由本機鉤子與 `backup.sh drill` 承擔。

@@ -18,6 +18,9 @@
   ⑦ 溯源電池：PROVENANCE.json 中每個產物的輸入指紋須與現狀一致（輸入漂移即敗，
      說明產物與輸入的對應關係已斷——要麼重跑生成器，要麼確認變更已入庫）
   ⑧ 台賬衛生：IGNORED_CHANGES.log 四欄完整／時間非降／與 events.jsonl 雙檔對賬
+  ⑭ 家目錄路徑：跟蹤文件不得含 `/home/<user>`、`/Users/<user>`、`C:\\Users\\<user>`
+     ——台账/日志入库后最容易带出来的隐私泄漏（2026-11-05 实发：events.jsonl 写入了快照绝对路径）。
+     查的是**当前树**，不受历史白名单影响：历史可放行，新泄漏不行。
   ⑬ 暫存區體量：任何暫存文件 >5MB 即敗（配置倉不該有大檔；誤 `git add -A` 的兜底）
   ⑫ 鉤子有效性：core.hooksPath 已設時，pre-commit／post-commit／pre-push 三件必須
      存在且可執行。「鉤子檔在」不等於「鉤子會跑」——git 對不可執行的鉤子只給一行
@@ -186,6 +189,7 @@ WRITER_EXEMPT = {
     'gen_no_simple_data.py': '產物 no_simple_data.lua 已入庫（git 提交即歷史）；另有 --verify 零漂移閉環',
     'gen_pinyin_tone.py': '產物 pinyin_tone.lua 已入庫（git 提交即歷史）；輸入漂移由⑦溯源電池兜底',
     'mdx_keys.py': '一次性取鍵工具：讀外部 .mdx、輸出臨時鍵表，不入庫亦不參與管道',
+    'privacy-gate.sh': '只讀門禁：僅寫 mktemp 臨時檔，不改任何數據',
     '_ledger.py': '台賬寫入器本身',
     '_provenance.py': '溯源清單寫入器本身',
 }
@@ -269,6 +273,20 @@ def battery_mirror():
              f'{len(lack)} 個 tag 不在鏡像中（如 {lack[:3]}）——backup.sh mirror-sync')
     else:
         item('⑨鏡像', True, f'HEAD {head[:9]} 在鏡像中；快照 ref {n} 個；tag {len(mt)}/{len(lt)}')
+
+
+# ── ⑭ 家目錄路徑 ────────────────────────────────────────────────
+def battery_homepath():
+    pat = r'(/home/|/Users/)[A-Za-z0-9_.-]+|[A-Za-z]:\\Users\\[A-Za-z0-9_.-]+'
+    r = run(['git', 'grep', '-n', '-I', '-E', pat, '--', '.'])
+    hits = [l for l in r.stdout.splitlines() if l.strip()]
+    # 本電池的樣式字串本身會命中文檔說明，排除自身
+    hits = [l for l in hits if 'check_consistency.py' not in l.split(':', 1)[0]]
+    if hits:
+        item('⑭家目錄路徑', False,
+             f'{len(hits)} 處絕對路徑：{[h.split(":", 2)[0] + ":" + h.split(":", 2)[1] for h in hits[:3]]}')
+    else:
+        item('⑭家目錄路徑', True, '跟蹤文件零命中')
 
 
 # ── ⑬ 暫存區體量 ────────────────────────────────────────────────
@@ -376,6 +394,7 @@ def main():
     battery_fsck()
     battery_hooks()
     battery_staged_size()
+    battery_homepath()
     if '--determinism' in sys.argv:
         battery_determinism()
     fails = [r for r in results if r[1] is False]

@@ -47,6 +47,19 @@ def _clean(s):
     return ' '.join(str(s).replace('\t', ' ').split())
 
 
+def _scrub(s):
+    """脫敏（2026-11-05）：家目錄 → `~`、倉庫根 → `.`。
+    台賬入庫後會進公開歷史，絕對路徑等於把用戶名與目錄結構一併公開。
+    此前 events.jsonl 因寫入 `/home/<user>/Backups/...` 而被隱私掃描判 HIGH。"""
+    s = str(s)
+    home = os.path.expanduser('~')
+    if home and home != '/':
+        s = s.replace(home, '~')
+    if ROOT and ROOT != '/':
+        s = s.replace(ROOT, '.')
+    return _clean(s)
+
+
 def is_ignored(path):
     """該路徑是否落在 gitignore 區。git 不可用時保守返回 True（寧可多記）。"""
     if not path or os.path.isabs(path) or path.startswith('..'):
@@ -61,7 +74,7 @@ def is_ignored(path):
 
 def note(path, action, detail, actor=None):
     """記一條事件。返回寫入的記錄 dict（便於調用方打印）。"""
-    path, action, detail = _clean(path), _clean(action), _clean(detail)
+    path, action, detail = _scrub(path), _clean(action), _scrub(detail)
     if not (path and action):
         raise ValueError('note(): path 與 action 必填')
     actor = _clean(actor or os.path.basename(sys.argv[0] or 'unknown'))

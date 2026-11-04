@@ -28,6 +28,17 @@ if ! ( cd "$TOOLS" && python3 check_consistency.py >/tmp/rime-prepush.log 2>&1 )
   exit 1
 fi
 
+# 隱私門禁（2026-11-05 加固）：此前全靠人記得跑 privacy-scrub skill，
+# 實測「人記得」＝「很少跑」——本倉庫曾連續 45 個提交未經隱私掃描。
+if [ -x "$TOOLS/privacy-gate.sh" ]; then
+  if ! "$TOOLS/privacy-gate.sh" >/tmp/rime-prepush-privacy.log 2>&1; then
+    echo "✗ pre-push：隱私門禁未過，拒絕推送"
+    sed -n '1,12p' /tmp/rime-prepush-privacy.log | sed 's/^/    /'
+    exit 1
+  fi
+  grep '^✓' /tmp/rime-prepush-privacy.log | sed 's/^/  /'
+fi
+
 # 工作區若有未提交改動，提醒「推上去的不是你以爲的那份」
 if [ -n "$(git status --porcelain)" ]; then
   echo "提示：工作區有未提交改動，本次推送不含它們。"

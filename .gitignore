@@ -77,6 +77,8 @@ lua/codelllc09/tools/dict_pipeline/archive/reports/*
 !lua/codelllc09/tools/dict_pipeline/archive/reports/addon_review.txt
 # 手收詞總表（詞庫再生種子）
 !lua/codelllc09/tools/dict_pipeline/handpicked.txt
+# 隱私門禁白名單（2026-11-05）：入庫才能隨 diff 審查；檔案內只存 sha256 前綴，無明文 token
+!lua/codelllc09/tools/privacy-allow.txt
 __pycache__/
 
 # 舊方案歸檔（純本機保留，不入庫）

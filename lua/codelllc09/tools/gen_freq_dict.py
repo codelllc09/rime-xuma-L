@@ -881,7 +881,7 @@ def main():
                 f.write('? %s → %s\t分:%d\t[%s]\n' % (simp, trad, f0, tag))
             f.write('\n')
     nbig = len(big); nmisc = sum(len(v) for k, v in misc)
-    print(f'TO_BE_REVIEWED 已寫出 {rp}（大組 {nbig}，雜項 {nmisc} 詞，共 {len(amb_list)} 詞）')
+    print(f'TO_BE_REVIEWED 已寫出 {os.path.relpath(rp, RIME)}（大組 {nbig}，雜項 {nmisc} 詞，共 {len(amb_list)} 詞）')
 
     # ---- 逐碼位重排，生成新行 ----
     def render(e, f):
@@ -1057,7 +1057,7 @@ def main():
         f.flush()
         os.fsync(f.fileno())
     os.replace(_tmp_out, out_path)
-    print(f'寫出 {out_path}: 主體 {len(new_lines)} 行 + 尾區 {len(tail_lines)} 行')
+    print(f'寫出 {os.path.relpath(out_path, RIME)}: 主體 {len(new_lines)} 行 + 尾區 {len(tail_lines)} 行')
 
     # ---- 寫出 dry-run 報告 ----
     rep = []
@@ -1148,7 +1148,7 @@ def main():
     with open(_rep_p + '.tmp', 'w', encoding='utf-8') as f:
         f.write('\n'.join(rep) + '\n')
     os.replace(_rep_p + '.tmp', _rep_p)
-    print(f'報告已寫出 {os.path.join(ARCHIVE, "freq_report.md")}')
+    print(f'報告已寫出 {os.path.relpath(os.path.join(ARCHIVE, "freq_report.md"), RIME)}')
     # 詳細樣例直接打印到 stdout 供審
     print('\n===== 樣例碼位新舊對照 =====')
     for c, o, n in changed[:10]:
