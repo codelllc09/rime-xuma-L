@@ -9,7 +9,7 @@ name: gate
 
 on:
   push:
-    branches: [main]
+    branches: [main, ui]     # ui＝意願台（前端）開發分支，同樣要過門禁
   pull_request:
   workflow_dispatch:
 
