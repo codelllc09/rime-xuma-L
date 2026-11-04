@@ -160,6 +160,19 @@ python3 check_consistency.py                # 10 項電池應全綠
 - **只取歷史與原件**：把 `ignored/` 按需挑揀覆蓋（如只要 `std_tables/download`、`tmp` 審計報告）
 - **整機對齊**：按 A 步驟在對方機器重建，再把對方 `userdb/`（個人學習記錄）另行處置
 
+## B2. 歷史被改寫／倉庫被清空（filter-repo 事故類）
+
+工具已隨工作樹一起被刪，只能用純 git：
+
+```sh
+git clone ~/Backups/rime/mirror.git /tmp/recover        # 本地裸鏡像
+git fetch origin '+refs/snapshots/*:refs/snapshots/*'   # 取回全部快照點
+git -C /tmp/recover log --oneline --all | head
+```
+
+或自改寫守衛留的 bundle：`~/Backups/rime/pre-rewrite/pre-rewrite-*.bundle`。
+（2026-11-05 演練：0 提交 → 恢復 27 提交／112 件，十一項門禁全綠。）
+
 ## C. 不可再生區說明
 
 | 目錄 | 是否可重建 |

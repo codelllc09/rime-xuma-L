@@ -148,8 +148,20 @@ git filter-repo --invert-paths --paths-from-file <(echo "$ALLP" | sed 's/^/liter
    （本倉庫已設）。對 `reset --hard` 這類「對象仍在、只是不可達」的誤操作有效；
    對 filter-repo（改寫後自身會 gc）無效，故只是輔助層。
 
-**恢復路徑**：`backup.sh mirror-restore <空目錄>`（自鏡像）或 `git clone <pre-rewrite bundle>`
-（`~/Backups/rime/pre-rewrite/` 下由守衛自動生成）。
+**恢復路徑**（**純 git，不依賴倉庫內任何腳本**——事故後工具本身已被刪光，
+這是 2026-11-05 演練確認過的唯一可靠寫法）：
+
+```sh
+git clone ~/Backups/rime/mirror.git /tmp/recover        # origin/main ＝ 最後同步的狀態
+git fetch origin '+refs/snapshots/*:refs/snapshots/*'   # 需要更早的點時再取
+git -C /tmp/recover log --oneline --all | head
+# 或在改寫守衛自動留的 bundle：
+mkdir -p /tmp/recover && git clone ~/Backups/rime/pre-rewrite/pre-rewrite-*.bundle /tmp/recover
+```
+
+演練記錄（2026-11-05）：沙箱克隆中重放原樣事故命令 →
+`0 提交／0 件／根目錄空` → 純 git 自鏡像恢復 → `27 提交／112 件`，恢復體十一項門禁全綠。
+
 
 ## 只讀第三方審查（變更季後例行，2026-11-05 成文）
 
