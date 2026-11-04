@@ -20,6 +20,7 @@
     wishd.py suspicious             可疑組：同分並列、異體雙形
     wishd.py overrides              現有次序裁定 + 生效狀態推定
     wishd.py add    "詞1 詞2"       加入暫存（與 /add 共用 spool）
+    wishd.py drop   "詞1 詞2"       棄用：同時寫 handpicked 的 -詞 與 rejected（防補詞復活）
     wishd.py pending                看待應用：暫存詞 / 已改未重跑的意願檔
     wishd.py order  <碼> A>B>C [--dry-run] [--note 說明]
     wishd.py apply  --yes [--no-deploy]   跑管道（+44碼閘門+部署）；無 --yes 只列待辦
@@ -103,16 +104,25 @@ def invalidate():
     _CACHE.update(entries=None, mtime=None, groups=None, wc=None)
 
 
-def load_handpicked():
-    s = set()
+def load_handpicked_parts():
+    """返回 (正常詞集, 棄用詞集)。棄用＝行首 `-` 的詞條（管線據此從詞庫刪除並記審計）。"""
+    add, drop = set(), set()
     if not os.path.exists(HP):
-        return s
+        return add, drop
     for l in io.open(HP, encoding='utf-8'):
         l = l.strip()
         if not l or l.startswith('#') or l.startswith('## '):
             continue
-        s.add(l[1:] if l.startswith('-') else l)
-    return s
+        if l.startswith('-') and len(l) > 1:
+            drop.add(l[1:])
+        else:
+            add.add(l)
+    return add, drop
+
+
+def load_handpicked():
+    add, drop = load_handpicked_parts()
+    return add | drop
 
 
 def load_overrides():
@@ -276,6 +286,79 @@ def add_words(words):
             'skipped': [{'w': w, 'why': r} for w, r in skipped]}
 
 
+def drop_words(words, reason=''):
+    """就地棄用：**同時**寫 handpicked 的 `-詞` 與 rejected 台账。
+
+    兩者缺一不可：
+      只寫 `-詞` → 詞從現有詞庫刪掉，但補詞階段會從語料撈回來
+      只寫 rejected → 補詞不復活，但現有詞庫那條還在
+    另外會把該詞從 handpicked 的正常分組裏移除（否則同時「收」與「棄」，語義打架），
+    並從暫存 spool 裏剔掉（避免剛棄用又入庫）。
+    """
+    groups, wc = load_dict()
+    add, already = load_handpicked_parts()
+    spool = load_spool()
+    rejected = set()
+    if os.path.exists(REJ):
+        rejected = {l.strip() for l in io.open(REJ, encoding='utf-8')
+                    if l.strip() and not l.lstrip().startswith('#')}
+
+    done, skipped = [], []
+    for w in words:
+        w = w.strip()
+        if not w:
+            continue
+        if w not in wc and w not in add and w not in already:
+            skipped.append((w, '不在詞庫，也非手收'))
+            continue
+        if w in already:
+            skipped.append((w, '已標記棄用（待應用）'))
+            continue
+        done.append(w)
+    if not done:
+        return {'dropped': [], 'skipped': [{'w': w, 'why': r} for w, r in skipped]}
+
+    # handpicked：移除正常分組中的該詞，末尾追加「## 棄用」區
+    lines = io.open(HP, encoding='utf-8').read().splitlines(True) if os.path.exists(HP) else []
+    kept = [l for l in lines if l.strip() not in done or l.lstrip().startswith('#')]
+    while kept and not kept[-1].strip():
+        kept.pop()
+    stamp = datetime.date.today().isoformat()
+    need_hdr = '## 棄用' not in ''.join(kept)
+    tail = ([f'\n## 棄用（wishd，{stamp} 起；行首 - 表示從詞庫刪除）\n'] if need_hdr else ['\n'])
+    tail += [f'-{w}\n' for w in done]
+    tmp = HP + '.tmp'
+    with io.open(tmp, 'w', encoding='utf-8') as f:
+        f.write(''.join(kept) + ''.join(tail))
+    os.replace(tmp, HP)
+
+    # rejected：防補詞階段復活
+    new_rej = [w for w in done if w not in rejected]
+    if new_rej:
+        with io.open(REJ, 'a', encoding='utf-8') as f:
+            f.write(f"\n# wishd 棄用（{stamp}）" + (f"：{reason}" if reason else '') + '\n')
+            f.write(''.join(w + '\n' for w in new_rej))
+
+    # spool：剛棄用的不該還在待入庫隊列
+    if spool:
+        left = [w for w in spool if w not in done]
+        if len(left) != len(spool):
+            tmp = SPOOL + '.tmp'
+            with io.open(tmp, 'w', encoding='utf-8') as f:
+                f.write(''.join(w + '\n' for w in left))
+            os.replace(tmp, SPOOL)
+
+    try:
+        from _ledger import note as _note
+        _note('handpicked.txt', '棄用',
+              '−' + '／'.join(done) + '（同時寫 rejected 防復活）'
+              + (f'｜{reason}' if reason else ''))
+    except Exception:
+        pass
+    return {'dropped': done, 'skipped': [{'w': w, 'why': r} for w, r in skipped],
+            'rejected_added': new_rej}
+
+
 # ── 待應用狀態 ──────────────────────────────────────────────────
 def _sha(path):
     import hashlib
@@ -432,6 +515,25 @@ def main():
         for s in r['skipped']:
             print(f'  − {s["w"]}（{s["why"]}）')
         print(f'\n已加入暫存 {len(r["added"])} 詞；下一步 wishd.py apply --yes')
+        return 0
+
+    if cmd == 'drop':
+        if not rest:
+            sys.exit('用法：wishd.py drop "詞1 詞2" [--note 理由]')
+        reason = ''
+        if '--note' in rest:
+            i = rest.index('--note')
+            reason = rest[i + 1] if i + 1 < len(rest) else ''
+            rest = rest[:i] + rest[i + 2:]
+        words = [w for a in rest for w in re.split(r'[\s,、]+', a) if w]
+        r = drop_words(words, reason)
+        for w in r['dropped']:
+            print(f'  − {w}')
+        for s in r['skipped']:
+            print(f'  · {s["w"]}（{s["why"]}）')
+        if r['dropped']:
+            print(f'\n已標記棄用 {len(r["dropped"])} 詞'
+                  f'（rejected 新增 {len(r["rejected_added"])} 條）；下一步 wishd.py apply --yes')
         return 0
 
     if cmd == 'pending':

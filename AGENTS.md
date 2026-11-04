@@ -38,13 +38,14 @@ cd lua/codelllc09/tools
 python3 wishd.py list  oooo          # 看同碼組全部成員（頻分／來源／手收）
 python3 wishd.py order oooo "A > B"  # 寫次序裁定（同碼校驗、重複檢測、組內其餘詞警告）
 python3 wishd.py add "詞1 詞2"        # 加詞入暫存（與 /add 共用 spool）
+python3 wishd.py drop "詞1 詞2"       # 棄用：**同時**寫 handpicked 的 -詞 與 rejected（防補詞復活）
 python3 wishd.py pending             # 看「待應用」：暫存詞、已改未重跑的意願檔
 python3 wishd.py apply --yes         # 跑管道＋44 碼閘門＋部署（無 --yes 只列待辦）
 python3 wishd_ui.py                  # 本機界面 http://127.0.0.1:8721
                                      #   「調序 / 加詞」分頁：拖拽排序、加詞、應用
-                                     #   「字典」分頁：19.6 萬條唯讀瀏覽（詞含／碼前綴／
+                                     #   「字典」分頁：19.6 萬條瀏覽（詞含／碼前綴／
                                      #   字數／來源／區段篩選，按行號·編碼·頻分·詞形排序，
-                                     #   點一行跳到該碼組調序）
+                                     #   點一行跳到該碼組調序；行尾「棄用」就地刪詞）
 ```
 
 **「應用」是破壞性動作，必須二次確認**——三處一致：

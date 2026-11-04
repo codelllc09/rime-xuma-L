@@ -138,6 +138,7 @@ def api_dict(params):
 
     entries = wishd.load_entries()
     hp = wishd.load_handpicked()
+    _hp_add, hp_drop = wishd.load_handpicked_parts()
     rows = []
     for w, c, wt, line, tag, sn in entries:
         if word and word not in w:
@@ -156,9 +157,11 @@ def api_dict(params):
             continue
         if src == 'tag' and not tag:
             continue
+        if src == 'drop' and w not in hp_drop:
+            continue
         if src == 'plain' and (tag or w in hp):
             continue
-        rows.append((w, c, wt, line, tag, sn, w in hp))
+        rows.append((w, c, wt, line, tag, sn, w in _hp_add, w in hp_drop))
 
     if sort == 'weight':
         rows.sort(key=lambda r: (-(int(r[2]) if r[2].isdigit() else -1), r[3]))
@@ -171,8 +174,8 @@ def api_dict(params):
     return {'total': total, 'page': page, 'size': size,
             'pages': max(1, (total + size - 1) // size),
             'rows': [{'w': w, 'code': c, 'wt': wt, 'line': line,
-                      'tag': tag, 'sec': sn, 'hp': ishp}
-                     for w, c, wt, line, tag, sn, ishp in rows[start:start + size]]}
+                      'tag': tag, 'sec': sn, 'hp': ishp, 'dropped': isdrop}
+                     for w, c, wt, line, tag, sn, ishp, isdrop in rows[start:start + size]]}
 
 
 def api_dict_stats():
@@ -185,6 +188,21 @@ def api_dict_stats():
     return {'total': len(entries), 'by_len': dict(sorted(by_len.items())),
             'by_code_len': dict(sorted(by_code_len.items())),
             'tagged': tagged, 'handpicked': sum(1 for e in entries if e[0] in hp)}
+
+
+def api_drop(payload):
+    words = payload.get('words') or []
+    reason = (payload.get('note') or '').strip()
+    r = wishd.drop_words(words, reason)
+    try:
+        from _ledger import note as _note
+        if r['dropped']:
+            _note('handpicked.txt', '棄用',
+                  '−' + '／'.join(r['dropped']) + '（Web UI 就地棄用）'
+                  + (f'｜{reason}' if reason else ''))
+    except Exception:
+        pass
+    return r
 
 
 def api_order(payload):
@@ -274,6 +292,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps(api_order(payload), ensure_ascii=False))
         if self.path == '/api/commit':
             return self._send(200, json.dumps(api_commit(payload), ensure_ascii=False))
+        if self.path == '/api/drop':
+            return self._send(200, json.dumps(api_drop(payload), ensure_ascii=False))
         if self.path == '/api/add':
             return self._send(200, json.dumps(wishd.add_words(payload.get('words') or []),
                                               ensure_ascii=False))
@@ -384,7 +404,8 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
          <option value="2">二字</option><option value="3">三字</option><option value="4">四字</option>
          <option value="other">五字以上</option></select>
        <select id="ds"><option value="">來源不限</option><option value="hp">手收</option>
-         <option value="tag">有標記</option><option value="plain">無標記且非手收</option></select>
+         <option value="tag">有標記</option><option value="plain">無標記且非手收</option>
+         <option value="drop">已標記棄用</option></select>
        <select id="dsec"><option value="">全部區段</option><option value="主體">主體</option>
          <option value="併入區">併入區</option></select>
        <select id="dso"><option value="line">按行號</option><option value="code">按編碼</option>
@@ -394,8 +415,8 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
      </div>
      <div class="scroll">
        <table><thead><tr><th style="width:26%">詞</th><th style="width:16%">編碼</th>
-         <th class="wt">頻分</th><th style="width:9%">字數</th><th style="width:10%">標記</th>
-         <th class="wt" style="width:9%">行號</th></tr></thead>
+         <th class="wt">頻分</th><th style="width:8%">字數</th><th style="width:14%">標記</th>
+         <th class="wt" style="width:8%">行號</th><th style="width:10%">操作</th></tr></thead>
          <tbody id="drows"></tbody></table>
      </div>
      <div class="bar" style="margin-top:10px">
@@ -541,13 +562,21 @@ function dictQuery(page){
     DPAGES=d.pages;
     $('#dpage').textContent=' 第 '+d.page+' / '+d.pages+' 頁，共 '+d.total.toLocaleString()+' 條 ';
     $('#drows').innerHTML=d.rows.length?d.rows.map(r=>
-      '<tr class="clickable" data-c="'+r.code+'"><td>'+esc(r.w)+'</td><td><code>'+esc(r.code)+'</code></td>'
+      '<tr class="clickable" data-c="'+esc(r.code)+'" data-w="'+esc(r.w)+'">'
+      +'<td>'+esc(r.w)+'</td><td><code>'+esc(r.code)+'</code></td>'
       +'<td class="wt">'+(r.wt||'—')+'</td><td>'+[...r.w].length+'</td>'
-      +'<td class="tag">'+(r.hp?'手收 ':'')+esc((r.tag||'').slice(0,18))+'</td>'
-      +'<td class="wt">'+r.line+'</td></tr>').join('')
-      :'<tr><td colspan="6" class="muted">無匹配</td></tr>';
-    [...$('#drows').children].forEach(tr=>{if(tr.dataset.c)
-      tr.onclick=()=>{tab('order');load(tr.dataset.c);};});
+      +'<td class="tag">'+(r.hp?'手收 ':'')+esc((r.tag||'').slice(0,16))
+        +(r.dropped?'<span class="err"> 已標記棄用</span>':'')+'</td>'
+      +'<td class="wt">'+r.line+'</td>'
+      +'<td>'+(r.dropped?'<span class="muted">待應用</span>'
+        :'<button class="dropbtn" data-w="'+esc(r.w)+'" style="padding:2px 8px;font-size:12px">棄用</button>')
+      +'</td></tr>').join('')
+      :'<tr><td colspan="7" class="muted">無匹配</td></tr>';
+    [...$('#drows').children].forEach(tr=>{
+      if(!tr.dataset.c)return;
+      tr.onclick=e=>{if(e.target.classList.contains('dropbtn'))return;tab('order');load(tr.dataset.c);};
+      const b=tr.querySelector('.dropbtn');
+      if(b)b.onclick=e=>{e.stopPropagation();dropOne(b.dataset.w,tr.dataset.c);};});
   });
 }
 ['#dgo'].forEach(s=>$(s).onclick=()=>dictQuery(1));
@@ -563,6 +592,19 @@ api('/api/dict/stats').then(s=>{
     '</b>｜二字 <b>'+(L['2']||0)+'</b>｜四字 <b>'+(L['4']||0)+'</b>｜手收 <b>'+s.handpicked+
     '</b>｜有標記 <b>'+s.tagged+'</b>';
 });
+
+/* ── 就地棄用 ── */
+function dropOne(w, code){
+  const msg='要棄用「'+w+'」嗎？\n\n'
+    +'• 從詞庫刪除（handpicked 寫 -詞）\n'
+    +'• 同時寫入 rejected，防止補詞階段從語料撈回來\n'
+    +'• 改動要按「應用」才生效；可 git checkout 撤銷';
+  if(!confirm(msg))return;
+  api('/api/drop',{method:'POST',body:JSON.stringify({words:[w]})}).then(d=>{
+    if(d.skipped&&d.skipped.length){alert('未處理：'+d.skipped.map(s=>s.w+'（'+s.why+'）').join('；'));return;}
+    refreshPending();dictQuery(DPAGE);
+  });
+}
 
 /* ── 待應用 ── */
 function refreshPending(){
