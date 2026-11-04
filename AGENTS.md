@@ -61,15 +61,46 @@
 - 詞表每次改動後必須產出複覈報告：
   `python3 lua/codelllc09/tools/diff_report.py <舊提交> HEAD` → `tmp/詞表改動-*.md` 供用戶逐條過目，
   用戶指出誤改即回滾調整——改動可見性優先於效率；
-- **留痕規定**：凡被 gitignore 的數據承載文件，改動同時必須在
-  `dict_pipeline/log/IGNORED_CHANGES.log`（append-only 台賬）記一行
-  `ISO時間	路徑	動作	說明`——git 之外的第二歷史手段。
-  已接駁：diff_report.py（tmp/ 報告）、build_sources.py（語料區）、
-  handpick_commit.sh（入庫事件一行索引；全量明細由調用方 add_word_proc.lua
-  重定向至 add_commit.log——明細與台賬兩級，非重複）；
-  手改 corpus/cache 等場景由 agent 手工補記。純派生緩存（cache/）免記。
-- 個人數據不入庫：`userdb/`、`/sync/`、`spool`、`log/`、`default.custom.yaml` 等；
+- **留痕規定**（2026-11-05 加固改寫）：凡被 gitignore 的數據承載文件，改動必須留痕——
+  git 之外的第二歷史手段。**唯一寫入口是 `tools/_ledger.py`**，勿自拼字串：
+  - `note(path, 動作, 說明)`：必寫 `log/events.jsonl`（機讀）；目標在忽略區時
+    **另**寫 `log/IGNORED_CHANGES.log`（人讀 TSV，四欄 `ISO時間	路徑	動作	說明`）。
+    已入庫文件只進 JSONL（git 即歷史），不稀釋人讀台賬；
+  - `note_if_changed(...)`：僅字節真變動時留痕，防每次運行刷屏；
+  - shell／手工補記走 `python3 tools/_ledger.py <路徑> <動作> <說明>`。
+  - **兩檔皆入庫**：台賬若也不在 git，二重歷史與 git 同歸於盡（此前的邏輯漏洞）。
+  - 已接駁：diff_report（tmp 報告）、build_sources（語料區）、handpick_commit
+    （入庫事件＋**部署事件含引擎錯誤計數**）、transcribe_review（轉抄判定）、
+    gen_freq_dict（xuma.addon.dict.yaml）。
+  - 免記：純派生緩存 `cache/`（管道重算即得）。
+  - **機械強制**：`check_consistency.py` ⑥ 留痕靜態電池——凡寫盤腳本必須有
+    `_ledger` 調用，或在電池的 `WRITER_EXEMPT` 中聲明理由；未聲明者即敗。
+    新增寫盤點時，二者必居其一（這是「所有需要有日誌的行爲都有日誌」的執行機制）。
+- **溯源規定**（2026-11-05 新增）：生成物與其生成器、輸入指紋的對應關係記於
+  `tools/PROVENANCE.json`（由 `tools/_provenance.py` 維護）。三個生成器運行時
+  自動刷新；新增生成物須在 `_provenance.SPEC` 聲明輸入 glob。
+  `check_consistency.py` ⑦ 溯源電池比對輸入指紋——輸入漂移而產物未重生成即敗。
+- 個人數據不入庫：`userdb/`、`/sync/`、`spool`、`add_debug.log`（含上屏原始字符＝擊鍵痕跡）、
+  `default.custom.yaml` 等；`log/` 現已部分入庫（台賬與管道明細，見留痕規定）——
+  該目錄整體仍忽略，僅四件白名單放行；
 - YAML 縮進敏感：改嵌套層級內容後逐字覈對縮進（2026-11-04 punct 縮進事故教訓）。
+
+## 防災（2026-11-05 成文，事故當日）
+
+事故教訓：git 只管 12M／99 件，其餘 290M（72M 字表原件、台賬、審計報告）當時
+**只有這一塊盤一份**。恢復能成，靠本地日誌與提交記錄互相印證——而日誌本身並無備份。
+
+- **不可再生集**（丟了就是真丟）：`std_tables/download/`（一次性考據原件）、
+  `dict_pipeline/log/`（台賬與明細）、`tmp/`（對賬報告與答辯）；
+- **可重建集**：`corpus/sources/`（`BUILD.md` 釘版＋`SHA256SUMS`，淨室實測 29/29）、
+  `cache/`（管道重算）、詞典與 lua 生成物（入庫，git 即歷史）；
+- **快照**：`tools/backup.sh create` → `~/Backups/rime/rime-snapshot-*.tar.gz`
+  （bundle 全史＋不可再生集＋逐件 sha256 ＋ `RESTORE.md`；默認約 29M，滾動保留 14 代）。
+  **只含已提交狀態**——未提交改動不在快照內，故備份前先 commit；
+- **異地**：另一臺設備是唯一異地點，快照檔須人工拷過去（放與本機不同的一塊盤）；
+- **演練**：`tools/backup.sh drill`＝造快照→還原到臨時目錄→復跑十項門禁。
+  演練未過即快照不足恃，須修復後重演。建議每月或每次改動管道後跑一次；
+- `backup.sh verify|restore|list` 供校驗與還原；還原步驟亦隨快照附 `RESTORE.md`。
 
 ## 只讀第三方審查（變更季後例行，2026-11-05 成文）
 

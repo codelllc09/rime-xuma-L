@@ -19,3 +19,5 @@
 {"ts": "2026-11-05T06:27:45", "actor": "cli", "action": "快照", "path": "/tmp/tmp.cHqwTO2TwV/rime-snapshot-20261105-062740.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
 {"ts": "2026-11-05T06:28:09", "actor": "cli", "action": "快照", "path": "/tmp/tmp.qcEKDVO6TJ/rime-snapshot-20261105-062804.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
 {"ts": "2026-11-05T06:28:36", "actor": "cli", "action": "快照", "path": "/tmp/tmp.TLQ59VhnUN/rime-snapshot-20261105-062831.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
+{"ts": "2026-11-05T06:28:58", "actor": "cli", "action": "快照", "path": "/tmp/tmp.OvcKpMup7W/rime-snapshot-20261105-062852.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
+{"ts": "2026-11-05T06:29:00", "actor": "cli", "action": "演練", "path": "drill", "detail": "快照 rime-snapshot-20261105-062852.tar.gz 還原並復跑門禁：通過", "tracked": true}
