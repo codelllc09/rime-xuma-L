@@ -85,6 +85,7 @@
   台賬衛生＋全電池十項，⑦溯源可抓「改了 rulings／語料卻沒重跑管道」這類最常見的漏步驟。
   新克隆需一次性執行 `git config core.hooksPath lua/codelllc09/tools/hooks`。
   確需跳過用 `git commit --no-verify`，並在提交信息說明理由；**靜默跳過即違紀**。
+  `post-commit` 負責把每個提交追加進本地裸鏡像（見「歷史改寫防護」）。
 - **CI**（2026-11-05 新增）：`.github/workflows/gate.yml` 在 push/PR 上跑全電池十項、
   Python 語法、提交身份白名單、敏感路徑掃描。語料不在 git，故 ③corpus／⑤tendency
   在 CI 必 SKIP——這是設計而非缺陷；需活庫語料的檢查由本機鉤子與 `backup.sh drill` 承擔。
@@ -111,6 +112,44 @@
 - **演練**：`tools/backup.sh drill`＝造快照→還原到臨時目錄→復跑十項門禁。
   演練未過即快照不足恃，須修復後重演。建議每月或每次改動管道後跑一次；
 - `backup.sh verify|restore|list` 供校驗與還原；還原步驟亦隨快照附 `RESTORE.md`。
+
+## 歷史改寫防護（2026-11-05 事故後成文）
+
+**事故原型**（2026-11-05 20:32，本倉庫真事）：清洗隱私時用生成式清單餵 filter-repo——
+
+```sh
+ALLP=$(git log --all --name-only --format= | sort -u | grep -E '...')   # ← 當時返回空
+git filter-repo --invert-paths --paths-from-file <(echo "$ALLP" | sed 's/^/literal:/')
+```
+
+空清單 → process substitution 產出**一行 `literal:`** → 空路徑匹配一切，配 `--invert-paths`
+即把全部歷史與工作樹副本刪光。**根因不是 filter-repo，是「程序生成的輸入沒有先驗非空」。**
+
+三層防線（按可靠性排序）：
+
+1. **本地裸鏡像**——`backup.sh mirror-init`，之後 `post-commit` 鉤子自動把每個提交推成
+   鏡像裏一個**新** ref `refs/snapshots/<時間>-<sha8>`，只增不刪。工作區倉庫裏的一切
+   改寫都碰不到另一個目錄的裸庫，**這是唯一不依賴自律的一層**。
+   絕不用 `push --mirror`（會連鏡像 ref 一起覆蓋，改寫清零後鏡像同步遭殃）。
+   ⚠ 鏡像與工作區同盤，只防誤操作、不防盤壞——異地仍靠拷快照到另一臺。
+   新克隆需一次性 `backup.sh mirror-init`；`check_consistency` ⑨ 電池檢查鏡像是否覆蓋 HEAD。
+2. **改寫守衛**——**禁止直接運行 `filter-repo`／`filter-branch`／`reset --hard`／
+   `gc --prune=now`／`branch -D` 等破壞性命令**，一律包一層：
+
+   ```sh
+   cd lua/codelllc09/tools
+   ./safe-rewrite.sh --note "爲什麼要改寫" -- <原命令...>
+   ```
+
+   它做五件事：工作區須潔淨（或 `--allow-dirty`）→ 鏡像須覆蓋 HEAD → 另打時間戳 bundle
+   → **校驗所有 `--paths-from-file` 參數**（空檔／空行／`literal:` 空模式／條目在歷史中
+   全不存在，四類一律拒絕）→ 事後提交數或跟蹤文件數歸零即判定災難並打印還原命令。
+3. **reflog 永不過期**——`gc.reflogExpire=never`、`gc.reflogExpireUnreachable=never`
+   （本倉庫已設）。對 `reset --hard` 這類「對象仍在、只是不可達」的誤操作有效；
+   對 filter-repo（改寫後自身會 gc）無效，故只是輔助層。
+
+**恢復路徑**：`backup.sh mirror-restore <空目錄>`（自鏡像）或 `git clone <pre-rewrite bundle>`
+（`~/Backups/rime/pre-rewrite/` 下由守衛自動生成）。
 
 ## 只讀第三方審查（變更季後例行，2026-11-05 成文）
 

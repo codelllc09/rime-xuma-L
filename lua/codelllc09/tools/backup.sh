@@ -278,7 +278,7 @@ cmd_drill() {
 mirror_path() { echo "${MIRROR:-$MIRROR_DEFAULT}"; }
 
 cmd_mirror_init() {
-  local dest="$MIRROR_DEFAULT"
+  local dest; dest="$(mirror_path)"     # 尊重 MIRROR 環境變量（沙箱演練與多倉共存需要）
   while [ $# -gt 0 ]; do case "$1" in --dest) dest="$2"; shift ;; esac; shift; done
   [ -d "$dest" ] && { echo "鏡像已存在：$dest"; return 0; }
   mkdir -p "$(dirname "$dest")"

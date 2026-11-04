@@ -18,6 +18,9 @@
   ⑦ 溯源電池：PROVENANCE.json 中每個產物的輸入指紋須與現狀一致（輸入漂移即敗，
      說明產物與輸入的對應關係已斷——要麼重跑生成器，要麼確認變更已入庫）
   ⑧ 台賬衛生：IGNORED_CHANGES.log 四欄完整／時間非降／與 events.jsonl 雙檔對賬
+  ⑨ 鏡像覆蓋：本地裸鏡像（backup.sh mirror-*）須含當前 HEAD——鏡像是歷史改寫類
+     事故（filter-repo／reset --hard／gc --prune=now）唯一不依賴自律的防線；
+     未建鏡像時 SKIP（淨室克隆／CI 屬正常）
   --determinism（默認關，僅管道邏輯改動後跑）：雙 PYTHONHASHSEED 復跑管道——
      兩次 stdout 與產出文件字節摘要皆須一致（seed 不變性即過）；產出相對已提交
      版本的漂移（隔日日期戳屬預期）僅告警不判敗，實質變化走詞表改動流程複覈後提交
@@ -233,6 +236,25 @@ def battery_ledger_health():
         item('⑧台賬衛生', True, f'TSV {len(rows)} 行／JSONL {len(js)} 行，格式與雙檔對賬通過')
 
 
+# ── ⑨ 鏡像覆蓋 ──────────────────────────────────────────────────
+def battery_mirror():
+    m = os.environ.get('RIME_MIRROR') or os.path.expanduser('~/Backups/rime/mirror.git')
+    if not os.path.isdir(m):
+        item('⑨鏡像', None, f'未建鏡像（{m}）——建議 backup.sh mirror-init')
+        return
+    head = run(['git', 'rev-parse', 'HEAD']).stdout.strip()
+    if not head:
+        item('⑨鏡像', None, '倉庫無提交，SKIP')
+        return
+    hit = run(['git', '-C', m, 'cat-file', '-e', f'{head}^{{commit}}']).returncode == 0
+    n = len([x for x in run(['git', '-C', m, 'for-each-ref', 'refs/snapshots']).stdout.splitlines() if x])
+    if hit:
+        item('⑨鏡像', True, f'HEAD {head[:9]} 在鏡像中；快照 ref {n} 個')
+    else:
+        item('⑨鏡像', False,
+             f'鏡像未覆蓋 HEAD {head[:9]}（快照 ref {n} 個）——立即 backup.sh mirror-sync')
+
+
 # ── ⑥ 確定性（--determinism，默認關）───────────────────────────
 def battery_determinism():
     outs_paths = ['xuma_L.dict.yaml',
@@ -283,6 +305,7 @@ def main():
     battery_ledger_static()
     battery_provenance()
     battery_ledger_health()
+    battery_mirror()
     if '--determinism' in sys.argv:
         battery_determinism()
     fails = [r for r in results if r[1] is False]
