@@ -1,0 +1,82 @@
+# 運行時與編譯產物
+/build/
+*.userdb/
+# 2026-11-04：userdb 同步导出快照（个人输入历史，不入公开库；
+# 若日后改用私有远端做版本化备份，删掉下一行即可）
+/sync/
+user.yaml
+installation.yaml
+tmp.md
+# 詞表改動複覈報告（diff_report.py 產出，個人複覈用，不入庫）
+tmp/
+*.save
+
+# 備份快照
+bak.*/
+
+# 大數據（語料與出典字表）
+lua/codelllc09/tools/std_tables/*
+# download/ 爲原始件暫存區（文本與影印大件，git 整體忽略）；
+# 收編流程：暫存區清洗 → 成果寫 std_tables 根目錄
+!lua/codelllc09/tools/std_tables/download/
+lua/codelllc09/tools/std_tables/download/**
+!lua/codelllc09/tools/std_tables/.gitkeep
+!lua/codelllc09/tools/std_tables/README.md
+!lua/codelllc09/tools/std_tables/SHA256SUMS
+!lua/codelllc09/tools/std_tables/official/
+lua/codelllc09/tools/std_tables/official/*
+!lua/codelllc09/tools/std_tables/official/*.txt
+!lua/codelllc09/tools/std_tables/classics/
+lua/codelllc09/tools/std_tables/classics/*
+!lua/codelllc09/tools/std_tables/classics/*.txt
+lua/codelllc09/tools/dict_pipeline/*
+!lua/codelllc09/tools/dict_pipeline/archive/
+lua/codelllc09/tools/dict_pipeline/archive/*
+!lua/codelllc09/tools/dict_pipeline/corpus/
+lua/codelllc09/tools/dict_pipeline/corpus/*
+!lua/codelllc09/tools/dict_pipeline/corpus/.gitkeep
+# 語料出處與復現途徑（2026-11-05 收編）
+!lua/codelllc09/tools/dict_pipeline/corpus/README.md
+!lua/codelllc09/tools/dict_pipeline/corpus/SHA256SUMS
+# sources/ 內僅跟蹤復現兩件（手冊+腳本），語料本體仍忽略
+!lua/codelllc09/tools/dict_pipeline/corpus/sources/
+lua/codelllc09/tools/dict_pipeline/corpus/sources/*
+!lua/codelllc09/tools/dict_pipeline/corpus/sources/BUILD.md
+!lua/codelllc09/tools/dict_pipeline/corpus/sources/build_sources.py
+!lua/codelllc09/tools/dict_pipeline/log/
+lua/codelllc09/tools/dict_pipeline/log/*
+!lua/codelllc09/tools/dict_pipeline/log/.gitkeep
+# 例外：規則補丁（方案運行必需）與審定積累（長期勿失）入庫
+!lua/codelllc09/tools/dict_pipeline/manual_overrides.txt
+# 裁定輸入 rulings/（人寫，管道讀：否決閘/定案跳過/放行清單/政策檔）——2026-11-05 分區
+!lua/codelllc09/tools/dict_pipeline/archive/rulings/
+lua/codelllc09/tools/dict_pipeline/archive/rulings/*
+# 審裁層說明（2026-11-05）
+!lua/codelllc09/tools/dict_pipeline/archive/README.md
+!lua/codelllc09/tools/dict_pipeline/archive/rulings/rejected.txt
+!lua/codelllc09/tools/dict_pipeline/archive/rulings/reviewed.txt
+!lua/codelllc09/tools/dict_pipeline/archive/rulings/reviewed_done.txt
+# 機讀字形傾向（check_tendency.py 校驗）
+!lua/codelllc09/tools/dict_pipeline/archive/rulings/用詞傾向.txt
+# 回歸基線（check_acceptance.py 校驗）
+!lua/codelllc09/tools/dict_pipeline/archive/rulings/驗收基準.txt
+# reports/（2026-11-05 收編）：TO_BE_REVIEWED 承載未轉抄批注須版本保護；
+# freq_report/addon_review 爲每輪運行快照，隨提交留審計
+!lua/codelllc09/tools/dict_pipeline/archive/reports/
+lua/codelllc09/tools/dict_pipeline/archive/reports/*
+!lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt
+!lua/codelllc09/tools/dict_pipeline/archive/reports/freq_report.md
+!lua/codelllc09/tools/dict_pipeline/archive/reports/addon_review.txt
+# 手收詞總表（詞庫再生種子）
+!lua/codelllc09/tools/dict_pipeline/handpicked.txt
+__pycache__/
+
+# 舊方案歸檔（純本機保留，不入庫）
+/legacy/*
+
+# 流水线生成物（审计表，可由 gen_freq_dict.py 重现）
+xuma.addon.dict.yaml
+
+# 本机个人配置（全局方案表/切键/独立朙月拼音定制），不入库
+default.custom.yaml
+luna_pinyin.custom.yaml
