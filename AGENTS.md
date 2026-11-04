@@ -97,6 +97,14 @@
   在 CI 必 SKIP——這是設計而非缺陷；需活庫語料的檢查由本機鉤子與 `backup.sh drill` 承擔。
 - **一次性設置**：`./lua/codelllc09/tools/setup.sh`——鉤子／reflog／鏡像都存在
   `.git/config`（不入庫），克隆後必須重跑；腳本化以免恢復時漏步。
+- **遠端分支保護**（2026-11-05）：GitHub `main` 已開保護——**禁強制推送、禁刪除，
+  `enforce_admins` 亦爲 true**（連擁有者也不能繞過）。這是本地鏡像之外的第二道
+  「防手滑」網，且它在雲端，本地全毀時仍生效。
+  實測：正常推送可通；`git push --force origin HEAD~1:main` 被拒
+  （`Cannot force-push to this branch` / `protected branch hook declined`）。
+  ⚠ 今後若真要重寫歷史並推上去，**必須先去 GitHub 設置裏臨時關閉保護**——
+  這一步「刻意摩擦」正是設計目的；關閉前先 `backup.sh create` 並跑 `drill`。
+  刪除保護屬同一保護對象，已配置（未單獨實測，避免真刪默認分支）。
 - **恢復卡**：`RECOVERY.md` 入庫——任何 clone（含從鏡像 clone 的）都帶着它。
   事故時倉庫內腳本可能已被刪光，該卡只列**純 git／系統命令**。
 - **里程碑 tag**：每次「事故重建完成／大規模改動季結束／門禁與演練雙綠」打一個附註 tag
@@ -123,7 +131,9 @@
 - **本地鏡像**：`backup.sh mirror-init` 另建裸庫，`post-commit` 自動追加只增不刪的快照 ref。
   它與工作區**同盤**，只防「命令毀庫」不防「盤壞」——兩者互補，缺一不可。
   見「歷史改寫防護」節；
-- **演練**：`tools/backup.sh drill`＝造快照→還原到臨時目錄→復跑十項門禁。
+- **演練**：`tools/backup.sh drill`＝造快照→校驗→還原到臨時目錄→復跑十二項門禁
+  →驗鏡像可 clone→**雙 seed 復跑管道驗確定性**（僅工作區潔淨時執行，跑完 checkout 還原；
+  全程約 30s）。
   演練未過即快照不足恃，須修復後重演。建議每月或每次改動管道後跑一次；
 - `backup.sh verify|restore|list` 供校驗與還原；還原步驟亦隨快照附 `RESTORE.md`。
 
