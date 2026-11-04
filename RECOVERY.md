@@ -3,6 +3,19 @@
 > 本檔案入庫，因此**任何 clone（含從鏡像 clone 出來的）都帶着它**。
 > 事故發生時，倉庫內的腳本可能已被刪光——下面的命令只用 `git` 與系統工具。
 
+## 情境 0：本機整台沒了 —— 先找異地副本
+
+異地副本在 **另一臺設備**（Windows，`yoga`）：`D:\Backups\rime\rime-snapshot-*.tar.gz`
+
+```sh
+# 從本機或任一臺能 ssh 過去的機器取回
+scp yoga:'D:/Backups/rime/rime-snapshot-*.tar.gz' /tmp/
+tar -xzf /tmp/rime-snapshot-*.tar.gz -C /tmp/snap
+# 之後走「情境 2」
+```
+
+（Windows 端 console 是 GBK，中文檔名會顯示成亂碼——**內容無損**，以 sha256 爲準。）
+
 ## 情境 1：歷史被改寫／倉庫被清空（filter-repo、reset --hard、gc --prune=now）
 
 ```sh

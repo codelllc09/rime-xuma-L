@@ -127,7 +127,16 @@
   （打包後自動校驗；目標盤餘量 <5G 告警；`--with-userdb` 另含個人學習庫，默認不含）
   （bundle 全史＋不可再生集＋逐件 sha256 ＋ `RESTORE.md`；默認約 29M，滾動保留 14 代）。
   **只含已提交狀態**——未提交改動不在快照內，故備份前先 commit；
-- **異地**：另一臺設備是唯一異地點，快照檔須人工拷過去（放與本機不同的一塊盤）；
+- **異地**：另一臺設備是唯一異地點。已配好一條命令：
+
+  ```sh
+  cd lua/codelllc09/tools
+  ./backup.sh offsite --fresh        # → yoga:D:/Backups/rime，自帶遠端雜湊校驗
+  ```
+
+  默認目標 `yoga:D:/Backups/rime`（可在參數裏覆蓋為 `host:目錄`）；
+  兼容 Unix `sha256sum` 與 Windows `Get-FileHash` 兩種遠端。
+  **每次大改之後、長期不動之前各跑一次**——這是唯一擋得住「盤壞／整機丟」的一層。
 - **本地鏡像**：`backup.sh mirror-init` 另建裸庫，`post-commit` 自動追加只增不刪的快照 ref。
   它與工作區**同盤**，只防「命令毀庫」不防「盤壞」——兩者互補，缺一不可。
   見「歷史改寫防護」節；
