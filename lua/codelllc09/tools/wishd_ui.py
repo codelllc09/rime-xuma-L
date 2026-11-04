@@ -16,6 +16,7 @@
      提交時還要明文 `APPLY`；指紋變了（待辦內容被改動）token 即失效——防 TOCTOU。
      前端亦要求手打 APPLY，不是點一下 yes。
 """
+import io
 import json
 import os
 import secrets
@@ -109,6 +110,25 @@ def api_search(q):
     hits = [(w, sorted(c)) for w, c in wc.items() if q and q in w]
     hits.sort(key=lambda x: (len(x[0]), x[0]))
     return {'hits': [{'w': w, 'codes': c} for w, c in hits[:60]], 'total': len(hits)}
+
+
+def api_recent(n=12):
+    """最近動態：讀台賬尾部。比「可疑組」有用——那裏 89.7% 是上游帶來的零權重符號。"""
+    import json as _j
+    p = os.path.join(HERE, 'dict_pipeline', 'log', 'events.jsonl')
+    out = []
+    if os.path.exists(p):
+        lines = io.open(p, encoding='utf-8').read().splitlines()[-200:]
+        for ln in reversed(lines):
+            try:
+                r = _j.loads(ln)
+            except Exception:
+                continue
+            out.append({'ts': r.get('ts', ''), 'action': r.get('action', ''),
+                        'path': r.get('path', ''), 'detail': (r.get('detail') or '')[:80]})
+            if len(out) >= n:
+                break
+    return {'rows': out}
 
 
 def api_suspicious():
@@ -331,8 +351,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps(api_group(q.get('code', [''])[0]), ensure_ascii=False))
         if u.path == '/api/search':
             return self._send(200, json.dumps(api_search(q.get('q', [''])[0]), ensure_ascii=False))
-        if u.path == '/api/suspicious':
-            return self._send(200, json.dumps(api_suspicious(), ensure_ascii=False))
+        if u.path == '/api/recent':
+            return self._send(200, json.dumps(api_recent(), ensure_ascii=False))
         if u.path == '/api/job':
             with JOB_LOCK:
                 return self._send(200, json.dumps(dict(JOB), ensure_ascii=False))
@@ -521,8 +541,8 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
      <pre id="out" style="margin:0">—</pre>
    </div>
    <div class="card">
-     <h3>可疑組（同分並列＝可能是異體重複）</h3>
-     <div id="susp" class="muted">載入中…</div>
+     <h3>最近動態（台賬）</h3>
+     <div id="recent" class="muted">載入中…</div>
    </div>
  </aside>
 </main>
@@ -733,12 +753,17 @@ $('#dlgok').onclick=()=>{
    });
 };
 
-api('/api/suspicious').then(d=>{
-  $('#susp').innerHTML=d.rows.length?d.rows.map(r=>
-    '<div style="cursor:pointer" onclick="load(\''+r.code+'\')"><code>'+r.code+'</code> '
-    +esc(r.words.join(' / '))+' <span class="muted">='+r.wt+'</span></div>').join(''):'（無）';
-});
-refreshPending();
+function loadRecent(){
+  api('/api/recent').then(d=>{
+    $('#recent').innerHTML=d.rows.length?d.rows.map(r=>
+      '<div style="font-size:12px;line-height:1.5"><span class="muted">'
+      +esc((r.ts||'').slice(5,16).replace('T',' '))+'</span> '
+      +'<b>'+esc(r.action)+'</b> <code style="font-size:11px">'+esc(r.path)+'</code>'
+      +'<div class="muted" style="padding-left:4px">'+esc(r.detail)+'</div></div>').join('')
+      :'<span class="muted">（無記錄）</span>';
+  });
+}
+refreshPending();loadRecent();
 </script></html>"""
 
 
