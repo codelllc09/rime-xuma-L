@@ -85,13 +85,14 @@ files = []
 i = 0
 while i < len(argv):
     a = argv[i]
-    if a in ('--paths-from-file', '--paths'):
+    if a in ('--paths-from-file', '--paths', '--replace-text', '--replace-message'):
         if i + 1 < len(argv):
             files.append((a, argv[i + 1]))
         i += 2
         continue
-    if a.startswith('--paths-from-file=') or a.startswith('--paths='):
-        files.append((a.split('=', 1)[0], a.split('=', 1)[1]))
+    for fl in ('--paths-from-file', '--paths', '--replace-text', '--replace-message'):
+        if a.startswith(fl + '='):
+            files.append((fl, a.split('=', 1)[1])); break
     i += 1
 
 if not files:
@@ -110,6 +111,15 @@ for flag, path in files:
     if not entries:
         print(f'  ✗ {path}：**空清單**——這正是 2026-11-05 刪庫事故的形狀，拒絕執行')
         fatal = True; continue
+    # --replace-text／--replace-message：每行須是 `舊==>新`。缺 `==>` 的行會被當作
+    # 「整行字面量替換爲空」——靜默改壞內容，且不會有任何報錯。
+    if flag in ('--replace-text', '--replace-message'):
+        bad = [e for e in entries if '==>' not in e]
+        if bad:
+            print(f'  ✗ {path}：{len(bad)} 行缺 `==>` 分隔（會被當作字面量替換爲空）：{bad[:3]}')
+            fatal = True; continue
+        print(f'  ✓ {path}：{len(entries)} 條替換規則')
+        continue
     # `literal:` / `glob:` / `regex:` 後爲空 → 空模式匹配一切
     hollow = [e for e in entries if e in ('literal:', 'glob:', 'regex:')
               or (e.split(':', 1)[0] in ('literal', 'glob', 'regex') and not e.split(':', 1)[1].strip())]
