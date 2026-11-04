@@ -76,6 +76,7 @@ def run_apply(no_deploy=False):
                 JOB['log'] += str(s) + '\n'
         try:
             rc = wishd.do_apply(['--no-deploy'] if no_deploy else [], log=log)
+            wishd.invalidate()
             with JOB_LOCK:
                 JOB['state'] = 'done' if rc == 0 else 'failed'
                 JOB['elapsed'] = round(time.time() - t0, 1)
@@ -115,6 +116,75 @@ def api_suspicious():
     hp = wishd.load_handpicked()
     rows = wishd.suspicious(groups, hp, limit=80)
     return {'rows': [{'code': c, 'kind': k, 'wt': wt, 'words': ws} for c, k, ws, wt in rows]}
+
+
+def api_dict(params):
+    """字典瀏覽：篩選 + 排序 + 分頁。19.6 萬條，服務端分頁（前端只拿一頁）。"""
+    g = lambda k, d='': (params.get(k, [d])[0] if isinstance(params.get(k), list) else params.get(k, d)) or d
+    word = g('word')
+    code = g('code').lower()
+    ln = g('len')
+    src = g('src')
+    sec = g('sec')
+    sort = g('sort', 'line')
+    try:
+        page = max(1, int(g('page', '1')))
+    except ValueError:
+        page = 1
+    try:
+        size = min(300, max(20, int(g('size', '100'))))
+    except ValueError:
+        size = 100
+
+    entries = wishd.load_entries()
+    hp = wishd.load_handpicked()
+    rows = []
+    for w, c, wt, line, tag, sn in entries:
+        if word and word not in w:
+            continue
+        if code and not c.lower().startswith(code):
+            continue
+        if ln:
+            if ln == 'other':
+                if len(w) <= 4:
+                    continue
+            elif len(w) != int(ln):
+                continue
+        if sec and sn != sec:
+            continue
+        if src == 'hp' and w not in hp:
+            continue
+        if src == 'tag' and not tag:
+            continue
+        if src == 'plain' and (tag or w in hp):
+            continue
+        rows.append((w, c, wt, line, tag, sn, w in hp))
+
+    if sort == 'weight':
+        rows.sort(key=lambda r: (-(int(r[2]) if r[2].isdigit() else -1), r[3]))
+    elif sort == 'code':
+        rows.sort(key=lambda r: (r[1], r[3]))
+    elif sort == 'word':
+        rows.sort(key=lambda r: (r[0], r[3]))
+    total = len(rows)
+    start = (page - 1) * size
+    return {'total': total, 'page': page, 'size': size,
+            'pages': max(1, (total + size - 1) // size),
+            'rows': [{'w': w, 'code': c, 'wt': wt, 'line': line,
+                      'tag': tag, 'sec': sn, 'hp': ishp}
+                     for w, c, wt, line, tag, sn, ishp in rows[start:start + size]]}
+
+
+def api_dict_stats():
+    import collections
+    entries = wishd.load_entries()
+    by_len = collections.Counter(len(w) for w, *r in entries)
+    by_code_len = collections.Counter(len(c) for _, c, *r in entries)
+    tagged = sum(1 for e in entries if e[4])
+    hp = wishd.load_handpicked()
+    return {'total': len(entries), 'by_len': dict(sorted(by_len.items())),
+            'by_code_len': dict(sorted(by_code_len.items())),
+            'tagged': tagged, 'handpicked': sum(1 for e in entries if e[0] in hp)}
 
 
 def api_order(payload):
@@ -176,6 +246,10 @@ class Handler(BaseHTTPRequestHandler):
         if u.path == '/api/job':
             with JOB_LOCK:
                 return self._send(200, json.dumps(dict(JOB), ensure_ascii=False))
+        if u.path == '/api/dict':
+            return self._send(200, json.dumps(api_dict(q), ensure_ascii=False))
+        if u.path == '/api/dict/stats':
+            return self._send(200, json.dumps(api_dict_stats(), ensure_ascii=False))
         if u.path == '/api/pending':
             return self._send(200, json.dumps(wishd.pending(), ensure_ascii=False))
         return self._send(404, json.dumps({'error': 'not found'}))
@@ -229,40 +303,56 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
  body{font:14px/1.6 -apple-system,"Noto Sans CJK TC",sans-serif;margin:0;background:#f6f7f9;color:#222}
  header{background:#263238;color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center}
  header input{font:inherit;padding:5px 10px;border:0;border-radius:4px;width:280px}
+ nav{display:flex;gap:4px;background:#eceff1;padding:0 16px}
+ nav button{border:0;background:transparent;padding:9px 18px;cursor:pointer;font:inherit;border-bottom:3px solid transparent}
+ nav button.on{border-bottom-color:#1565c0;color:#1565c0;font-weight:600;background:#fff}
  main{display:grid;grid-template-columns:1fr 400px;gap:16px;padding:16px}
+ section.hide,aside.hide{display:none}
+ main.dictmode{grid-template-columns:1fr}
  .card{background:#fff;border:1px solid #e3e6ea;border-radius:8px;padding:14px;margin-bottom:16px}
  h3{margin:0 0 10px;font-size:14px;color:#37474f}
  table{width:100%;border-collapse:collapse}
  td,th{padding:5px 8px;border-bottom:1px solid #eee;text-align:left;font-size:13px}
+ th{background:#fafbfc;position:sticky;top:0;z-index:1}
  tr.drag{opacity:.35} tr.over{outline:2px dashed #1565c0}
+ tr.clickable{cursor:pointer} tr.clickable:hover{background:#f1f8ff}
  .w{cursor:grab;user-select:none}
  .wt{color:#888;font-variant-numeric:tabular-nums;text-align:right}
  .tag{color:#00695c;font-size:12px} .hp{background:#e8f5e9}
+ code{background:#eceff1;padding:1px 5px;border-radius:4px;font-size:12px}
  button{font:inherit;padding:6px 12px;border:1px solid #cfd8dc;background:#fff;border-radius:6px;cursor:pointer}
  button.primary{background:#1565c0;color:#fff;border-color:#1565c0}
  button.danger{background:#c62828;color:#fff;border-color:#c62828}
  button:disabled{opacity:.5;cursor:not-allowed}
  pre{background:#263238;color:#b2ff59;padding:10px;border-radius:6px;overflow:auto;max-height:260px;font-size:12px}
- textarea{font:inherit;width:100%;box-sizing:border-box;padding:6px;border:1px solid #cfd8dc;border-radius:6px;resize:vertical}
+ textarea,input[type=text]{font:inherit;padding:6px 8px;border:1px solid #cfd8dc;border-radius:6px;box-sizing:border-box}
+ textarea{width:100%;resize:vertical}
  .warn{color:#b26a00} .err{color:#c62828} .ok{color:#2e7d32} .muted{color:#90a4ae}
  .bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
  .spool{display:flex;flex-wrap:wrap;gap:6px}
  .chip{background:#e3f2fd;border-radius:12px;padding:2px 10px;font-size:13px}
+ .scroll{max-height:70vh;overflow:auto;border:1px solid #eee;border-radius:6px}
  dialog{border:0;border-radius:10px;padding:0;max-width:520px;width:92vw;box-shadow:0 12px 40px rgba(0,0,0,.3)}
  dialog::backdrop{background:rgba(0,0,0,.45)}
  .dlg-h{background:#c62828;color:#fff;padding:12px 16px;font-weight:600}
  .dlg-b{padding:16px} .dlg-f{padding:0 16px 16px;display:flex;gap:8px;justify-content:flex-end}
  dialog input{font:inherit;padding:8px;border:1px solid #cfd8dc;border-radius:6px;width:100%;box-sizing:border-box}
  ul{margin:6px 0;padding-left:20px}
+ .stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#546e7a}
+ .stats b{color:#263238}
 </style>
 <header>
   <strong>詞庫意願台</strong>
-  <input id="q" placeholder="輸入碼（如 oooo）或詞（如 合適）…" autofocus>
+  <input id="q" placeholder="碼（oooo）或詞（合適）…" autofocus>
   <button id="go" class="primary">查</button>
-  <span class="muted" style="margin-left:auto">只寫意願通道，永不直接改詞典</span>
+  <span id="hint" class="muted" style="margin-left:auto">只寫意願通道，永不直接改詞典</span>
 </header>
-<main>
- <section>
+<nav>
+  <button id="tab-order" class="on">調序 / 加詞</button>
+  <button id="tab-dict">字典</button>
+</nav>
+<main id="main">
+ <section id="pane-order">
    <div class="card">
      <h3 id="gtitle">同碼組</h3>
      <div class="bar">
@@ -283,7 +373,43 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
      </div>
    </div>
  </section>
- <aside>
+
+ <section id="pane-dict" class="hide">
+   <div class="card">
+     <h3>字典（十九萬六千條，服務端分頁）</h3>
+     <div class="bar">
+       <input id="dw" type="text" placeholder="詞含…" style="width:170px">
+       <input id="dc" type="text" placeholder="碼前綴…" style="width:120px">
+       <select id="dl"><option value="">字數不限</option><option value="1">單字</option>
+         <option value="2">二字</option><option value="3">三字</option><option value="4">四字</option>
+         <option value="other">五字以上</option></select>
+       <select id="ds"><option value="">來源不限</option><option value="hp">手收</option>
+         <option value="tag">有標記</option><option value="plain">無標記且非手收</option></select>
+       <select id="dsec"><option value="">全部區段</option><option value="主體">主體</option>
+         <option value="併入區">併入區</option></select>
+       <select id="dso"><option value="line">按行號</option><option value="code">按編碼</option>
+         <option value="weight">按頻分</option><option value="word">按詞形</option></select>
+       <button id="dgo" class="primary">查詢</button>
+       <span id="dstats" class="stats"></span>
+     </div>
+     <div class="scroll">
+       <table><thead><tr><th style="width:26%">詞</th><th style="width:16%">編碼</th>
+         <th class="wt">頻分</th><th style="width:9%">字數</th><th style="width:10%">標記</th>
+         <th class="wt" style="width:9%">行號</th></tr></thead>
+         <tbody id="drows"></tbody></table>
+     </div>
+     <div class="bar" style="margin-top:10px">
+       <button id="dfirst">« 首頁</button>
+       <button id="dprev">‹ 上頁</button>
+       <span id="dpage" class="muted"></span>
+       <button id="dnext">下頁 ›</button>
+       <button id="dlast">末頁 »</button>
+       <span class="muted">點一行可跳到「調序」看該碼組</span>
+     </div>
+   </div>
+ </section>
+
+ <aside id="pane-side">
    <div class="card">
      <h3>待應用</h3>
      <div id="pend" class="muted">載入中…</div>
@@ -319,14 +445,30 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
 
 <script>
 let CODE='', SEQ=[], DRAG=null, TOKEN=null;
+let DPAGE=1, DPAGES=1;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-
 function api(path,opt){opt=opt||{};opt.headers=Object.assign({'X-Wishd':'1'},opt.headers||{});
   return fetch(path,opt).then(r=>r.json());}
 function say(t,cls){$('#msg').textContent=t;$('#msg').className=cls||'muted';}
 function show(o){$('#out').textContent=typeof o==='string'?o:JSON.stringify(o,null,1);}
 
+/* ── 分頁籤 ── */
+function tab(which){
+  const order=which==='order';
+  $('#tab-order').classList.toggle('on',order);
+  $('#tab-dict').classList.toggle('on',!order);
+  $('#pane-order').classList.toggle('hide',!order);
+  $('#pane-dict').classList.toggle('hide',order);
+  $('#pane-side').classList.toggle('hide',!order);
+  $('#main').classList.toggle('dictmode',!order);
+  $('#hint').textContent=order?'只寫意願通道，永不直接改詞典':'唯讀視圖：字典瀏覽不會改動任何東西';
+  if(!order&&!$('#drows').children.length)dictQuery(1);
+}
+$('#tab-order').onclick=()=>tab('order');
+$('#tab-dict').onclick=()=>tab('dict');
+
+/* ── 同碼組 ── */
 function renderGroup(d){
   CODE=d.code;
   $('#gtitle').textContent=d.exists?('碼組 '+d.code+'（'+d.members.length+' 詞）'):('碼組 '+d.code+' 不存在');
@@ -361,7 +503,9 @@ function load(key){
     } else say('查不到：'+key,'err');
   });
 }
-$('#go').onclick=()=>load($('#q').value.trim());
+$('#go').onclick=()=>{const k=$('#q').value.trim();
+  if($('#tab-dict').classList.contains('on')){$('#dw').value=k;$('#dc').value='';dictQuery(1);}
+  else{tab('order');load(k);}};
 $('#q').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click();});
 
 $('#prev').onclick=()=>{reorder();
@@ -387,6 +531,40 @@ $('#addbtn').onclick=()=>{
     if(ok.length)$('#newword').value='';
     refreshPending();});};
 
+/* ── 字典 ── */
+function dictQuery(page){
+  DPAGE=page||1;
+  const p=new URLSearchParams({word:$('#dw').value.trim(),code:$('#dc').value.trim(),
+    len:$('#dl').value,src:$('#ds').value,sec:$('#dsec').value,sort:$('#dso').value,
+    page:DPAGE,size:100});
+  api('/api/dict?'+p).then(d=>{
+    DPAGES=d.pages;
+    $('#dpage').textContent=' 第 '+d.page+' / '+d.pages+' 頁，共 '+d.total.toLocaleString()+' 條 ';
+    $('#drows').innerHTML=d.rows.length?d.rows.map(r=>
+      '<tr class="clickable" data-c="'+r.code+'"><td>'+esc(r.w)+'</td><td><code>'+esc(r.code)+'</code></td>'
+      +'<td class="wt">'+(r.wt||'—')+'</td><td>'+[...r.w].length+'</td>'
+      +'<td class="tag">'+(r.hp?'手收 ':'')+esc((r.tag||'').slice(0,18))+'</td>'
+      +'<td class="wt">'+r.line+'</td></tr>').join('')
+      :'<tr><td colspan="6" class="muted">無匹配</td></tr>';
+    [...$('#drows').children].forEach(tr=>{if(tr.dataset.c)
+      tr.onclick=()=>{tab('order');load(tr.dataset.c);};});
+  });
+}
+['#dgo'].forEach(s=>$(s).onclick=()=>dictQuery(1));
+['#dw','#dc'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')dictQuery(1);}));
+['#dl','#ds','#dsec','#dso'].forEach(s=>$(s).onchange=()=>dictQuery(1));
+$('#dfirst').onclick=()=>dictQuery(1);
+$('#dprev').onclick=()=>dictQuery(Math.max(1,DPAGE-1));
+$('#dnext').onclick=()=>dictQuery(Math.min(DPAGES,DPAGE+1));
+$('#dlast').onclick=()=>dictQuery(DPAGES);
+api('/api/dict/stats').then(s=>{
+  const L=s.by_len;
+  $('#dstats').innerHTML='共 <b>'+s.total.toLocaleString()+'</b> 條｜單字 <b>'+(L['1']||0)+
+    '</b>｜二字 <b>'+(L['2']||0)+'</b>｜四字 <b>'+(L['4']||0)+'</b>｜手收 <b>'+s.handpicked+
+    '</b>｜有標記 <b>'+s.tagged+'</b>';
+});
+
+/* ── 待應用 ── */
 function refreshPending(){
   api('/api/pending').then(p=>{
     let h='<div>暫存詞 '+p.spool.length+'：</div>';
@@ -402,6 +580,7 @@ function refreshPending(){
   });
 }
 
+/* ── 應用：二次確認 ── */
 $('#apply').onclick=()=>{
   api('/api/apply-token',{method:'POST',body:'{}'}).then(t=>{
     TOKEN=t.token;
@@ -427,7 +606,7 @@ $('#dlgok').onclick=()=>{
        $('#out').textContent=j.log||'…';
        if(j.state!=='running'){clearInterval(tick);
          say(j.state==='done'?'完成':'失敗',j.state==='done'?'ok':'err');
-         refreshPending();if(CODE)load(CODE);}
+         refreshPending();if(CODE)load(CODE);if($('#drows').children.length)dictQuery(DPAGE);}
      }),900);
    });
 };

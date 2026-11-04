@@ -47,35 +47,60 @@ HAN2_4 = re.compile(r'^[\u3400-\u4dbf\u4e00-\u9fff]{2,4}$')
 
 
 # ── 讀取層 ──────────────────────────────────────────────────────
-def load_dict():
-    """返回 (groups, wordcodes)：groups[code] = [(word, weight, lineno, tag)]；
-    wordcodes[word] = {該詞出現過的全部碼}
+_CACHE = {'entries': None, 'mtime': None, 'groups': None, 'wc': None}
 
-    tag 取自該詞上方的 `# [..]` 註釋（手收/裁定等），僅作展示。
+
+def load_entries(refresh=False):
+    """解析詞典為 [(word, code, weight, lineno, tag, section)]，按 mtime 緩存。
+
+    19.6 萬條，每次請求重解析約 0.5s——務必走緩存。section 由併入區標記行切分。
     """
-    groups, words, _all = {}, {}, {}
+    mt = os.path.getmtime(DICT)
+    if not refresh and _CACHE['entries'] is not None and _CACHE['mtime'] == mt:
+        return _CACHE['entries']
+    entries = []
+    section = '主體'
+    tag = ''
     started = False
-    last_comment = ''
     for i, line in enumerate(io.open(DICT, encoding='utf-8'), 1):
         if not started:
             if line.rstrip('\n') == '...':
                 started = True
             continue
         if line.startswith('#'):
-            last_comment = line.strip()
+            if '併入區' in line:
+                section = '併入區'
+            m = re.match(r'#\s*\[([^\]]+)\]', line)
+            if m:
+                tag = m.group(1)
             continue
         if '\t' not in line:
             continue
         c = line.rstrip('\n').split('\t')
-        w, code = c[0], c[1] if len(c) > 1 else ''
+        w = c[0]
+        code = c[1] if len(c) > 1 else ''
         wt = c[2] if len(c) > 2 else ''
-        groups.setdefault(code, []).append((w, wt, i, last_comment))
-        last_comment = ''
-    # 一词可有多码（同一词形在不同码组各有一条）；判定同码必须用交集，不能用单值映射
-    for code, rows in groups.items():
-        for w, *_ in rows:
-            _all.setdefault(w, set()).add(code)
-    return groups, _all
+        entries.append((w, code, wt, i, tag, section))
+        tag = ''
+    _CACHE.update(entries=entries, mtime=mt, groups=None, wc=None)
+    return entries
+
+
+def load_dict():
+    """返回 (groups, wordcodes)：groups[code] = [(word, weight, lineno, tag)]；
+    wordcodes[word] = {該詞出現過的全部碼}（一詞多碼，判同碼必須用交集）"""
+    if _CACHE['groups'] is not None:
+        return _CACHE['groups'], _CACHE['wc']
+    groups, wc = {}, {}
+    for w, code, wt, ln, tag, _sec in load_entries():
+        groups.setdefault(code, []).append((w, wt, ln, tag))
+        wc.setdefault(w, set()).add(code)
+    _CACHE.update(groups=groups, wc=wc)
+    return groups, wc
+
+
+def invalidate():
+    _CACHE.update(entries=None, mtime=None, groups=None, wc=None)
 
 
 def load_handpicked():
