@@ -1,12 +1,7 @@
-# 隐私门禁白名单（2026-11-05）：只放行**已人工复核**的扫描命中。
+# 隐私门禁白名单（2026-11-05 历史重写后重建）：只放行**已人工复核**的命中。
 # 格式：kind<TAB>路径子串<TAB>match 的 sha256 前12位<TAB>理由
 # 不写明文 token——加一条即一次显式、可在 git diff 里看到的决定。
-home_path	lua/codelllc09/tools/dict_pipeline/log/add_commit.log	ddb98bf73f5a	历史：管道曾打印绝对路径（已改相对，旧 blob 仍在史）
-home_path	lua/codelllc09/tools/dict_pipeline/log/events.jsonl	ddb98bf73f5a	历史：台账曾记快照绝对路径（已加脱敏，旧 blob 仍在史）
-identity	.github/workflows/gate.yml	11592b856ec2	历史：旧版 CI 用黑名单把 token 写进了文件（已改白名单，旧 blob 仍在史）
-identity	.github/workflows/gate.yml	b134ce47a896	历史：旧版 CI 用黑名单把 token 写进了文件（已改白名单，旧 blob 仍在史）
-identity	lua/codelllc09/tools/dict_pipeline/log/add_commit.log	11592b856ec2	历史：管道曾打印绝对路径（已改相对，旧 blob 仍在史）
-identity	lua/codelllc09/tools/dict_pipeline/log/events.jsonl	11592b856ec2	历史：台账曾记快照绝对路径（已加脱敏，旧 blob 仍在史）
-identity	lua/codelllc09/tools/std_tables/official/cn_tongyongguifan_wikisource_raw.txt	b134ce47a896	公共字表数值巧合
-identity	xuma_L.dict.yaml	11592b856ec2	用户裁定：词典编码列/权重列的数据值，非身份串；每次 push 人工复核
-identity	xuma_L.dict.yaml	b134ce47a896	用户裁定：词典编码列/权重列的数据值，非身份串；每次 push 人工复核
+# 重写前有 9 条（多数是历史 blob 残留），重写后仅剩词典与公共字表的数值巧合。
+identity	lua/codelllc09/tools/std_tables/official/cn_tongyongguifan_wikisource_raw.txt	b134ce47a896	人工复核放行
+identity	xuma_L.dict.yaml	11592b856ec2	用户裁定：词典编码列（字母码）/权重列（频次数值）的数据值，非身份串；每次 push 人工复核
+identity	xuma_L.dict.yaml	b134ce47a896	用户裁定：词典编码列（字母码）/权重列（频次数值）的数据值，非身份串；每次 push 人工复核
