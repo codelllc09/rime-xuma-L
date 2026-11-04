@@ -203,6 +203,13 @@ git -C /tmp/recover log --oneline --all | head
 | `dict_pipeline/cache/` | 是（管道重算，熱跑約 10s／冷跑約 50s） |
 MD
 
+  # 恢復卡的**倉庫外副本**：RECOVERY.md 雖入庫，但倉庫沒了時你打不開它。
+  # 在快照旁放一份，並在 offsite 時一併投遞。
+  if [ -f "$ROOT/RECOVERY.md" ]; then
+    cp -f "$ROOT/RECOVERY.md" "$out/RECOVERY.md"
+    printf '    %s\n' "$out/RECOVERY.md"
+  fi
+
   c_g "⑤ 打包"
   tar -czf "$out/$name" -C "$tmp" repo.bundle ignored MANIFEST.json RESTORE.md battery.log
   chmod 600 "$out/$name"
@@ -280,6 +287,7 @@ cmd_restore() {
 
 # ── drill ─────────────────────────────────────────────────────────
 cmd_drill() {
+  local T0; T0=$(date +%s)
   c_g "災難演練：造快照 → 還原到臨時目錄 → 門禁復跑"
   local out; out="$(mktemp -d)"
   local work; work="$(mktemp -d)"
@@ -337,13 +345,16 @@ cmd_drill() {
                     || { echo "     ⚠ 還原後仍有 $left 處改動，請人工確認"; rc=1; }
   fi
 
+  local RTO=$(( $(date +%s) - T0 ))
+  echo "⑧ 恢復耗時（RTO）：${RTO}s"
   if [ "$rc" = 0 ]; then
-    c_g "⑤ 演練通過：快照可還原、鏡像可 clone，還原體門禁全綠"
+    c_g "⑤ 演練通過：快照可還原、鏡像可 clone，還原體門禁全綠（RTO ${RTO}s）"
   else
     c_y "⑤ 演練未通過（rc=$rc）——快照不足以重建可工作倉庫，須修復後重演"
     return 1
   fi
-  python3 "$TOOLS/_ledger.py" drill 演練 "快照 $(basename "$snap") 還原並復跑門禁：通過" >/dev/null
+  python3 "$TOOLS/_ledger.py" drill 演練 \
+    "快照 $(basename "$snap") 還原並復跑門禁：通過；RTO ${RTO}s" >/dev/null
 }
 
 # ── mirror：獨立裸鏡像 ────────────────────────────────────────────
@@ -381,8 +392,22 @@ cmd_mirror_sync() {
   # clone 默認只拷 refs/heads/*，不拷 snapshots——故兩者都要。
   # 必須繞過鉤子：本 push 會觸發 pre-push，而 pre-push 跑的電池⑨正是檢查
   # 「鏡像是否覆蓋 HEAD」——尚未同步時必敗，遂成死鎖（實測踩到）。
+  # 除 HEAD 外，還要保住三類容易漏掉的 ref（2026-11-05 補）：
+  #   refs/tags/*   —— 里程碑「已知良好點」，出事後最想要的東西；此前完全沒進鏡像
+  #   refs/notes/*  —— 提交註記
+  #   refs/stash    —— 未提交的暫存工作（最容易丟的一類）
+  local extra=()
+  local r
+  while IFS= read -r r; do
+    [ -n "$r" ] && extra+=("+$r:$r")
+  done < <(git -C "$ROOT" for-each-ref --format='%(refname)' refs/tags refs/notes 2>/dev/null)
+  # refs/stash 是 "funny ref"，远端拒收——改存 refs/archive/stash-<ts>，只增不覆盖
+  if git -C "$ROOT" for-each-ref refs/stash 2>/dev/null | grep -q .; then
+    extra+=("+refs/stash:refs/archive/stash-$(date '+%Y%m%d-%H%M%S')")
+  fi
+
   git -C "$ROOT" -c core.hooksPath=/dev/null push --quiet --force "$m" \
-      "HEAD:refs/heads/main" "HEAD:$ref" 2>/dev/null || {
+      "HEAD:refs/heads/main" "HEAD:$ref" ${extra[@]+"${extra[@]}"} 2>/dev/null || {
     echo "⚠ 鏡像同步失敗（$m）" >&2; return 0; }   # 失敗也不阻塞提交
   # 自愈：老鏡像的 HEAD 可能還指着 refs/heads/master（默認初始化值），
   # 那樣 `git clone 鏡像` 會得到空工作樹（實測踩過）。每次同步都糾正一次。
@@ -475,6 +500,10 @@ cmd_offsite() {
       2>/dev/null || true
   timeout 900 scp -q "$snap" "$host:$rdir/" || die "scp 失敗"
   echo "   $(du -h "$snap" | cut -f1)"
+
+  # 恢復卡也送一份：倉庫與快照都在的情況下它多餘，但「只剩這台機」時它是全部。
+  [ -f "$ROOT/RECOVERY.md" ] && timeout 120 scp -q "$ROOT/RECOVERY.md" "$host:$rdir/" 2>/dev/null \
+    && echo "   另送 RECOVERY.md"
 
   c_g "③ 遠端校驗"
   local lh rh

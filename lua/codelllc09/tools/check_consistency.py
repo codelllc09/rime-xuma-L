@@ -254,11 +254,20 @@ def battery_mirror():
         return
     hit = run(['git', '-C', m, 'cat-file', '-e', f'{head}^{{commit}}']).returncode == 0
     n = len([x for x in run(['git', '-C', m, 'for-each-ref', 'refs/snapshots']).stdout.splitlines() if x])
-    if hit:
-        item('⑨鏡像', True, f'HEAD {head[:9]} 在鏡像中；快照 ref {n} 個')
-    else:
+    # tag 也要在鏡像裏：tag 是「已知良好點」，出事後最想要的東西。
+    # 2026-11-05 實例：mirror-sync 只推 HEAD，5 個 tag 一個都沒進鏡像。
+    lt = [x for x in run(['git', 'tag', '-l']).stdout.splitlines() if x]
+    mt = [x for x in run(['git', '-C', m, 'for-each-ref', '--format=%(refname:short)',
+                          'refs/tags']).stdout.splitlines() if x]
+    lack = [x for x in lt if x not in mt]
+    if not hit:
         item('⑨鏡像', False,
              f'鏡像未覆蓋 HEAD {head[:9]}（快照 ref {n} 個）——立即 backup.sh mirror-sync')
+    elif lack:
+        item('⑨鏡像', False,
+             f'{len(lack)} 個 tag 不在鏡像中（如 {lack[:3]}）——backup.sh mirror-sync')
+    else:
+        item('⑨鏡像', True, f'HEAD {head[:9]} 在鏡像中；快照 ref {n} 個；tag {len(mt)}/{len(lt)}')
 
 
 # ── ⑫ 鉤子有效性 ────────────────────────────────────────────────

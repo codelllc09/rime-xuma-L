@@ -141,7 +141,12 @@
   默認目標 `yoga:D:/Backups/rime`（可在參數裏覆蓋為 `host:目錄`）；
   兼容 Unix `sha256sum` 與 Windows `Get-FileHash` 兩種遠端。
   **每次大改之後、長期不動之前各跑一次**——這是唯一擋得住「盤壞／整機丟」的一層。
-- **本地鏡像**：`backup.sh mirror-init` 另建裸庫，`post-commit` 自動追加只增不刪的快照 ref。
+- **刪除前清點**：`rm -rf`／`mv` 倉庫目錄**之前**必須跑
+  `./lua/codelllc09/tools/pre-delete-check.sh`——未推送提交／未提交改動／stash／
+  未跟蹤文件／**忽略區不可再生資產（按體量排序）**／鏡像覆蓋／未合併分支，
+  七項全過才返回 0。「有远端」不等於「有副本」。
+- **本地鏡像**：`backup.sh mirror-init` 另建裸庫，`post-commit` 自動追加只增不刪的快照 ref，
+  並同步 `refs/tags/*`（里程碑）與 `refs/archive/stash-<ts>`（stash 是 funny ref，遠端拒收）。
   它與工作區**同盤**，只防「命令毀庫」不防「盤壞」——兩者互補，缺一不可。
   見「歷史改寫防護」節；
 - **演練**：`tools/backup.sh drill`＝造快照→校驗→還原到臨時目錄→復跑十二項門禁
