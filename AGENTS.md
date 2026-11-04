@@ -28,6 +28,23 @@
   自動轉抄三清單並自驗；字形裁定落 `archive/rulings/用詞傾向.txt`；然後重跑管道。
 - **命名規約：需人親自批注的文本一律全大寫英文名、語義明確**（現行：TO_BE_REVIEWED）。
 
+### 詞庫意願台（2026-11-05）
+
+三個意願通道（handpicked／manual_overrides／rejected）的**寫入校驗**收在
+`lua/codelllc09/tools/wishd.py` 一處；CLI 與 Web 共用，勿另寫一套（會繞過護欄）。
+
+```sh
+cd lua/codelllc09/tools
+python3 wishd.py list  oooo          # 看同碼組全部成員（頻分／來源／手收）
+python3 wishd.py order oooo "A > B"  # 寫次序裁定（同碼校驗、重複檢測、組內其餘詞警告）
+python3 wishd.py apply               # 跑管道＋44 碼閘門＋部署
+python3 wishd_ui.py                  # 本機界面 http://127.0.0.1:8721（拖拽排序）
+```
+
+- **只綁 127.0.0.1**，POST 需 `X-Wishd: 1` 標頭擋 CSRF；**共享機器勿開**（能改詞庫並重跑管道＝準 RCE 面）
+- 仍**永不直接改 `xuma_L.dict.yaml`**——它只寫意願通道，改動經管道生效
+- 每次寫入記台賬；應用前有 44 碼閘門，未過不上線
+
 ## 詞庫改動的正道
 
 - `xuma_L.dict.yaml` 數據區由 `lua/codelllc09/tools/gen_freq_dict.py` 生成，**勿手改**；
