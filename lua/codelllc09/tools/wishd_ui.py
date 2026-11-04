@@ -277,7 +277,8 @@ def api_dict_stats():
     by_code_len = collections.Counter(len(c) for _, c, *r in entries)
     tagged = sum(1 for e in entries if e[4])
     hp = wishd.load_handpicked()
-    return {'total': len(entries), 'by_len': dict(sorted(by_len.items())),
+    return {'total': len(entries), 'words': len({e[0] for e in entries}),
+            'by_len': dict(sorted(by_len.items())),
             'by_code_len': dict(sorted(by_code_len.items())),
             'tagged': tagged, 'handpicked': sum(1 for e in entries if e[0] in hp)}
 
@@ -412,6 +413,7 @@ class Handler(BaseHTTPRequestHandler):
 PAGE = r"""<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>詞庫意願台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E8%A9%9E%3C/text%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#f6f8fb; --surface:#ffffff; --surface-2:#f8fafc; --border:#e3e8ef; --border-strong:#cbd5e1;
@@ -485,7 +487,32 @@ tbody tr:hover{background:var(--surface-2)}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--fg-muted)}
 .scroll{max-height:66vh;overflow:auto;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface)}
 table.plain th{background:var(--surface)}
-.handle{width:22px;color:var(--fg-faint);cursor:grab;user-select:none;text-align:center}
+.vlist{border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;background:var(--surface)}
+.vrow{position:relative;display:grid;
+  /* grip | 序 | 詞 | 條 | 頻分 | 占比 | 行 | 徽章 */
+  grid-template-columns:22px 20px minmax(70px,132px) minmax(70px,1fr) 82px 54px 58px 92px;
+  align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--border);
+  background:var(--surface);transition:background .12s}
+.vrow:last-child{border-bottom:0}
+.vrow:hover{background:var(--surface-2)}
+.vrow.dragging{opacity:.45}
+.vrow.drop-top{box-shadow:inset 0 2px 0 0 var(--accent)}
+.vrow.drop-bottom{box-shadow:inset 0 -2px 0 0 var(--accent)}
+.vrow .rank{font-variant-numeric:tabular-nums;color:var(--fg-faint);font-size:12.5px;text-align:right}
+.vrow .word{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vrow .track{position:relative;height:16px;border-radius:4px;background:var(--surface-2);
+  border:1px solid var(--border);overflow:hidden}
+.vrow .bar{height:100%;border-radius:3px 0 0 3px;
+  background:linear-gradient(90deg,var(--primary),color-mix(in srgb,var(--primary) 60%,transparent));
+  min-width:2px;transition:width .25s ease}
+.vrow .bar.zero{background:var(--border-strong)}
+.vrow .wt{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--fg);text-align:right}
+.vrow .pct{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--fg-faint);text-align:right}
+.vrow .ln{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--fg-faint);text-align:right}
+.vrow .grip{color:var(--fg-faint);cursor:grab;user-select:none;text-align:center;line-height:1}
+.vrow .flags{display:flex;gap:4px;justify-content:flex-end;flex-wrap:nowrap;overflow:hidden}
+.badge{white-space:nowrap}
+.handle{color:var(--fg-faint);cursor:grab;user-select:none}
 tr.dragging{opacity:.4}
 tr.drop-top{box-shadow:inset 0 2px 0 0 var(--accent)}
 tr.drop-bottom{box-shadow:inset 0 -2px 0 0 var(--accent)}
@@ -561,10 +588,8 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
    <div class="card">
      <h2 id="gtitle">同碼組</h2>
      <p class="sub" id="gsub">輸入碼或詞開始。拖拽 <span class="handle">⠿</span> 或用 <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> 調整次序。</p>
-     <table class="plain"><thead><tr>
-       <th style="width:28px"></th><th>詞</th><th class="num" style="width:110px">頻分</th>
-       <th style="width:120px">來源</th><th style="width:72px">行</th></tr></thead>
-       <tbody id="rows"><tr><td colspan="5"><div class="empty">尚未載入</div></td></tr></tbody></table>
+     <div id="gstats" class="stats" style="margin-bottom:10px"></div>
+     <div id="rows" class="vlist"><div class="empty">尚未載入</div></div>
      <div class="row" style="margin-top:12px">
        <button id="prev">預覽變更</button>
        <button id="save" class="primary">寫入裁定</button>
@@ -585,7 +610,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
  <section id="pane-dict" role="tabpanel" hidden>
    <div class="card">
      <h2>字典</h2>
-     <p class="sub">十八萬七千詞形；同一詞的簡碼與全碼併為一行，<b>全碼</b>高亮、簡碼灰顯。</p>
+     <p class="sub">同一詞的簡碼與全碼併為一行：<b>全碼實心</b>、簡碼灰底。取消「合併多碼詞」可看逐條目（含行號）。</p>
      <div class="row" style="margin-bottom:10px">
        <input id="dw" placeholder="詞含…" style="width:150px">
        <input id="dc" placeholder="碼前綴…" style="width:110px">
@@ -704,47 +729,71 @@ $('#tab-dict').onclick=()=>tab('dict');
 /* ───── 同碼組 ───── */
 function renderGroup(d){
   CODE=d.code;
-  $('#gtitle').textContent=d.exists?`碼組 ${d.code} · ${d.members.length} 詞`:`碼組 ${d.code}（不存在）`;
-  const tb=$('#rows'); tb.innerHTML='';
+  const ws=d.members.map(m=>parseFloat(m.wt)||0);
+  const maxW=Math.max(1,...ws);
+  const sumW=ws.reduce((a,b)=>a+b,0);
+  $('#gtitle').textContent=d.exists?`碼組 ${d.code}`:`碼組 ${d.code}（不存在）`;
+  const ovWords=new Set(); (d.overrides||[]).forEach(o=>o.words.forEach(w=>ovWords.add(w)));
+
+  if(d.members.length){
+    const top=ws[0]||0, second=ws[1]||0;
+    const ratio=(top>0&&second>0)?(top/second):null;
+    const share=sumW>0?(top/sumW*100):0;
+    $('#gstats').innerHTML=
+       `<span><b>${d.members.length}</b> 詞</span>`
+      +`<span>總頻分 <b>${sumW.toLocaleString()}</b></span>`
+      +`<span>首位占比 <b>${share.toFixed(1)}%</b></span>`
+      +(ratio?`<span>首位/次位 <b>${ratio.toFixed(ratio<10?2:0)}×</b></span>`:'')
+      +(d.overrides.length?`<span style="color:var(--primary)">已有裁定</span>`:'');
+  } else $('#gstats').innerHTML='';
+
+  const box=$('#rows'); box.innerHTML='';
   SEQ=d.members.map(m=>m.w);
-  if(!d.members.length){
-    tb.innerHTML='<tr><td colspan="5"><div class="empty">此碼組沒有詞</div></td></tr>';
-  }
+  if(!d.members.length){ box.innerHTML='<div class="empty">此碼組沒有詞</div>'; return; }
+
   d.members.forEach((m,idx)=>{
-    const tr=document.createElement('tr');
-    tr.draggable=true; tr.tabIndex=0; tr.dataset.w=m.w; tr.classList.add('movable');
-    tr.innerHTML='<td class="handle" title="拖拽或 Alt+↑/↓">⠿</td>'
-      +'<td><b>'+esc(m.w)+'</b></td>'
-      +'<td class="num">'+(m.wt||'—')+'</td>'
-      +'<td>'+(m.hp?'<span class="badge hp">手收</span> ':'')
-      +'<span class="badge">'+esc((m.tag||'').slice(0,16)||'—')+'</span></td>'
-      +'<td class="num">'+m.line+'</td>';
-    tr.addEventListener('dragstart',()=>{DRAG=tr;tr.classList.add('dragging');});
-    tr.addEventListener('dragend',()=>{tr.classList.remove('dragging');DRAG=null;reorder();});
-    tr.addEventListener('dragover',e=>{e.preventDefault();
-      if(!DRAG||DRAG===tr)return;
-      const r=tr.getBoundingClientRect(), after=(e.clientY-r.top)>r.height/2;
-      tr.classList.toggle('drop-bottom',after); tr.classList.toggle('drop-top',!after);});
-    tr.addEventListener('dragleave',()=>tr.classList.remove('drop-top','drop-bottom'));
-    tr.addEventListener('drop',e=>{e.preventDefault();
-      tr.classList.remove('drop-top','drop-bottom');
-      if(!DRAG||DRAG===tr)return;
-      const r=tr.getBoundingClientRect(), after=(e.clientY-r.top)>r.height/2;
-      after?tr.after(DRAG):tr.before(DRAG); reorder();});
-    tr.addEventListener('keydown',e=>{
+    const w=parseFloat(m.wt)||0;
+    const pct=sumW>0?(w/sumW*100):0;
+    const el=document.createElement('div');
+    el.className='vrow'; el.draggable=true; el.tabIndex=0; el.dataset.w=m.w;
+    // 線性刻度：柱長＝該詞頻分 / 組內最大。對數會把 8 倍差距壓成 1.2 倍，失真。
+    const bw=w?Math.max(1.5,(w/maxW)*100):0;
+    el.innerHTML=
+       '<div class="grip" title="拖拽或 Alt+↑/↓">⋮⋮</div>'
+      +`<div class="rank">${idx+1}</div>`
+      +`<div class="word">${esc(m.w)}</div>`
+      +`<div class="track"><div class="bar${w?'':' zero'}" style="width:${bw.toFixed(2)}%"></div></div>`
+      +`<div class="wt">${m.wt?w.toLocaleString():'—'}</div>`
+      +`<div class="pct">${w?pct.toFixed(1)+'%':''}</div>`
+      +`<div class="ln">${m.line}</div>`
+      +`<div class="flags">${m.hp?'<span class="badge hp">手收</span>':''}`
+      +`${ovWords.has(m.w)?'<span class="badge" style="color:var(--primary);border-color:var(--primary)">裁定</span>':''}`
+      +`</div>`;
+    el.title=(m.tag?m.tag+'\n':'')+'行 '+m.line;
+    el.addEventListener('dragstart',()=>{DRAG=el;el.classList.add('dragging');});
+    el.addEventListener('dragend',()=>{el.classList.remove('dragging');DRAG=null;reorder();});
+    el.addEventListener('dragover',e=>{e.preventDefault();
+      if(!DRAG||DRAG===el)return;
+      const r=el.getBoundingClientRect(), after=(e.clientY-r.top)>r.height/2;
+      el.classList.toggle('drop-bottom',after); el.classList.toggle('drop-top',!after);});
+    el.addEventListener('dragleave',()=>el.classList.remove('drop-top','drop-bottom'));
+    el.addEventListener('drop',e=>{e.preventDefault();
+      el.classList.remove('drop-top','drop-bottom');
+      if(!DRAG||DRAG===el)return;
+      const r=el.getBoundingClientRect(), after=(e.clientY-r.top)>r.height/2;
+      after?el.after(DRAG):el.before(DRAG); reorder();});
+    el.addEventListener('keydown',e=>{
       if(!e.altKey)return;
-      if(e.key==='ArrowUp'&&tr.previousElementSibling){
-        tr.previousElementSibling.before(tr); e.preventDefault(); reorder();
-        tr.focus(); toast('已上移：'+m.w,'info',1400);}
-      else if(e.key==='ArrowDown'&&tr.nextElementSibling){
-        tr.nextElementSibling.after(tr); e.preventDefault(); reorder();
-        tr.focus(); toast('已下移：'+m.w,'info',1400);}
+      if(e.key==='ArrowUp'&&el.previousElementSibling){
+        el.previousElementSibling.before(el); e.preventDefault(); reorder(); el.focus();}
+      else if(e.key==='ArrowDown'&&el.nextElementSibling){
+        el.nextElementSibling.after(el); e.preventDefault(); reorder(); el.focus();}
     });
-    tb.appendChild(tr);
+    box.appendChild(el);
   });
   $('#ovs').innerHTML=d.overrides.length
-    ? '<h2 style="margin-bottom:6px">既有裁定</h2>'+d.overrides.map(o=>
-        '<div class="pill" style="margin:3px 4px 0 0"><span class="mono">第'+o.line+'行</span>'
+    ? '<h2 style="margin:14px 0 6px">既有裁定</h2>'+d.overrides.map(o=>
+        '<div class="pill" style="margin:3px 4px 0 0"><span class="mono">第'+o.line+'行</span> '
         +esc(o.raw)+'</div>').join('') : '';
 }
 function reorder(){SEQ=[...$('#rows').children].filter(t=>t.dataset.w).map(t=>t.dataset.w);}
@@ -824,7 +873,7 @@ function dictQuery(page){
       +'<td class="num">'+[...r.w].length+'</td>'
       +'<td>'+(r.hp?'<span class="badge hp">手收</span> ':'')
         +(r.dropped?'<span class="badge drop">待刪</span> ':'')
-        +'<span class="badge">'+esc((r.tag||'').slice(0,12)||'—')+'</span></td>'
+        +(r.tag?'<span class="badge">'+esc(r.tag.slice(0,14))+'</span>':'')+'</td>'
       +'<td class="num" title="'+(r.lines||[]).join(', ')+'">'
         +(r.lines&&r.lines.length>1?r.lines[0]+'+'+(r.lines.length-1):r.line)+'</td>'
       +'<td class="right">'+(r.dropped?''
@@ -885,6 +934,7 @@ $('#dlast').onclick=()=>dictQuery(DPAGES);
 api('/api/dict/stats').then(s=>{
   const L=s.by_len||{};
   $('#dstats').innerHTML=`共 <b>${s.total.toLocaleString()}</b> 條`
+    +`<span>／ <b>${(s.words||s.total).toLocaleString()}</b> 詞形</span>`
     +`<span>單字 <b>${(L['1']||0).toLocaleString()}</b></span>`
     +`<span>二字 <b>${(L['2']||0).toLocaleString()}</b></span>`
     +`<span>四字 <b>${(L['4']||0).toLocaleString()}</b></span>`
