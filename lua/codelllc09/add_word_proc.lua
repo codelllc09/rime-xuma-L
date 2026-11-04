@@ -50,20 +50,18 @@ local function processor(key, env)
   local keyname = parts[#parts]
   if keyname:match('_[LR]$') or keyname == 'Caps_Lock' then return K_NOOP end
 
-  -- 固定直達鍵（2026-11-05 修）：單詞收進暫存後，1 號位會被橫幅/指引等 noop 僞候選
-  -- 頂替，「入庫重跑」位次漂移（1↔2↔3），按數字常踩空——s/x 直達動作，不受位次影響
+  -- 固定直達鍵（2026-11-05 增設）：s=入庫重跑 / x=清空暫存，不受位次影響
   local direct
   if keyname == 's' then direct = 'commit'
   elseif keyname == 'x' then direct = 'clear'
   end
-
   local idx
   if direct then
-    for _, it in ipairs(state.menu) do
-      if it.kind == direct then idx = _ end
+    for i, it in ipairs(state.menu) do
+      if it.kind == direct then idx = i end
     end
     if not idx then return K_NOOP end
-  elseif keyname == 'space' then idx = 1                    -- 空格＝首選
+  elseif keyname == 'space' or keyname == 'Return' or keyname == 'KP_Enter' then idx = 1   -- 空格/回車＝首選
   elseif keyname:match('^%d$') then idx = tonumber(keyname)  -- 數字
   elseif keyname == 'semicolon' then idx = 2            -- 分號＝次選（對齊 key_binder）
   elseif keyname == 'apostrophe' then idx = 3           -- 引號＝三選（對齊 key_binder）

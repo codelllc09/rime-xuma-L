@@ -1,7 +1,7 @@
 -- add_word.lua —— /add 加詞採集菜單（translator）
 --
 -- 交互（全程候選欄可見，無隱式狀態）：
---   逐字打出缺詞上屏（最近 4 字內）→ 敲 /add → 尾部連綴候選（4/3/2 字降序，人眼即審）
+--   逐字打出缺詞上屏（最近 4 字內）→ 敲 /add → 尾部連綴詞選項（4/3/2 字降序）
 --   → 選鍵收錄進 spool → 攢批後選「入庫重跑」固化（handpicked ##日收 → 詞頻管道 → 部署）。
 --   詞形＝實際上屏的繁體形（WYSIWYG）；含簡形候選自帶 ⚠ 警示；
 --   詞頻由管道 t2s 後從十源語料查取，本模組不管頻次。
@@ -127,16 +127,14 @@ local function translator(input, seg, env)
   local seen = spool_set()
   local budget = 7   -- menu/page_size，防翻頁導致選鍵索引錯位
 
-  -- 動作後一次性橫幅
+  -- 動作後一次性反饋：只顯示在 preedit 行，不佔候選位（防按鍵落點漂移）
+  local label = '選擇要入庫的詞彙'
   if state.banner then
-    state.menu[#state.menu + 1] = { kind = 'noop', text = state.banner }
-    local c = Candidate('add', seg.start, seg._end, state.banner, '')
-    c.preedit = input .. '\t加詞'
-    yield(c)
+    label = state.banner
     state.banner = nil
   end
 
-  -- 尾部連綴詞候選（4/3/2 字降序）
+  -- 詞選項：4/3/2 字連綴（手收三字詞不受審查第 6 條限制，handpicked 顯式收錄）
   local acc = tail_run(ctx)
   local any_word = false
   for _, L in ipairs({ 4, 3, 2 }) do
@@ -148,17 +146,18 @@ local function translator(input, seg, env)
         state.menu[#state.menu + 1] = { kind = 'word', text = w }
         local c = Candidate('add', seg.start, seg._end, w,
           ' ' .. L .. '字·收錄' .. (has_simp(w) and ' ⚠含簡形' or ''))
-        c.preedit = input .. '\t加詞'
+        c.preedit = input .. '\t' .. label
         yield(c)
       end
     end
   end
 
-  -- 無詞可收時首位給指引（可選中關閉）
-  if not any_word and #state.menu == 0 then
+  -- 無詞可收且非動作反饋時（真冷啓動）首位給指引（可選中關閉）；
+  -- 動作反饋輪不插指引，保持按鍵位穩定（首位恆爲 入庫重跑）
+  if not any_word and #state.menu == 0 and label == '選擇要入庫的詞彙' then
     state.menu[#state.menu + 1] = { kind = 'noop', text = '打出缺詞·再敲 /add' }
     local c = Candidate('add', seg.start, seg._end, '打出缺詞·再敲 /add', ' 最近 4 字連綴會列在這裏')
-    c.preedit = input .. '\t加詞'
+    c.preedit = input .. '\t' .. label
     yield(c)
   end
 
@@ -167,11 +166,11 @@ local function translator(input, seg, env)
   for _ in pairs(seen) do n = n + 1 end
   state.menu[#state.menu + 1] = { kind = 'commit', text = '入庫重跑' }
   local c1 = Candidate('add', seg.start, seg._end, '入庫重跑', ' 按 s 直達（合併暫存·重跑詞頻·部署）')
-  c1.preedit = input .. '\t加詞'
+  c1.preedit = input .. '\t' .. label
   yield(c1)
   state.menu[#state.menu + 1] = { kind = 'clear', text = '清空暫存' }
   local c2 = Candidate('add', seg.start, seg._end, '清空暫存', ' 按 x 直達（暫存 ' .. n .. ' 詞）')
-  c2.preedit = input .. '\t加詞'
+  c2.preedit = input .. '\t' .. label
   yield(c2)
 end
 
