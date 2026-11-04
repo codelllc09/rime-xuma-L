@@ -12,8 +12,8 @@ local ZHI = { '子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '�
 local XIAO = { '鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬' }
 local NUM = { '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' }
 local WEEK = { '日', '一', '二', '三', '四', '五', '六' }
-local PLACEHOLDER = { ['ttimexx'] = '/time', ['ddatexx'] = '/date' }
 local KE = { '初刻', '一刻', '二刻', '三刻' }  -- 時辰刻：每小时四刻（15分一刻）
+local PLACEHOLDER = { ['ttimexx'] = '/time', ['ddatexx'] = '/date' }
 
 local function cn_num(n)
   if n == 0 then return '〇' end
@@ -66,7 +66,7 @@ local function lunar_text(sy, sm, sd)
   elseif lu.d == 20 then d = '二十'
   elseif lu.d < 30 then d = '廿' .. NUM[lu.d - 20 + 1]
   else d = '三十' end
-  return string.format('農曆%s年（%s）%s%s', g, sx, mname, d)
+  return string.format('農曆%s年(%s)%s%s', g, sx, mname, d)
 end
 
 local function dt_filter(input, env)
@@ -83,11 +83,12 @@ local function dt_filter(input, env)
         -- 十二時辰（2026-11-04）：子時=23–01（跨午夜），序號 = (h+1)//2 mod 12；
         -- 再細分：奇數小時=初、偶數小時=正（子初23時/子正0時/午初11時/午正12時），
         -- 每小時四刻（15分一刻）：午正三刻 = 12:45
-        local h = t.hour
-        local zhi = ZHI[(h + 1) // 2 % 12 + 1]
-        local cz = (h % 2 == 1) and '初' or '正'
-        local ke = KE[math.floor(t.min / 15) + 1]
-        yield(ShadowCandidate(cand, 'datetime', zhi .. cz .. ke))
+        local idx = math.floor((t.hour + 1) / 2) % 12
+        local start = (idx * 2 - 1) % 24
+        yield(ShadowCandidate(cand, 'datetime', ZHI[idx + 1] .. '時',
+          string.format('(%02d-%02d時)', start, (start + 2) % 24)))
+        yield(ShadowCandidate(cand, 'datetime',
+          ZHI[idx + 1] .. (t.hour % 2 == 1 and '初' or '正') .. KE[math.floor(t.min / 15) + 1]))
       else
         local y, m, d = tonumber(os.date('%Y')), tonumber(os.date('%m')), tonumber(os.date('%d'))
         yield(ShadowCandidate(cand, 'datetime', string.format('%d年%d月%d日', y, m, d)))
