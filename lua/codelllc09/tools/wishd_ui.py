@@ -119,7 +119,12 @@ def api_suspicious():
 
 
 def api_dict(params):
-    """字典瀏覽：篩選 + 排序 + 分頁。19.6 萬條，服務端分頁（前端只拿一頁）。"""
+    """字典瀏覽：篩選 + 分頁。
+
+    默認按**詞形合併**——同一個詞的簡碼與全碼併成一行（如 `美麗` → x · xjgm）。
+    詞典裏 8,675 個詞有多碼（多爲三碼簡碼＋四碼全碼），逐條目顯示會有大量重複行。
+    `group=0` 可切回逐條目視圖（查行號時用）。
+    """
     g = lambda k, d='': (params.get(k, [d])[0] if isinstance(params.get(k), list) else params.get(k, d)) or d
     word = g('word')
     code = g('code').lower()
@@ -127,6 +132,7 @@ def api_dict(params):
     src = g('src')
     sec = g('sec')
     sort = g('sort', 'line')
+    grouped = g('group', '1') == '1'
     try:
         page = max(1, int(g('page', '1')))
     except ValueError:
@@ -137,45 +143,95 @@ def api_dict(params):
         size = 100
 
     entries = wishd.load_entries()
-    hp = wishd.load_handpicked()
-    _hp_add, hp_drop = wishd.load_handpicked_parts()
-    rows = []
-    for w, c, wt, line, tag, sn in entries:
+    hp_add, hp_drop = wishd.load_handpicked_parts()
+
+    def hit(w, c, tag):
         if word and word not in w:
-            continue
-        if code and not c.lower().startswith(code):
-            continue
+            return False
         if ln:
             if ln == 'other':
                 if len(w) <= 4:
-                    continue
+                    return False
             elif len(w) != int(ln):
-                continue
-        if sec and sn != sec:
-            continue
-        if src == 'hp' and w not in hp:
-            continue
+                return False
+        if sec:
+            pass    # 區段在聚合後按主條目判
+        if src == 'hp' and w not in hp_add:
+            return False
         if src == 'tag' and not tag:
-            continue
+            return False
         if src == 'drop' and w not in hp_drop:
-            continue
-        if src == 'plain' and (tag or w in hp):
-            continue
-        rows.append((w, c, wt, line, tag, sn, w in _hp_add, w in hp_drop))
+            return False
+        if src == 'plain' and (tag or w in hp_add or w in hp_drop):
+            return False
+        return True
 
-    if sort == 'weight':
-        rows.sort(key=lambda r: (-(int(r[2]) if r[2].isdigit() else -1), r[3]))
-    elif sort == 'code':
-        rows.sort(key=lambda r: (r[1], r[3]))
-    elif sort == 'word':
-        rows.sort(key=lambda r: (r[0], r[3]))
-    total = len(rows)
+    if not grouped:
+        rows = []
+        for w, c, wt, line, tag, sn, in entries:
+            if code and not c.lower().startswith(code):
+                continue
+            if sec and sn != sec:
+                continue
+            if not hit(w, c, tag):
+                continue
+            rows.append({'w': w, 'codes': [c], 'primary': c, 'wt': wt, 'line': line,
+                         'lines': [line], 'tag': tag, 'sec': sn,
+                         'hp': w in hp_add, 'dropped': w in hp_drop})
+        if sort == 'weight':
+            rows.sort(key=lambda r: (-(int(r['wt']) if r['wt'].isdigit() else -1), r['line']))
+        elif sort == 'code':
+            rows.sort(key=lambda r: (r['primary'], r['line']))
+        elif sort == 'word':
+            rows.sort(key=lambda r: (r['w'], r['line']))
+        total = len(rows)
+    else:
+        # 先選出符合條件的詞形（碼前綴＝任一碼命中），再把該詞的全部條目聚合
+        sel = set()
+        for w, c, wt, line, tag, sn in entries:
+            if code and not c.lower().startswith(code):
+                continue
+            if hit(w, c, tag):
+                sel.add(w)
+        agg = {}
+        for w, c, wt, line, tag, sn in entries:
+            if w not in sel:
+                continue
+            a = agg.get(w)
+            if a is None:
+                agg[w] = {'w': w, 'codes': [c], 'entries': [(c, wt, line, tag, sn)]}
+            else:
+                a['codes'].append(c)
+                a['entries'].append((c, wt, line, tag, sn))
+        rows = []
+        for w, a in agg.items():
+            ents = a['entries']
+            # 主條目＝碼最長者（全碼）；同長取頻分高者
+            prim = max(ents, key=lambda e: (len(e[0]),
+                                            int(e[1]) if e[1].isdigit() else -1))
+            codes = sorted({e[0] for e in ents}, key=lambda c: (len(c), c))
+            tag = next((e[3] for e in ents if e[3]), '')
+            if sec and prim[4] != sec:
+                continue
+            rows.append({'w': w, 'codes': codes, 'primary': prim[0], 'wt': prim[1],
+                         'line': prim[2], 'lines': sorted({e[2] for e in ents}),
+                         'tag': tag, 'sec': prim[4],
+                         'hp': w in hp_add, 'dropped': w in hp_drop})
+        if sort == 'weight':
+            rows.sort(key=lambda r: (-(int(r['wt']) if r['wt'].isdigit() else -1), r['line']))
+        elif sort == 'code':
+            rows.sort(key=lambda r: (r['primary'], r['line']))
+        elif sort == 'word':
+            rows.sort(key=lambda r: (r['w'], r['line']))
+        total = len(rows)
+
     start = (page - 1) * size
+    page_rows = rows[start:start + size]
+    for r in page_rows:
+        r.pop('entries', None)
     return {'total': total, 'page': page, 'size': size,
             'pages': max(1, (total + size - 1) // size),
-            'rows': [{'w': w, 'code': c, 'wt': wt, 'line': line,
-                      'tag': tag, 'sec': sn, 'hp': ishp, 'dropped': isdrop}
-                     for w, c, wt, line, tag, sn, ishp, isdrop in rows[start:start + size]]}
+            'grouped': grouped, 'rows': page_rows}
 
 
 def api_dict_stats():
@@ -410,13 +466,15 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
          <option value="併入區">併入區</option></select>
        <select id="dso"><option value="line">按行號</option><option value="code">按編碼</option>
          <option value="weight">按頻分</option><option value="word">按詞形</option></select>
+       <label class="muted" style="display:flex;gap:4px;align-items:center">
+         <input type="checkbox" id="dgrp" checked>合併多碼詞</label>
        <button id="dgo" class="primary">查詢</button>
        <span id="dstats" class="stats"></span>
      </div>
      <div class="scroll">
-       <table><thead><tr><th style="width:26%">詞</th><th style="width:16%">編碼</th>
+       <table><thead><tr><th style="width:20%">詞</th><th style="width:30%">編碼（簡碼 · 全碼）</th>
          <th class="wt">頻分</th><th style="width:8%">字數</th><th style="width:14%">標記</th>
-         <th class="wt" style="width:8%">行號</th><th style="width:10%">操作</th></tr></thead>
+         <th class="wt" style="width:8%">行</th><th style="width:10%">操作</th></tr></thead>
          <tbody id="drows"></tbody></table>
      </div>
      <div class="bar" style="margin-top:10px">
@@ -557,17 +615,20 @@ function dictQuery(page){
   DPAGE=page||1;
   const p=new URLSearchParams({word:$('#dw').value.trim(),code:$('#dc').value.trim(),
     len:$('#dl').value,src:$('#ds').value,sec:$('#dsec').value,sort:$('#dso').value,
-    page:DPAGE,size:100});
+    group:$('#dgrp').checked?'1':'0',page:DPAGE,size:100});
   api('/api/dict?'+p).then(d=>{
     DPAGES=d.pages;
     $('#dpage').textContent=' 第 '+d.page+' / '+d.pages+' 頁，共 '+d.total.toLocaleString()+' 條 ';
+    const cell=r=>r.codes.map(c=>c===r.primary
+        ?'<code style="font-weight:600">'+esc(c)+'</code>'
+        :'<code style="background:#f5f5f5;color:#78909c">'+esc(c)+'</code>').join(' ');
     $('#drows').innerHTML=d.rows.length?d.rows.map(r=>
-      '<tr class="clickable" data-c="'+esc(r.code)+'" data-w="'+esc(r.w)+'">'
-      +'<td>'+esc(r.w)+'</td><td><code>'+esc(r.code)+'</code></td>'
+      '<tr class="clickable" data-c="'+esc(r.primary)+'" data-w="'+esc(r.w)+'">'
+      +'<td>'+esc(r.w)+'</td><td>'+cell(r)+'</td>'
       +'<td class="wt">'+(r.wt||'—')+'</td><td>'+[...r.w].length+'</td>'
-      +'<td class="tag">'+(r.hp?'手收 ':'')+esc((r.tag||'').slice(0,16))
+      +'<td class="tag">'+(r.hp?'手收 ':'')+esc((r.tag||'').slice(0,14))
         +(r.dropped?'<span class="err"> 已標記棄用</span>':'')+'</td>'
-      +'<td class="wt">'+r.line+'</td>'
+      +'<td class="wt" title="'+(r.lines||[]).join(', ')+'">'+(r.lines&&r.lines.length>1?r.lines[0]+'+'+(r.lines.length-1):r.line)+'</td>'
       +'<td>'+(r.dropped?'<span class="muted">待應用</span>'
         :'<button class="dropbtn" data-w="'+esc(r.w)+'" style="padding:2px 8px;font-size:12px">棄用</button>')
       +'</td></tr>').join('')
@@ -581,7 +642,7 @@ function dictQuery(page){
 }
 ['#dgo'].forEach(s=>$(s).onclick=()=>dictQuery(1));
 ['#dw','#dc'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')dictQuery(1);}));
-['#dl','#ds','#dsec','#dso'].forEach(s=>$(s).onchange=()=>dictQuery(1));
+['#dl','#ds','#dsec','#dso','#dgrp'].forEach(s=>$(s).onchange=()=>dictQuery(1));
 $('#dfirst').onclick=()=>dictQuery(1);
 $('#dprev').onclick=()=>dictQuery(Math.max(1,DPAGE-1));
 $('#dnext').onclick=()=>dictQuery(Math.min(DPAGES,DPAGE+1));
