@@ -271,8 +271,27 @@ cmd_drill() {
   echo "④ 還原體門禁："
   local rc=0
   ( cd "$work/rime/lua/codelllc09/tools" && python3 check_consistency.py 2>&1 | tail -4 ) || rc=$?
+  # ⑥ 鏡像可用性：真的能 clone 出與 HEAD 相同的樹（不是只看 ref 存在）
+  echo "⑥ 鏡像可用性："
+  local mrc=0
+  if [ -d "$(mirror_path)" ]; then
+    git clone -q "$(mirror_path)" "$work/mirror-clone" 2>/dev/null || mrc=1
+    if [ "$mrc" = 0 ]; then
+      local a b
+      a="$(git -C "$work/mirror-clone" ls-tree -r --name-only HEAD 2>/dev/null | sort | sha256sum | cut -d' ' -f1)"
+      b="$(git -C "$ROOT" ls-tree -r --name-only HEAD | sort | sha256sum | cut -d' ' -f1)"
+      [ "$a" = "$b" ] && echo "     ✓ 克隆樹與 HEAD 一致（$(git -C "$work/mirror-clone" ls-files | wc -l) 件）" \
+                      || { echo "     ✗ 克隆樹與 HEAD 不一致"; mrc=1; }
+    else
+      echo "     ✗ 鏡像無法 clone"
+    fi
+  else
+    echo "     − 未建鏡像，跳過"
+  fi
+  [ "$mrc" = 0 ] || rc=1
+
   if [ "$rc" = 0 ]; then
-    c_g "⑤ 演練通過：快照可還原，還原體門禁全綠"
+    c_g "⑤ 演練通過：快照可還原、鏡像可 clone，還原體門禁全綠"
   else
     c_y "⑤ 演練未通過（rc=$rc）——快照不足以重建可工作倉庫，須修復後重演"
     return 1
@@ -315,6 +334,10 @@ cmd_mirror_sync() {
   # clone 默認只拷 refs/heads/*，不拷 snapshots——故兩者都要。
   git -C "$ROOT" push --quiet --force "$m" "HEAD:refs/heads/main" "HEAD:$ref" 2>/dev/null || {
     echo "⚠ 鏡像同步失敗（$m）" >&2; return 0; }   # 失敗也不阻塞提交
+  # 自愈：老鏡像的 HEAD 可能還指着 refs/heads/master（默認初始化值），
+  # 那樣 `git clone 鏡像` 會得到空工作樹（實測踩過）。每次同步都糾正一次。
+  [ "$(git -C "$m" symbolic-ref --quiet HEAD 2>/dev/null)" = "refs/heads/main" ] \
+    || git -C "$m" symbolic-ref HEAD refs/heads/main 2>/dev/null || true
 }
 
 cmd_mirror_status() {
