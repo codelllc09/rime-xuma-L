@@ -12,6 +12,11 @@
 #   restore <檔案> <目標目錄>     從快照還原（目標目錄須不存在或爲空）
 #   drill                         災難演練：造快照→還原到臨時目錄→克隆→校驗→跑門禁
 #
+#   mirror-init [--dest P]        建立本地裸鏡像（默認 ~/Backups/rime/mirror.git）
+#   mirror-sync                   把當前 HEAD 推成鏡像裏一個**新**的快照 ref（post-commit 自動調用）
+#   mirror-status                 鏡像覆蓋情況（HEAD 是否有對應快照 ref）
+#   mirror-restore <目標目錄>     從鏡像克隆（鏡像是歷史改寫的最後防線）
+#
 # 快照內容（--full 額外）：
 #   repo.bundle          git 全史（--all，含所有分支標籤）
 #   ignored/             不可再生區：std_tables/download、log/（含 add_debug）、tmp/、spool
@@ -24,6 +29,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 TOOLS="$ROOT/lua/codelllc09/tools"
 OUT_DEFAULT="$HOME/Backups/rime"
+MIRROR_DEFAULT="$HOME/Backups/rime/mirror.git"
 KEEP=14
 
 _CLEAN=""
@@ -261,11 +267,76 @@ cmd_drill() {
   python3 "$TOOLS/_ledger.py" drill 演練 "快照 $(basename "$snap") 還原並復跑門禁：通過" >/dev/null
 }
 
+# ── mirror：獨立裸鏡像 ────────────────────────────────────────────
+# 爲什麼要它：工作區倉庫裏的一切改寫（filter-repo／reset --hard／gc --prune=now）
+# 都碰不到另一個目錄裏的裸庫。這是**唯一不依賴自律**的防線——2026-11-05 那次
+# 空路徑清單事故若當時有鏡像，恢復只需一條 clone。
+#
+# 關鍵設計：不 push --mirror（那會把鏡像的 ref 一起覆蓋，改寫後照樣清零）。
+# 改為每個提交推一個**新** ref：refs/snapshots/<時間>-<sha8>。只增不刪，
+# 任何時刻的 HEAD 都留着一份，且互相不可覆蓋。
+mirror_path() { echo "${MIRROR:-$MIRROR_DEFAULT}"; }
+
+cmd_mirror_init() {
+  local dest="$MIRROR_DEFAULT"
+  while [ $# -gt 0 ]; do case "$1" in --dest) dest="$2"; shift ;; esac; shift; done
+  [ -d "$dest" ] && { echo "鏡像已存在：$dest"; return 0; }
+  mkdir -p "$(dirname "$dest")"
+  git init --quiet --bare "$dest"
+  echo "已建裸鏡像：$dest"
+  cmd_mirror_sync
+}
+
+cmd_mirror_sync() {
+  local m; m="$(mirror_path)"
+  [ -d "$m" ] || return 0        # 鏡像未建：靜默跳過（鉤子調用時不得阻塞提交）
+  local head ref
+  head="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null)" || return 0
+  ref="refs/snapshots/$(date '+%Y%m%d-%H%M%S')-${head:0:8}"
+  # 同秒同 sha 重複推同一 ref 是無害的（no-op），故不加去重判斷
+  git -C "$ROOT" push --quiet "$m" "HEAD:$ref" 2>/dev/null || {
+    echo "⚠ 鏡像同步失敗（$m）" >&2; return 0; }   # 失敗也不阻塞提交
+}
+
+cmd_mirror_status() {
+  local m; m="$(mirror_path)"
+  [ -d "$m" ] || { echo "未建鏡像（$m）——建議 backup.sh mirror-init"; return 0; }
+  local head n
+  head="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo '')"
+  n="$(git -C "$m" for-each-ref refs/snapshots | wc -l)"
+  echo "鏡像：$m"
+  echo "快照 ref 數：$n"
+  if [ -n "$head" ] && git -C "$m" cat-file -e "$head^{commit}" 2>/dev/null; then
+    echo "HEAD ${head:0:9}：✓ 鏡像中有此提交"
+  else
+    echo "HEAD ${head:0:9}：✗ 鏡像中沒有——立即 backup.sh mirror-sync"
+    return 1
+  fi
+}
+
+cmd_mirror_restore() {
+  local dest="${1:-}" m; m="$(mirror_path)"
+  [ -n "$dest" ] || die "用法：backup.sh mirror-restore <目標目錄>"
+  [ -d "$m" ] || die "未建鏡像：$m"
+  [ -e "$dest" ] && [ -n "$(ls -A "$dest" 2>/dev/null)" ] && die "目標目錄非空：$dest"
+  git clone --quiet "$m" "$dest"
+  local latest
+  latest="$(git -C "$m" for-each-ref --sort=-refname --format='%(refname)' refs/snapshots | head -1)"
+  [ -n "$latest" ] || die "鏡像裏沒有快照 ref"
+  git -C "$dest" checkout --quiet -B main "$latest" 2>/dev/null || git -C "$dest" checkout --quiet "$latest"
+  echo "已從鏡像還原到 $dest（快照 ${latest##*/}）"
+  echo "後續：cd $dest && git remote add origin https://github.com/codelllc09/rime-xuma-L.git"
+}
+
 case "${1:-}" in
   create) shift; cmd_create "$@" ;;
   list) shift; cmd_list "$@" ;;
   verify) shift; cmd_verify "$@" ;;
   restore) shift; cmd_restore "$@" ;;
   drill) cmd_drill ;;
-  *) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//' ;;
+  mirror-init) shift; cmd_mirror_init "$@" ;;
+  mirror-sync) cmd_mirror_sync ;;
+  mirror-status) shift; cmd_mirror_status ;;
+  mirror-restore) shift; cmd_mirror_restore "$@" ;;
+  *) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac

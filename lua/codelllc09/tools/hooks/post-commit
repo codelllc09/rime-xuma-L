@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# post-commit — 每次提交後把 HEAD 追加進本地裸鏡像（2026-11-05 加固）
+#
+# 爲什麼：歷史改寫類操作（filter-repo／reset --hard／gc --prune=now）能毀掉工作區
+# 倉庫裏的全部對象，但碰不到另一個目錄裏的裸庫。這是**唯一不依賴自律**的防線。
+#
+# 設計要點：推的是 refs/snapshots/<時間>-<sha>，每個提交一個**新** ref，只增不刪。
+# 絕不用 push --mirror——那會把鏡像的 ref 一起覆蓋，改寫清零後鏡像也跟着清零。
+#
+# 靜默與容錯：鏡像不存在就跳過；同步失敗只警告，絕不阻塞提交（鉤子不該成爲障礙）。
+set -uo pipefail
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+BK="$ROOT/lua/codelllc09/tools/backup.sh"
+[ -x "$BK" ] || exit 0
+"$BK" mirror-sync >/dev/null 2>&1 || true
+exit 0
