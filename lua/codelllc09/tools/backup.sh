@@ -179,8 +179,9 @@ MD
       rm -f "$old"; echo "    滾動清理：$(basename "$old")"
     done
   fi
-  # 台賬留痕（快照本身是不可再生區的一次固化）
-  python3 "$TOOLS/_ledger.py" "$out/$name" 快照 "git bundle --all＋不可再生區；$battery" >/dev/null
+  # 註：快照本身不寫台賬——MANIFEST.json（含 created_at／HEAD／216 件雜湊）就在快照裏，
+  # 它自己即記錄本。若每份快照都往台賬追加一行，會讓 events.jsonl 長期處於「未提交」狀態，
+  # 稀釋「git status 潔淨」的信號價值。drill／restore 屬低頻且有診斷價值，仍記台賬。
   c_g "完成。異地留存：把該檔拷到另一臺設備（建議放 $HOME/Backups/rime 之外的另一塊盤）"
 }
 
