@@ -283,6 +283,9 @@ cmd_mirror_init() {
   [ -d "$dest" ] && { echo "鏡像已存在：$dest"; return 0; }
   mkdir -p "$(dirname "$dest")"
   git init --quiet --bare "$dest"
+  # 裸庫的 HEAD 指向一個不存在的分支時，`git clone` 會得到空倉——先把它指好，
+  # 否則出事後最自然的動作（clone 鏡像）會失敗。實測教訓。
+  git -C "$dest" symbolic-ref HEAD refs/heads/main
   echo "已建裸鏡像：$dest"
   cmd_mirror_sync
 }
@@ -293,8 +296,11 @@ cmd_mirror_sync() {
   local head ref
   head="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null)" || return 0
   ref="refs/snapshots/$(date '+%Y%m%d-%H%M%S')-${head:0:8}"
-  # 同秒同 sha 重複推同一 ref 是無害的（no-op），故不加去重判斷
-  git -C "$ROOT" push --quiet "$m" "HEAD:$ref" 2>/dev/null || {
+  # 推兩個 ref：
+  #   refs/heads/main          —— 便民用，讓 `git clone 鏡像` 拿到東西；會移動
+  #   refs/snapshots/<…>-<sha> —— **只增不刪**的歷史，恢復時真正的依據
+  # clone 默認只拷 refs/heads/*，不拷 snapshots——故兩者都要。
+  git -C "$ROOT" push --quiet --force "$m" "HEAD:refs/heads/main" "HEAD:$ref" 2>/dev/null || {
     echo "⚠ 鏡像同步失敗（$m）" >&2; return 0; }   # 失敗也不阻塞提交
 }
 
