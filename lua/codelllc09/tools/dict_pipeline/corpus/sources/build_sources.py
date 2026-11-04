@@ -252,6 +252,15 @@ def main():
         if NET: fn()
         else: print(fn.__name__, '→', fn.__doc__.strip()[:40] if fn.__doc__ else '')
     shutil.rmtree(TMP, ignore_errors=True)
+    # 台賬（2026-11-05 加固）：語料區屬忽略區，重建事件必須留痕。
+    # AGENTS.md 曾聲稱本腳本已接駁台賬，實測 0 處寫入、台賬 0 條語料記錄——此處補上。
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    '..', '..', '..'))
+    from _ledger import note
+    n = len([x for x in os.listdir(HERE) if os.path.isfile(os.path.join(HERE, x))]) \
+        if os.path.isdir(HERE) else 0
+    note('corpus/sources', '重建' if NET else '預演',
+         f'build_sources.py{" --force" if FORCE else ""}：目錄 {n} 件（校驗見 corpus/SHA256SUMS）')
     print('\n驗收：cd .. && sha256sum -c SHA256SUMS')
 
 

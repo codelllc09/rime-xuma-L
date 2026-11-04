@@ -46,6 +46,12 @@ python3 gen_freq_dict.py
 echo "$(date '+%F %T') 部署（ibus restart）……"
 ibus restart && sleep 3
 echo "$(date '+%F %T') 入庫完成"
-# 本行僅向 IGNORED_CHANGES 台賬記一行索引（手動調用本腳本時，明細無落點，此行即唯一痕跡）
-printf '%s\tspool_pending.txt\t入庫\t/add 收詞固化：重跑詞頻管道並部署\n' \
-  "$(date '+%FT%T')" >> "$TOOLS/dict_pipeline/log/IGNORED_CHANGES.log"
+# 部署事件留痕（2026-11-05 加固）：此前部署結果只存在 /tmp 輪轉日誌，不留檔——
+# 出問題時無法回答「這個錯誤是哪次部署引入的」。此處固化「時刻＋引擎日誌錯誤計數」。
+L=$(ls -t /tmp/rime.ibus.*.log.INFO.* 2>/dev/null | head -1 || true)
+ERR=$( [ -n "${L:-}" ] && grep -icE "error|E[0-9]{4}" "$L" 2>/dev/null || echo 'NA')
+python3 "$TOOLS/_ledger.py" ibus 部署 "ibus restart；引擎日誌錯誤計數 ${ERR}；樣例碼位見 add_commit.log" >/dev/null
+[ "${ERR}" = "0" ] || echo "⚠ 部署後引擎日誌錯誤計數 ${ERR}（$L）"
+# 台賬（2026-11-05 加固）：統一走 _ledger 寫入口——TSV（人讀）+ events.jsonl（機讀）雙寫，
+# 腳本名自動入 actor 欄，處置鏈可回溯到具體調用方
+python3 "$TOOLS/_ledger.py" spool_pending.txt 入庫 "/add 收詞固化：重跑詞頻管道並部署" 

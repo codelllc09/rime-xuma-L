@@ -13,7 +13,12 @@
   ④ HEAD 煙測：git worktree 檢出 HEAD → check_acceptance＋gen_no_simple --verify
      ——「fresh clone 雙檢必掛」級 P0（如基準文件被 ignore 漏跟蹤）的唯一機檢防線
   ⑤ 雙檢編排：check_acceptance＋gen_no_simple --verify＋check_tendency（語料在則跑）
-  ⑥ --determinism（默認關，僅管道邏輯改動後跑）：雙 PYTHONHASHSEED 復跑管道——
+  ⑥ 留痕靜態電池：凡寫盤腳本必須有 _ledger 調用，或在豁免清單中聲明理由
+     ——「所有需要用日誌的行爲都有日誌」的機械保障（未聲明的寫盤者即敗）
+  ⑦ 溯源電池：PROVENANCE.json 中每個產物的輸入指紋須與現狀一致（輸入漂移即敗，
+     說明產物與輸入的對應關係已斷——要麼重跑生成器，要麼確認變更已入庫）
+  ⑧ 台賬衛生：IGNORED_CHANGES.log 四欄完整／時間非降／與 events.jsonl 雙檔對賬
+  --determinism（默認關，僅管道邏輯改動後跑）：雙 PYTHONHASHSEED 復跑管道——
      兩次 stdout 與產出文件字節摘要皆須一致（seed 不變性即過）；產出相對已提交
      版本的漂移（隔日日期戳屬預期）僅告警不判敗，實質變化走詞表改動流程複覈後提交
 
@@ -98,14 +103,31 @@ def battery_sums():
     # 校驗單路徑前綴爲 sources/，須自 corpus/ 目錄執行（BUILD.md「cd ..」同理）
     corpus = os.path.join(HERE, 'dict_pipeline', 'corpus')
     src = os.path.join(corpus, 'sources')
-    present = os.path.isdir(src) and any(os.scandir(src))
-    if not present:
-        item('③corpus', None, '語料缺失（無語料模式），SKIP')
+    # 「語料是否存在」不能看目錄非空——淨室克隆裏 sources/ 有 BUILD.md/SHA256SUMS 等
+    # 跟蹤文件，目錄必然非空（2026-11-05 演練實測暴露）。改判校驗單所列數據件是否在場：
+    # 全不在＝無語料模式 SKIP；部分在＝按校驗單對賬（缺件的自然 FAIL）。
+    listed = []
+    sums = os.path.join(corpus, 'SHA256SUMS')
+    if os.path.exists(sums):
+        for ln in open(sums, encoding='utf-8'):
+            ln = ln.strip()
+            if not ln or ln.startswith('#'):
+                continue
+            parts = ln.split(None, 1)
+            if len(parts) == 2:
+                listed.append(parts[1].lstrip('*'))
+    have = [x for x in listed if os.path.exists(os.path.join(corpus, x))]
+    if not listed:
+        item('③corpus', None, '校驗單缺失，SKIP')
+        return
+    if not have:
+        item('③corpus', None, f'語料缺席 {len(listed)} 件全無（無語料模式），SKIP')
         return
     r = run(['sha256sum', '-c', 'SHA256SUMS'], cwd=corpus)
     n_ok = r.stdout.count(': OK')
     item('③corpus', r.returncode == 0,
-         f'{n_ok} 條全 OK' if r.returncode == 0 else f'存在但未全過（exit {r.returncode}）')
+         f'{n_ok} 條全 OK' if r.returncode == 0
+         else f'在場 {len(have)}/{len(listed)} 件，對賬未全過（exit {r.returncode}）')
 
 
 # ── ④ HEAD 煙測（worktree 檢出，僅用跟蹤文件）──────────────────
@@ -144,6 +166,71 @@ def battery_checks():
     else:
         det += ' tendency=SKIP（無語料）'
     item('⑤雙檢', ok, det)
+
+
+# ── ⑥ 留痕靜態電池 ────────────────────────────────────────────
+# 原則：任何寫盤腳本，要麼接 _ledger 留痕，要麼在此明說「爲什麼不用記」。
+# 未聲明的寫盤者即敗——防「新寫盤點悄悄長出來、日誌面卻沒跟上」。
+WRITER_EXEMPT = {
+    'check_consistency.py': '門禁自身：只寫臨時目錄（worktree/tempfile），不改任何數據',
+    'gen_no_simple_data.py': '產物 no_simple_data.lua 已入庫（git 提交即歷史）；另有 --verify 零漂移閉環',
+    'gen_pinyin_tone.py': '產物 pinyin_tone.lua 已入庫（git 提交即歷史）；輸入漂移由⑦溯源電池兜底',
+    'mdx_keys.py': '一次性取鍵工具：讀外部 .mdx、輸出臨時鍵表，不入庫亦不參與管道',
+    '_ledger.py': '台賬寫入器本身',
+    '_provenance.py': '溯源清單寫入器本身',
+}
+WRITE_RE = re.compile(r"open\([^)]*['\"](?:w|a|wb|ab)['\"]|io\.open\([^)]*['\"](?:w|a|wb|ab)['\"]"
+                      r"|open\([^)]*,\s*['\"]w['\"]|shutil\.copy")
+
+
+def battery_ledger_static():
+    ls = run(['git', 'ls-files']).stdout.split()
+    scripts = [f for f in ls if f.endswith(('.py', '.sh'))]
+    undeclared, tally = [], 0
+    for f in scripts:
+        p = os.path.join(ROOT, f)
+        try:
+            txt = open(p, encoding='utf-8', errors='replace').read()
+        except OSError:
+            continue
+        if not (WRITE_RE.search(txt) or ('>>' in txt and f.endswith('.sh'))):
+            continue
+        tally += 1
+        base = os.path.basename(f)
+        if '_ledger' in txt or base in WRITER_EXEMPT:
+            continue
+        undeclared.append(f)
+    if undeclared:
+        item('⑥留痕靜態', False,
+             f'{len(undeclared)} 個寫盤腳本既無 _ledger 亦無豁免聲明：{undeclared[:5]}')
+    else:
+        item('⑥留痕靜態', True,
+             f'{tally} 個寫盤腳本全部有留痕或已聲明豁免（{len(WRITER_EXEMPT)} 條豁免）')
+
+
+# ── ⑦ 溯源電池 ──────────────────────────────────────────────────
+def battery_provenance():
+    sys.path.insert(0, HERE)
+    import _provenance
+    ok, bad = _provenance.verify(verbose=False)
+    if ok is None:
+        item('⑦溯源', None, '輸入整體缺席（無語料模式：如淨室克隆），SKIP')
+    elif ok:
+        n = len(_provenance.load().get('artifacts', {}))
+        item('⑦溯源', True, f'{n} 個產物的輸入指紋與現狀一致')
+    else:
+        item('⑦溯源', False, f'{len(bad)} 處漂移：{bad[:3]}')
+
+
+# ── ⑧ 台賬衛生 ──────────────────────────────────────────────────
+def battery_ledger_health():
+    sys.path.insert(0, HERE)
+    import _ledger
+    rows, js, bad = _ledger.selfcheck()
+    if bad:
+        item('⑧台賬衛生', False, f'{len(bad)} 處問題：{bad[:3]}')
+    else:
+        item('⑧台賬衛生', True, f'TSV {len(rows)} 行／JSONL {len(js)} 行，格式與雙檔對賬通過')
 
 
 # ── ⑥ 確定性（--determinism，默認關）───────────────────────────
@@ -193,6 +280,9 @@ def main():
     battery_sums()
     battery_head_smoke()
     battery_checks()
+    battery_ledger_static()
+    battery_provenance()
+    battery_ledger_health()
     if '--determinism' in sys.argv:
         battery_determinism()
     fails = [r for r in results if r[1] is False]

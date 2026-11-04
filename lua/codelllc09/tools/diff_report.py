@@ -74,15 +74,12 @@ def main():
             f.write('```\n')
     print(f'報告寫出 {out}（新增{len(added)} 注釋{len(tocom)} 恢復{len(revive)} '
           f'消失{len(gone)} 變權{len(wchg)}）')
-    # 台賬接駁（2026-11-05）：tmp/ 報告屬忽略區，記 IGNORED_CHANGES 一行
-    import datetime
-    log = os.path.join(ROOT, 'lua', 'codelllc09', 'tools', 'dict_pipeline', 'log', 'IGNORED_CHANGES.log')
-    os.makedirs(os.path.dirname(log), exist_ok=True)
-    with open(log, 'a', encoding='utf-8') as lg:
-        lg.write(f"{datetime.datetime.now().isoformat(timespec='seconds')}\t"
-                 f"../tmp/{os.path.basename(out)}\t生成\t"
-                 f"對賬 {old_r}…{short(new_r)}：新增{len(added)} 注釋{len(tocom)} "
-                 f"恢復{len(revive)} 消失{len(gone)}\n")
+    # 台賬（2026-11-05 加固）：統一走 _ledger 寫入口，tmp/ 報告屬忽略區→TSV+JSONL 雙寫
+    sys.path.insert(0, HERE)
+    from _ledger import note
+    note(f'../tmp/{os.path.basename(out)}', '生成',
+         f'對賬 {old_r}…{short(new_r)}：新增{len(added)} 注釋{len(tocom)} '
+         f'恢復{len(revive)} 消失{len(gone)}')
 
 
 if __name__ == '__main__':

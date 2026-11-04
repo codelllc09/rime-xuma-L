@@ -51,6 +51,8 @@ lua/codelllc09/tools/dict_pipeline/log/*
 !lua/codelllc09/tools/dict_pipeline/log/IGNORED_CHANGES.log
 !lua/codelllc09/tools/dict_pipeline/log/add_commit.log
 !lua/codelllc09/tools/dict_pipeline/log/hp_removals.log
+# events.jsonl：台賬機讀孿生檔（_ledger 寫；與 TSV 同行數對賬）——必須同 TSV 一併入庫
+!lua/codelllc09/tools/dict_pipeline/log/events.jsonl
 # add_debug.log 保持忽略：內含上屏原始字符（個人擊鍵），不入庫。
 # 例外：規則補丁（方案運行必需）與審定積累（長期勿失）入庫
 !lua/codelllc09/tools/dict_pipeline/manual_overrides.txt

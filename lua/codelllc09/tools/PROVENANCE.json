@@ -1,0 +1,87 @@
+{
+  "artifacts": {
+    "lua/codelllc09/no_simple_data.lua": {
+      "cmd": "python3 gen_no_simple_data.py",
+      "generator": "gen_no_simple_data.py",
+      "inputs": [
+        {
+          "count": 10,
+          "digest": "32c9a2d2f034445789e6e3e9af0ba1fc49ee2de2e35cc5357d380eb926c3d715",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/std_tables/official/*.txt"
+        },
+        {
+          "count": 15,
+          "digest": "299dbdbea1cb58866c8b0ea36ade6b819047a7ac564dc0eabad2f9ca37a4d30a",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/std_tables/classics/*.txt"
+        },
+        {
+          "count": 6,
+          "digest": "e7d527a2c149d99c56ede319c6873ecb0a40142fe1d2afef5d4baee1349094de",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/_mapping/*"
+        }
+      ],
+      "output_sha256": "17bfd4239e4b7f3aa51cf22b38dbc4406f85de62e4938d5fe716cd429a6d44f6"
+    },
+    "lua/codelllc09/pinyin_tone.lua": {
+      "cmd": "python3 gen_pinyin_tone.py",
+      "generator": "gen_pinyin_tone.py",
+      "inputs": [
+        {
+          "count": 6,
+          "digest": "e7d527a2c149d99c56ede319c6873ecb0a40142fe1d2afef5d4baee1349094de",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/_mapping/*"
+        },
+        {
+          "count": 1,
+          "digest": "f54850dc159d205ca9d41d937511bc02248500c282573a779967d8293f03824d",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/E.subtlex/*"
+        }
+      ],
+      "output_sha256": "cd8931bfa5983280a90a03968cf43033ffba36eb9b949aa4bb089e307c1804d3"
+    },
+    "xuma_L.dict.yaml": {
+      "cmd": "python3 gen_freq_dict.py",
+      "generator": "gen_freq_dict.py",
+      "inputs": [
+        {
+          "count": 1,
+          "digest": "f8358f3f64ded03b28485254abf35d0a07351733d2a509e77d7ed8b3a4cdeef1",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/dict_pipeline/handpicked.txt"
+        },
+        {
+          "count": 1,
+          "digest": "6c173be42590095bb93eea81307e63ce105f8b030341dfb62e44384ce0eb2697",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/dict_pipeline/manual_overrides.txt"
+        },
+        {
+          "count": 5,
+          "digest": "ecd032ea05f1d8c497a2cb686a74042547ea15f9f9d2854e5e2c7854b9443059",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/dict_pipeline/archive/rulings/*.txt"
+        },
+        {
+          "count": 31,
+          "digest": "39af7a4860ab99291b0d41009742d94f268a94231334c92be1c909ccfc56d816",
+          "kind": "glob",
+          "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/**"
+        },
+        {
+          "count": 1,
+          "digest": "54ee4af4afd393ab65a14c7b7ac8d0ec829573ad934dc578d60132302a5e933d",
+          "kind": "glob",
+          "pattern": "xuma_L.schema.yaml"
+        }
+      ],
+      "output_sha256": "d273739a2b9986d4e071d2e6f04f624aeacce2425cda619331c722ee4f8fa8ba"
+    }
+  },
+  "note": "生成物溯源清單：產物←生成器←輸入指紋。由 _provenance.py 維護，gen_freq_dict.py / gen_no_simple_data.py / gen_pinyin_tone.py 運行時自動刷新。不含時間戳（git 提交即時間），故同一輸入必得同一文件。",
+  "schema": 1
+}

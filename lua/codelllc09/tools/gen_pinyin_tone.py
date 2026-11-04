@@ -88,6 +88,11 @@ def main():
             f.write('["%s"]="%s",\n' % (ch, '/'.join(table[ch])))
         f.write('}\n')
     print('pinyin_tone.lua: %d 字（pseudo %d + kMandarin 补 %d）' % (len(table), n_pseudo, len(table) - n_pseudo))
+    # 溯源刷新（2026-11-05 加固）：產物←生成器←輸入指紋，輸入漂移即被 _provenance --verify 抓到
+    import sys as _s
+    _s.path.insert(0, HERE)
+    from _provenance import update as _pv
+    _pv('lua/codelllc09/pinyin_tone.lua')
 
 if __name__ == '__main__':
     main()

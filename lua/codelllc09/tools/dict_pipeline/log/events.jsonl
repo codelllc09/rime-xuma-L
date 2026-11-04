@@ -1,0 +1,20 @@
+{"ts": "2026-11-05T02:41:23", "actor": "migrated", "action": "轉正", "path": "archive/reports/*", "detail": "三件收編入庫（TO_BE_REVIEWED/freq_report/addon_review），此後歸 git 管", "tracked": false}
+{"ts": "2026-11-05T02:41:59", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-台账试运转.md", "detail": "對賬 HEAD~1…6ee42da：新增0 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T03:25:51", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-f541fe1補報.md", "detail": "對賬 f541fe1~1…f541fe1：新增0 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T03:25:52", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-f541fe1補報.md", "detail": "對賬 f541fe1…f541fe1：新增0 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T03:34:32", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-排序固化.md", "detail": "對賬 HEAD~1…80ecce5：新增0 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T03:57:05", "actor": "migrated", "action": "生成", "path": "../tmp/答辯.md", "detail": "三輪審查答辯與勘誤（只讀第三方審查條文落規前的補記）", "tracked": false}
+{"ts": "2026-11-05T04:30:00", "actor": "migrated", "action": "歷史抹除", "path": "archive/rulings 三件退役裁定檔＋std_tables/download 原始件", "detail": "隱私清洗（口語原文已機化沉澱，原始件不再隨庫）；作者身份隨洗統一", "tracked": false}
+{"ts": "2026-11-05T05:07:46", "actor": "migrated", "action": "事故與重建", "path": "全倉", "detail": "filter-repo 空清單誤操作清空本地史；以遠端基線+倖存忽略區淨室重建（詳對話審計與 ~/rime-survivors-1105-0438.tgz 全量快照）", "tracked": false}
+{"ts": "2026-11-05T05:28:37", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-17c3368.md", "detail": "對賬 HEAD…17c3368：新增0 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T05:40:55", "actor": "migrated", "action": "入庫", "path": "spool_pending.txt", "detail": "/add 收詞固化：重跑詞頻管道並部署", "tracked": false}
+{"ts": "2026-11-05T05:43:02", "actor": "migrated", "action": "生成", "path": "../tmp/日收首次實測", "detail": "對賬 HEAD~1…44cac20：新增2 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T05:43:13", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-日收首次實測", "detail": "對賬 HEAD~1…44cac20：新增2 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T05:43:22", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-日收首次實測.md", "detail": "對賬 HEAD~1…44cac20：新增2 注釋0 恢復0 消失0", "tracked": false}
+{"ts": "2026-11-05T05:46:11", "actor": "migrated", "action": "入庫", "path": "spool_pending.txt", "detail": "/add 收詞固化：重跑詞頻管道並部署", "tracked": false}
+{"ts": "2026-11-05T05:48:52", "actor": "migrated", "action": "生成", "path": "../tmp/詞表改動-事故重放.md", "detail": "對賬 HEAD~1…954bfde：新增16 注釋3 恢復0 消失15", "tracked": false}
+{"ts": "2026-11-05T05:59:09", "actor": "migrated", "action": "入庫", "path": "spool_pending.txt", "detail": "/add 收詞固化：重跑詞頻管道並部署", "tracked": false}
+{"ts": "2026-11-05T06:02:03", "actor": "migrated", "action": "入庫", "path": "spool_pending.txt", "detail": "/add 收詞固化：重跑詞頻管道並部署", "tracked": false}
+{"ts": "2026-11-05T06:27:30", "actor": "cli", "action": "快照", "path": "/tmp/bk-test/rime-snapshot-20261105-062725.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
+{"ts": "2026-11-05T06:27:45", "actor": "cli", "action": "快照", "path": "/tmp/tmp.cHqwTO2TwV/rime-snapshot-20261105-062740.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
+{"ts": "2026-11-05T06:28:09", "actor": "cli", "action": "快照", "path": "/tmp/tmp.qcEKDVO6TJ/rime-snapshot-20261105-062804.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}

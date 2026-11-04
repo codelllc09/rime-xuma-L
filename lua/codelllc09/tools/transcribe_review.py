@@ -72,6 +72,13 @@ def main():
     bad += [f'{sp} 未入 reviewed_done' for sp, _ in ok + drop if sp not in dn2]
     for b in bad: print('  ✗', b)
     print('轉抄驗證：', '全滿足 ✓' if not bad else f'{len(bad)} 缺口 ✗')
+    # 判定事件留痕（2026-11-05 加固）：三清單本身入庫，但「何時、多少條、去向如何」
+    # 是 git 看不出的事件維度——寫 events.jsonl 供回溯
+    sys.path.insert(0, HERE)
+    from _ledger import note
+    note('archive/rulings', '轉抄',
+         f'＋reviewed {len(ok)}／－rejected {len(drop)}／✓done {len(ok) + len(drop)}'
+         f'；驗證 {"全滿足" if not bad else f"{len(bad)} 缺口"}')
     sys.exit(1 if bad else 0)
 
 

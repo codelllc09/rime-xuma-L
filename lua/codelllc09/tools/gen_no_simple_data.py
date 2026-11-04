@@ -165,6 +165,13 @@ def status(ch):
     return 'BLOCK' if ord(ch) in set(blocked) else 'keep '
 
 
+if '--verify' not in sys.argv:
+    # 溯源刷新（2026-11-05 加固）：僅在真寫盤時記錄；--verify 走臨時文件不動清單
+    import sys as _s
+    _s.path.insert(0, HERE)
+    from _provenance import update as _pv
+    _pv('lua/codelllc09/no_simple_data.lua')
+
 if '--verify' in sys.argv:
     same = filecmp.cmp(out, os.path.join(HERE, '..', 'no_simple_data.lua'), shallow=False)
     os.unlink(out)

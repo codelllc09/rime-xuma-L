@@ -827,13 +827,21 @@ def main():
     for idx, (trad, (code, disp, srctag)) in enumerate(addon_sorted):
         raw = f'{trad}\t{code}\t{disp}' if disp else f'{trad}\t{code}'
         merge[code].append(('a', idx, (idx, trad, code, disp, raw)))
-    # 審計文件
-    with open(os.path.join(RIME, 'xuma.addon.dict.yaml'), 'w', encoding='utf-8') as f:
+    # 審計文件（忽略區產物：寫前取摘要，寫後僅在真變動時留痕，防每次運行刷屏）
+    import sys as _sys
+    _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from _ledger import note_if_changed, hash_of as _hash
+    _addon_p = os.path.join(RIME, 'xuma.addon.dict.yaml')
+    _addon_h0 = _hash(_addon_p)
+    with open(_addon_p, 'w', encoding='utf-8') as f:
         f.write('# ★ 補詞審計表（僅供人審，未接入任何 schema）\n')
         f.write(f'# 生成 {today}：A源 {len(srcA)} + B源 {len(srcB)} → 新增 {len(addon)}；歧義攔下 {len(amb_list)}；無碼攔下 {len(noc_list)}\n')
         f.write('---\nname: "xuma.addon"\nversion: "addon.%s"\nsort: original\n...\n' % today)
         for trad, (code, disp, srctag) in addon_sorted:
             f.write(f'{trad}\t{code}\t{disp if disp else ""}\t{srctag}\n')
+    note_if_changed('xuma.addon.dict.yaml', '生成',
+                    f'A源 {len(srcA)} B源 {len(srcB)} 新增 {len(addon)} 歧義 {len(amb_list)} 無碼 {len(noc_list)}',
+                    _addon_h0)
     print(f'補詞階段：A源 {len(srcA)}，B源 {len(srcB)}，新增 {len(addon)}，歧義 {len(amb_list)}，無碼 {len(noc_list)}')
     with open(os.path.join(ARCHIVE, 'reports', 'addon_review.txt'), 'w', encoding='utf-8') as f:
         # 輸出前排序：源迭代序隨 PYTHONHASHSEED 漂移，排序固化快照（2026-11-05 復審建議）
@@ -1140,6 +1148,10 @@ def main():
     for c, o, n in report_samples:
         if c == 'fbic':
             print(f'[用戶指定] fbic: {" > ".join(o)}  ==>  {" > ".join(n)}')
+    # 溯源刷新（2026-11-05 加固）：把「本產物由這版輸入生成」固化進 PROVENANCE.json。
+    # 輸入漂移而產物未重生成時，check_consistency ⑥ 溯源電池即報 FAIL。
+    from _provenance import update as _pv
+    _pv('xuma_L.dict.yaml')
 
 if __name__ == '__main__':
     main()
