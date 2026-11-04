@@ -35,7 +35,7 @@ if not take:
     print('（無可入庫詞）')
     sys.exit(0)
 with io.open(hp, 'a', encoding='utf-8') as f:
-    today = datetime.date.now().strftime('%Y-%m-%d')
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
     f.write(f'## 日收（{today}，spool 攢批）\n' + '\n'.join(take) + '\n')
 io.open(spool, 'w', encoding='utf-8').write('')
 PY
