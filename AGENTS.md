@@ -30,6 +30,15 @@
 
 ### 詞庫意願台（2026-11-05）
 
+**分支約定**：意願台（`wishd.py`／`wishd_ui.py`）在 **`ui` 分支**上開發；
+`main` 保持方案本體（schema／lua／詞典／工具鏈／防護）的穩定狀態。
+
+- UI 改動 → 在 `ui` 上提交，push 到 `origin/ui`（CI 同樣跑全電池與隱私門禁）
+- 方案本體改動 → 在 `main` 上做；需要時 `git switch ui && git merge main` 同步
+- 前端穩定後再 `git switch main && git merge ui` 合回
+- 兩分支的檔案幾乎不重疊（UI 只碰 `wishd*.py` 與本節），合併衝突極少
+
+
 三個意願通道（handpicked／manual_overrides／rejected）的**寫入校驗**收在
 `lua/codelllc09/tools/wishd.py` 一處；CLI 與 Web 共用，勿另寫一套（會繞過護欄）。
 
