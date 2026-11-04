@@ -18,6 +18,7 @@
   ⑦ 溯源電池：PROVENANCE.json 中每個產物的輸入指紋須與現狀一致（輸入漂移即敗，
      說明產物與輸入的對應關係已斷——要麼重跑生成器，要麼確認變更已入庫）
   ⑧ 台賬衛生：IGNORED_CHANGES.log 四欄完整／時間非降／與 events.jsonl 雙檔對賬
+  ⑬ 暫存區體量：任何暫存文件 >5MB 即敗（配置倉不該有大檔；誤 `git add -A` 的兜底）
   ⑫ 鉤子有效性：core.hooksPath 已設時，pre-commit／post-commit／pre-push 三件必須
      存在且可執行。「鉤子檔在」不等於「鉤子會跑」——git 對不可執行的鉤子只給一行
      hint 就跳過（2026-11-05 實例：2 個提交因 post-commit 未置可執行而漏了快照 ref）。
@@ -270,6 +271,25 @@ def battery_mirror():
         item('⑨鏡像', True, f'HEAD {head[:9]} 在鏡像中；快照 ref {n} 個；tag {len(mt)}/{len(lt)}')
 
 
+# ── ⑬ 暫存區體量 ────────────────────────────────────────────────
+def battery_staged_size():
+    limit = 5 * 1024 * 1024
+    r = run(['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'])
+    names = [x for x in r.stdout.splitlines() if x]
+    if not names:
+        item('⑬暫存體量', None, '暫存區為空（非提交時段），SKIP')
+        return
+    big = []
+    for n in names:
+        p = os.path.join(ROOT, n)
+        if os.path.isfile(p) and os.path.getsize(p) > limit:
+            big.append(f'{n}（{os.path.getsize(p) / 1048576:.1f}MB）')
+    if big:
+        item('⑬暫存體量', False, f'{len(big)} 個檔案超過 5MB：{big[:3]}')
+    else:
+        item('⑬暫存體量', True, f'{len(names)} 個暫存檔案均在 5MB 以內')
+
+
 # ── ⑫ 鉤子有效性 ────────────────────────────────────────────────
 def battery_hooks():
     hp = run(['git', 'config', 'core.hooksPath']).stdout.strip()
@@ -355,6 +375,7 @@ def main():
     battery_mirror()
     battery_fsck()
     battery_hooks()
+    battery_staged_size()
     if '--determinism' in sys.argv:
         battery_determinism()
     fails = [r for r in results if r[1] is False]
