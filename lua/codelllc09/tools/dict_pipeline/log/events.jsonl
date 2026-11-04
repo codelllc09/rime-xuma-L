@@ -25,3 +25,4 @@
 {"ts": "2026-11-05T06:29:52", "actor": "cli", "action": "快照", "path": "/tmp/tmp.dDVy3wMdep/rime-snapshot-20261105-062946.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
 {"ts": "2026-11-05T06:29:54", "actor": "cli", "action": "演練", "path": "drill", "detail": "快照 rime-snapshot-20261105-062946.tar.gz 還原並復跑門禁：通過", "tracked": true}
 {"ts": "2026-11-05T06:31:38", "actor": "cli", "action": "快照", "path": "/tmp/bk-res/rime-snapshot-20261105-063133.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
+{"ts": "2026-11-05T06:34:59", "actor": "cli", "action": "演練", "path": "drill", "detail": "快照 rime-snapshot-20261105-063452.tar.gz 還原並復跑門禁：通過", "tracked": true}
