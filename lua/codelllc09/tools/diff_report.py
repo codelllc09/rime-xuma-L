@@ -49,6 +49,9 @@ def main():
     wchg   = sorted(k for k in A if k in B and A[k][0] == B[k][0] and A[k][1] != B[k][1])
     out = sys.argv[3] if len(sys.argv) > 3 else os.path.join(
         ROOT, 'tmp', f'詞表改動-{short(new_r)}.md')
+    if not os.path.dirname(out):   # 裸文件名 → 落 ROOT/tmp/，沿「詞表改動-<名>.md」慣例（2026-11-05）
+        if not out.endswith('.md'): out += '.md'
+        out = os.path.join(ROOT, 'tmp', f'詞表改動-{out}')
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, 'w', encoding='utf-8') as f:
         f.write(f'# 詞表改動對賬 · {old_r}…{short(new_r)}\n\n')
