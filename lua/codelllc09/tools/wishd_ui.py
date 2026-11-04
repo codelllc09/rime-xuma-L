@@ -131,6 +131,7 @@ def api_dict(params):
     ln = g('len')
     src = g('src')
     sec = g('sec')
+    clen = g('clen')            # '' | short(1–3) | full(4) | '1' | '2' | '3' | '4'
     sort = g('sort', 'line')
     grouped = g('group', '1') == '1'
     try:
@@ -144,6 +145,17 @@ def api_dict(params):
 
     entries = wishd.load_entries()
     hp_add, hp_drop = wishd.load_handpicked_parts()
+
+    def code_ok(c):
+        """碼長篩選。簡碼＝1–3 碼（含一簡/二簡/三碼），全碼＝4 碼。"""
+        if not clen:
+            return True
+        n = len(c)
+        if clen == 'short':
+            return n <= 3
+        if clen == 'full':
+            return n == 4
+        return n == int(clen)
 
     def hit(w, c, tag):
         if word and word not in w:
@@ -171,6 +183,8 @@ def api_dict(params):
         for w, c, wt, line, tag, sn, in entries:
             if code and not c.lower().startswith(code):
                 continue
+            if not code_ok(c):
+                continue
             if sec and sn != sec:
                 continue
             if not hit(w, c, tag):
@@ -191,11 +205,13 @@ def api_dict(params):
         for w, c, wt, line, tag, sn in entries:
             if code and not c.lower().startswith(code):
                 continue
+            if not code_ok(c):
+                continue
             if hit(w, c, tag):
                 sel.add(w)
         agg = {}
         for w, c, wt, line, tag, sn in entries:
-            if w not in sel:
+            if w not in sel or not code_ok(c):
                 continue
             a = agg.get(w)
             if a is None:
@@ -456,6 +472,9 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
      <div class="bar">
        <input id="dw" type="text" placeholder="詞含…" style="width:170px">
        <input id="dc" type="text" placeholder="碼前綴…" style="width:120px">
+       <select id="dcl"><option value="">全部碼</option>
+         <option value="short">簡碼（1–3）</option><option value="full">全碼（4）</option>
+         <option value="1">一碼</option><option value="2">二簡</option><option value="3">三碼</option></select>
        <select id="dl"><option value="">字數不限</option><option value="1">單字</option>
          <option value="2">二字</option><option value="3">三字</option><option value="4">四字</option>
          <option value="other">五字以上</option></select>
@@ -614,7 +633,7 @@ $('#addbtn').onclick=()=>{
 function dictQuery(page){
   DPAGE=page||1;
   const p=new URLSearchParams({word:$('#dw').value.trim(),code:$('#dc').value.trim(),
-    len:$('#dl').value,src:$('#ds').value,sec:$('#dsec').value,sort:$('#dso').value,
+    len:$('#dl').value,clen:$('#dcl').value,src:$('#ds').value,sec:$('#dsec').value,sort:$('#dso').value,
     group:$('#dgrp').checked?'1':'0',page:DPAGE,size:100});
   api('/api/dict?'+p).then(d=>{
     DPAGES=d.pages;
@@ -642,7 +661,7 @@ function dictQuery(page){
 }
 ['#dgo'].forEach(s=>$(s).onclick=()=>dictQuery(1));
 ['#dw','#dc'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')dictQuery(1);}));
-['#dl','#ds','#dsec','#dso','#dgrp'].forEach(s=>$(s).onchange=()=>dictQuery(1));
+['#dl','#dcl','#ds','#dsec','#dso','#dgrp'].forEach(s=>$(s).onchange=()=>dictQuery(1));
 $('#dfirst').onclick=()=>dictQuery(1);
 $('#dprev').onclick=()=>dictQuery(Math.max(1,DPAGE-1));
 $('#dnext').onclick=()=>dictQuery(Math.min(DPAGES,DPAGE+1));
