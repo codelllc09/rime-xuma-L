@@ -38,3 +38,4 @@
 {"ts": "2026-11-05T07:01:50", "actor": "cli", "action": "演練", "path": "drill", "detail": "快照 rime-snapshot-20261105-070116.tar.gz 還原並復跑門禁：通過；RTO 34s", "tracked": true}
 {"ts": "2026-11-05T07:13:17", "actor": "cli", "action": "歷史改寫", "path": "~/.config/ibus/rime", "detail": "探針｜前 47 提交/119 件 → 後 47/119；bundle pre-rewrite-20261105-071317.bundle", "tracked": true}
 {"ts": "2026-11-05T07:13:34", "actor": "cli", "action": "歷史改寫", "path": "~/.config/ibus/rime", "detail": "清除历史中的 /home/<user> 绝对路径与旧 CI 黑名单里的身份串｜前 48 提交/119 件 → 後 48/119；bundle pre-rewrite-20261105-071331.bundle", "tracked": true}
+{"ts": "2026-11-05T07:15:37", "actor": "cli", "action": "異地備份", "path": "yoga:D:/Backups/rime/rime-snapshot-20261105-071509.tar.gz", "detail": "快照 rime-snapshot-20261105-071509.tar.gz 投遞並校驗通過（HEAD bec2526f9）", "tracked": true}
