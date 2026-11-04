@@ -309,6 +309,31 @@ cmd_drill() {
   fi
   [ "$mrc" = 0 ] || rc=1
 
+  # ⑦ 確定性：雙 PYTHONHASHSEED 復跑管道，兩次產出須逐字節一致。
+  # 這一項要活庫語料，故只能在真實倉庫跑（還原體無語料會 SKIP）。
+  # 它會重寫詞典等生成物——故僅在工作區潔淨時執行，跑完立即 checkout 還原。
+  echo "⑦ 確定性（雙 seed 復跑管道）："
+  local dirty_d
+  dirty_d="$(git -C "$ROOT" status --porcelain | wc -l)"
+  if [ "$dirty_d" -gt 0 ]; then
+    echo "     − 工作區有 $dirty_d 處未提交改動，跳過（避免覆蓋你的工作）"
+  elif ! [ -d "$ROOT/lua/codelllc09/tools/dict_pipeline/corpus/sources/_mapping" ]; then
+    echo "     − 無語料，跳過"
+  else
+    local det=0
+    ( cd "$TOOLS" && python3 check_consistency.py --determinism ) >/tmp/rime-drill-det.log 2>&1 || det=1
+    grep -E '\[.\] ?[⑥⑦]|確定性' /tmp/rime-drill-det.log | tail -2 | sed 's/^/     /'
+    if [ "$det" != 0 ]; then
+      echo "     ✗ 確定性未過（詳見 /tmp/rime-drill-det.log）"; rc=1
+    fi
+    # 復跑必然重寫生成物；還原到提交態（上面已確認跑前是潔淨的）
+    git -C "$ROOT" checkout -- . 2>/dev/null || true
+    local left
+    left="$(git -C "$ROOT" status --porcelain | wc -l)"
+    [ "$left" = 0 ] && echo "     ✓ 生成物已還原，工作區潔淨" \
+                    || { echo "     ⚠ 還原後仍有 $left 處改動，請人工確認"; rc=1; }
+  fi
+
   if [ "$rc" = 0 ]; then
     c_g "⑤ 演練通過：快照可還原、鏡像可 clone，還原體門禁全綠"
   else

@@ -23,7 +23,7 @@
   ⑨ 鏡像覆蓋：本地裸鏡像（backup.sh mirror-*）須含當前 HEAD——鏡像是歷史改寫類
      事故（filter-repo／reset --hard／gc --prune=now）唯一不依賴自律的防線；
      未建鏡像時 SKIP（淨室克隆／CI 屬正常）
-  --determinism（默認關，僅管道邏輯改動後跑）：雙 PYTHONHASHSEED 復跑管道——
+  ⑪ 確定性（--determinism，默認關；backup.sh drill 會自動觸發）：雙 PYTHONHASHSEED 復跑管道——
      兩次 stdout 與產出文件字節摘要皆須一致（seed 不變性即過）；產出相對已提交
      版本的漂移（隔日日期戳屬預期）僅告警不判敗，實質變化走詞表改動流程複覈後提交
 
@@ -268,7 +268,7 @@ def battery_fsck():
         item('⑩對象庫', True, 'git fsck --connectivity-only 零錯誤')
 
 
-# ── ⑥ 確定性（--determinism，默認關）───────────────────────────
+# ── ⑪ 確定性（--determinism，默認關）───────────────────────────
 def battery_determinism():
     outs_paths = ['xuma_L.dict.yaml',
                   'lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt',
@@ -293,7 +293,7 @@ def battery_determinism():
         digs.append(digest())
         after.append(run(['git', 'status', '--porcelain']).stdout)
     if '寫出' not in outs[0]:
-        item('⑥確定性', None, '管道未寫盤（無語料模式），SKIP')
+        item('⑪確定性', None, '管道未寫盤（無語料模式），SKIP')
         return
     # 判據＝seed 不變性：兩次 stdout 與產出字節摘要皆一致；
     # 相對跑前的漂移（隔日日期戳屬預期）只告警——那是詞表改動流程的命題，不是確定性的
@@ -305,7 +305,7 @@ def battery_determinism():
         new = sorted(set(after[0].splitlines()) - set(before.splitlines()))
         detail += ('；⚠ 產出較已提交版本有漂移（隔日日期戳屬預期；實質變化請走'
                    f'diff_report 複覈後提交，或 git checkout -- 還原）：{new[:3]}')
-    item('⑥確定性', same, detail)
+    item('⑪確定性', same, detail)
 
 
 def main():
