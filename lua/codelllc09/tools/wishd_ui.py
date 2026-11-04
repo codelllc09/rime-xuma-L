@@ -426,8 +426,7 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK TC","PingFang TC","Microsoft JhengHei",sans-serif;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme:dark){
-  :root{
+[data-theme=dark]{
     --bg:#0b1220; --surface:#111827; --surface-2:#0f172a; --border:#1f2937; --border-strong:#334155;
     --fg:#e5e7eb; --fg-muted:#94a3b8; --fg-faint:#64748b;
     --primary:#60a5fa; --primary-fg:#0b1220; --primary-soft:#172554;
@@ -435,7 +434,6 @@ PAGE = r"""<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
     --ok:#4ade80; --ok-soft:#052e16; --warn:#fbbf24; --warn-soft:#451a03;
     --accent:#60a5fa;
     --sh-1:0 1px 2px rgba(0,0,0,.4); --sh-2:0 4px 14px rgba(0,0,0,.5); --sh-3:0 18px 50px rgba(0,0,0,.65);
-  }
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -526,6 +524,15 @@ dialog::backdrop{background:rgba(2,6,23,.55);backdrop-filter:blur(2px)}
   background:var(--surface);border:1px solid var(--border);box-shadow:var(--sh-2);font-size:13px;
   display:flex;gap:9px;align-items:flex-start;animation:pop .16s ease-out}
 @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.menu{position:fixed;z-index:70;min-width:150px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);box-shadow:var(--sh-2);padding:4px;animation:pop .12s ease-out}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;
+  border-radius:5px;font-weight:500;color:var(--fg)}
+.menu button:hover{background:var(--surface-2)}
+.menu button.danger-item{color:var(--danger)}
+.menu button.danger-item:hover{background:var(--danger-soft)}
+.menu .sep{height:1px;background:var(--border);margin:4px 2px}
+td.right{text-align:right}
 .toast.ok{border-left:3px solid var(--ok)} .toast.err{border-left:3px solid var(--danger)}
 .toast.warn{border-left:3px solid var(--warn)} .toast.info{border-left:3px solid var(--primary)}
 .skel{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2),var(--border),var(--surface-2));
@@ -541,6 +548,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
   <div class="search"><input id="q" placeholder="碼（oooo）或詞（合適）" aria-label="查詢"></div>
   <button id="go" class="primary">查詢</button>
   <span class="hint"><kbd>/</kbd> 聚焦搜尋</span>
+  <button id="theme" class="ghost" title="切換深/淺色" aria-label="切換深淺色">◐</button>
 </header>
 
 <nav role="tablist">
@@ -653,6 +661,13 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
 </dialog>
 
 <script>
+/* 主題：localStorage 記住選擇；首次跟隨系統 */
+(function(){
+  const saved=localStorage.getItem('wishd-theme');
+  const sys=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  document.documentElement.dataset.theme=saved||sys;
+})();
+
 let CODE='', SEQ=[], DRAG=null, TOKEN=null, DPAGE=1, DPAGES=1;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -812,17 +827,44 @@ function dictQuery(page){
         +'<span class="badge">'+esc((r.tag||'').slice(0,12)||'—')+'</span></td>'
       +'<td class="num" title="'+(r.lines||[]).join(', ')+'">'
         +(r.lines&&r.lines.length>1?r.lines[0]+'+'+(r.lines.length-1):r.line)+'</td>'
-      +'<td>'+(r.dropped?'':`<button class="dropbtn sm ghost" data-w="${esc(r.w)}">棄用</button>`)
+      +'<td class="right">'+(r.dropped?''
+        :`<button class="more ghost sm" data-w="${esc(r.w)}" title="更多操作" aria-label="更多操作">⋯</button>`)
       +'</td></tr>').join('')
       :'<tr><td colspan="7"><div class="empty">無匹配</div></td></tr>';
     [...tb.children].forEach(tr=>{
       if(!tr.dataset.c)return;
-      tr.onclick=e=>{if(e.target.closest('.dropbtn'))return;tab('order');load(tr.dataset.c);};
-      const b=tr.querySelector('.dropbtn');
-      if(b)b.onclick=e=>{e.stopPropagation();dropOne(b.dataset.w);};
+      tr.onclick=e=>{if(e.target.closest('.more'))return;tab('order');load(tr.dataset.c);};
+      const b=tr.querySelector('.more');
+      if(b)b.onclick=e=>{e.stopPropagation();openMenu(b,b.dataset.w);};
     });
   }).catch(()=>{tb.innerHTML='<tr><td colspan="7"><div class="empty">請求失敗</div></td></tr>';});
 }
+let CTXMENU=null;
+function closeMenu(){ if(CTXMENU){CTXMENU.remove(); CTXMENU=null;} }
+function openMenu(btn, w){
+  closeMenu();
+  const r=btn.getBoundingClientRect();
+  const m=document.createElement('div');
+  m.className='menu'; m.setAttribute('role','menu');
+  m.innerHTML='<button class="danger-item" role="menuitem">棄用此詞…</button>'
+             +'<div class="sep"></div>'
+             +'<button role="menuitem" data-act="copy">複製編碼</button>';
+  m.style.left=Math.min(r.left-110, innerWidth-170)+'px';
+  m.style.top=(r.bottom+4)+'px';
+  document.body.appendChild(m); CTXMENU=m;
+  const first=m.querySelector('button'); first.focus();
+  m.querySelector('.danger-item').onclick=e=>{e.stopPropagation();closeMenu();dropOne(w);};
+  m.querySelector('[data-act=copy]').onclick=e=>{
+    e.stopPropagation(); closeMenu();
+    const row=btn.closest('tr');
+    const codes=[...row.querySelectorAll('.chip')].map(x=>x.textContent);
+    navigator.clipboard.writeText(codes[codes.length-1]||'').then(()=>toast('已複製編碼','ok',1600));
+  };
+  m.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeMenu();btn.focus();} });
+}
+document.addEventListener('click',e=>{ if(CTXMENU && !e.target.closest('.menu')) closeMenu(); });
+addEventListener('scroll',()=>closeMenu(),true);
+
 function dropOne(w){
   if(!confirm('棄用「'+w+'」？\n\n• 從詞庫刪除（handpicked 寫 -詞）\n'
     +'• 同時寫入 rejected，防止補詞階段從語料撈回來\n• 需按「應用」才生效；可 git checkout 撤銷')) return;
@@ -915,6 +957,20 @@ function loadRecent(){
       :'<div class="empty">無記錄</div>';
   });
 }
+
+const THEMEBTN=$('#theme');
+function paintTheme(){
+  const dark=document.documentElement.dataset.theme==='dark';
+  THEMEBTN.textContent=dark?'☾':'☀';
+  THEMEBTN.title=dark?'目前深色，點擊切淺色':'目前淺色，點擊切深色';
+}
+THEMEBTN.onclick=()=>{
+  const cur=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=cur;
+  localStorage.setItem('wishd-theme',cur);
+  paintTheme();
+};
+paintTheme();
 
 document.addEventListener('keydown',e=>{
   if(e.key==='/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)){
