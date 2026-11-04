@@ -38,50 +38,41 @@ def append(path, header, words):
 def main():
     if not os.path.exists(REP):
         sys.exit(f'找不到 {REP}（先跑 gen_freq_dict.py 生成）')
-    rej_p = os.path.join(RUL, 'rejected.txt')
-    rev_p = os.path.join(RUL, 'reviewed.txt')
-    done_p = os.path.join(RUL, 'reviewed_done.txt')
-    rejected, reviewed, done = words_of(rej_p), words_of(rev_p), words_of(done_p)
+    ok, drop, pend = [], [], []
+    for l in open(REP, encoding='utf-8'):
+        m = re.match(r'^([+-?]) (\S+) → (\S+)\t', l)
+        if not m: continue
+        {'+': ok, '-': drop, '?': pend}[m.group(1)].append((m.group(2), m.group(3)))
+    print(f'批注統計：放行 {len(ok)}｜否決 {len(drop)}｜未批 {len(pend)}')
+    if pend:
+        print('  （未批詞維持丟棄語義，不轉抄；想處理請批完再跑本腳本）')
 
-    plus, minus, pending = [], [], []
-    for line in open(REP, encoding='utf-8'):
-        line = line.rstrip('\n')
-        if not line.strip() or line.startswith('#'):
-            continue
-        line = line.split('#', 1)[0]
-        m = re.match(r'^([+\-?])\s+(\S+)\s*→\s*(\S+)', line.strip())
-        if not m:
-            continue
-        mark, simp, trad = m.group(1), m.group(2), m.group(3)
-        if mark == '+': plus.append((simp, trad))
-        elif mark == '-': minus.append((simp, trad))
-        else: pending.append((simp, trad))
-
-    if not plus and not minus:
-        print(f'無批注（掛起 {len(pending)} 詞）；不動三清單。')
-        return
-
-    import datetime
-    today = datetime.date.today().isoformat()
-    tag = f'TO_BE_REVIEWED 批注（{today}）'
-    add_rev = {t for s, t in plus} - reviewed
-    add_done = ({s for s, t in plus} | {s for s, t in minus}) - done
-    add_rej = ({t for s, t in minus} | {s for s, t in minus}) - rejected
-    print(f'批注統計：放行 {len(plus)}，否決 {len(minus)}，未批 {len(pending)}')
-    print(f'轉抄：reviewed +{len(add_rev)}；rejected +{len(add_rej)}；reviewed_done +{len(add_done)}')
+    rw = words_of(os.path.join(RUL, 'reviewed.txt'))
+    rj = words_of(os.path.join(RUL, 'rejected.txt'))
+    dn = words_of(os.path.join(RUL, 'reviewed_done.txt'))
+    add_rw = {t for _, t in ok} - rw
+    add_dn = ({sp for sp, _ in ok} | {sp for sp, _ in drop}) - dn
+    add_rj = ({t for _, t in drop} | {sp for sp, _ in drop}) - rj
+    plan = [('reviewed.txt（繁形入庫）', add_rw), ('reviewed_done.txt（定案）', add_dn),
+            ('rejected.txt（雙形否決）', add_rj)]
+    for name, ws in plan:
+        if ws:
+            print(f'  將追加 {name}：{len(ws)} 詞')
+            if not DRY:
+                append(os.path.join(RUL, name.split("（")[0]), 'TO_BE_REVIEWED 批注轉抄', ws)
     if DRY:
-        print('（--dry-run：不落盤）')
-        return
-    append(rev_p, tag + '：放行繁形入庫', add_rev)
-    append(rej_p, tag + '：否決繁簡雙形，雙閘全封', add_rej)
-    append(done_p, tag + '：定案簡形，不再重列', add_done)
+        print('（dry-run：未寫盤）'); return
 
-    # 回讀自驗：義務全滿足
-    rejected2, reviewed2, done2 = words_of(rej_p), words_of(rev_p), words_of(done_p)
-    miss = (add_rev - reviewed2) | (add_done - done2) | (add_rej - rejected2)
-    if miss:
-        sys.exit(f'⛔ 自驗失敗，未入清單：{sorted(miss)[:5]}')
-    print('自驗 ✓ 三清單義務全滿足。')
+    # 回讀驗證：每條批注的義務必須滿足
+    rw2, rj2, dn2 = (words_of(os.path.join(RUL, f)) for f in
+                     ('reviewed.txt', 'rejected.txt', 'reviewed_done.txt'))
+    bad = [f'+{t} 未入 reviewed' for _, t in ok if t not in rw2]
+    bad += [f'-{sp}/{t} 未入 rejected' for sp, t in drop
+            if sp not in rj2 or t not in rj2]
+    bad += [f'{sp} 未入 reviewed_done' for sp, _ in ok + drop if sp not in dn2]
+    for b in bad: print('  ✗', b)
+    print('轉抄驗證：', '全滿足 ✓' if not bad else f'{len(bad)} 缺口 ✗')
+    sys.exit(1 if bad else 0)
 
 
 if __name__ == '__main__':

@@ -61,8 +61,9 @@ def battery_ignore():
     bad = []
     gi = os.path.join(ROOT, '.gitignore')
     with open(gi, encoding='utf-8') as f:
-        # 剝尾部斜線再探：帶 / 傳參會被「dir/*」類模式空匹配吞掉而誤報
-        wl = [l.rstrip('\n')[1:].strip().rstrip('/') for l in f if l.startswith('!')]
+        # 目錄型 ! 行（尾斜線）跳過探測：目錄不存在時無法驗證目錄語義（探針不友好），
+        # 其實際效果由①跟蹤電池對目錄內文件的判定兜底；文件型！行剝尾斜線探測
+        wl = [l.rstrip('\n')[1:].strip().rstrip('/') for l in f if l.startswith('!') and not l.rstrip('\n').endswith('/')]
     for path in wl:
         if run(['git', 'check-ignore', '-q', '--no-index', '--', path]).returncode == 0:
             bad.append(path)   # 白名單行寫了但仍被忽略＝壞行（行內尾註/粘行特徵）
