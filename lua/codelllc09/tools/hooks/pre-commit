@@ -49,6 +49,7 @@ if ! ( cd "$TOOLS" && python3 check_consistency.py >/tmp/rime-precommit.log 2>&1
     · ①白名單 → 新跟蹤文件要在 .gitignore 顯式放行（註釋須獨立成行）
     · ②未來日期 → 文檔/答辯寫了晚於今日的日期
     · ⑧台賬 → python3 _ledger.py --selfcheck
+    · ⑨鏡像 → ./backup.sh mirror-sync（本地裸鏡像未覆蓋 HEAD；它只防誤操作，不防盤壞）
   確需跳過：git commit --no-verify（並在提交信息說明理由）
 TIP
   exit 1
