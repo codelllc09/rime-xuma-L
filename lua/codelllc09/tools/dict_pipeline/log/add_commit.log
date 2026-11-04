@@ -1,0 +1,273 @@
+[handpick] 收詞 1：總包
+2026-11-04 21:16:19 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24451，B源 49586，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197794 行 + 尾區 4 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-04 21:16:46 部署（ibus restart）……
+2026-11-04 21:16:49 入庫完成
+[handpick] 收詞 1：驚呆
+2026-11-04 21:25:26 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24451，B源 49586，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197798 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+hsoi: 有味  ==>  驚呆 > 有味
+2026-11-04 21:25:51 部署（ibus restart）……
+[handpick] 收詞 1：審核
+2026-11-04 21:32:41 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24451，B源 49586，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197800 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+wpiy: 複核 > 審校  ==>  審核 > 複核 > 審校
+2026-11-04 21:33:06 部署（ibus restart）……
+[handpick] 收詞 1：重跑
+2026-11-04 21:34:04 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24451，B源 49586，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197802 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+rkos: 香吻  ==>  香吻 > 重跑
+2026-11-04 21:34:28 部署（ibus restart）……
+[handpick] 收詞 1：此在
+2026-11-04 21:49:09 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24451，B源 49586，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197804 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+lvhk: 處在 > 柴草 > 紫草  ==>  處在 > 柴草 > 紫草 > 此在
+2026-11-04 21:49:19 部署（ibus restart）……
+[handpick] 收詞 1：續跑
+2026-11-04 21:51:48 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24451，B源 49586，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197804 行 + 尾區 4 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-04 21:51:57 部署（ibus restart）……
+[handpick] 收詞 1：終檢
+2026-11-04 21:59:28 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24451，B源 49586，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197806 行 + 尾區 4 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-04 21:59:38 部署（ibus restart）……
+[handpick] 跳過 對於（已在詞典）
+[handpick] 無新詞可收
+2026-11-04 22:02:50 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+人工次序覆蓋 1 對
+補詞階段：A源 24451，B源 49586，新增 0，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197808 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-04 22:02:59 部署（ibus restart）……
+[handpick] 收詞 1：回退
+2026-11-05 02:13:22 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+[overrides] 名次生效: 合適 > 會議 > 會談（分 -3.19 > -4.12 > -4.13）
+[overrides] 生效: 路徑(-4.76 ↔ -4.74)口徑
+[overrides] 生效: 堅定(-4.13 ↔ -3.28)大家
+[overrides] 名次生效: 原處 > 一些 > 一處（分 -3.11 > -4.88 > -5.72）
+人工次序覆蓋 5 條
+[台账] 否決詞 262 條生效（archive/rulings/rejected.txt）
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24460，B源 49595，新增 1，歧義 30，無碼 0
+待審詞表已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/reports/待審詞表.txt（大組 0，雜項 30 詞，共 30 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197836 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+nobz: 圓子  ==>  圓子 > 回退
+2026-11-05 02:13:31 部署（ibus restart）……
+[handpick] 收詞 1：歸一
+[handpick] 收詞 1：自洽
+Traceback (most recent call last):
+  File "<stdin>", line 26, in <module>
+AttributeError: type object 'datetime.date' has no attribute 'now'
+[handpick] 收詞 1：歸一
+[handpick] 收詞 1：自洽
+2026-11-05 05:40:40 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+[overrides] 名次生效: 合適 > 會議 > 會談（分 -3.19 > -4.12 > -4.13）
+[overrides] 生效: 路徑(-4.76 ↔ -4.74)口徑
+[overrides] 生效: 批註(-6.16 ↔ -5.65)批文
+[overrides] 生效: 回退(-7.21 ↔ -6.20)圓子
+[overrides] 生效: 堅定(-4.13 ↔ -3.28)大家
+[overrides] 名次生效: 原處 > 一些 > 一處（分 -3.11 > -4.88 > -5.72）
+人工次序覆蓋 7 條
+[台账] 否決詞 292 條生效（archive/rulings/rejected.txt）
+[H源] 手收詞補錄 2 詞
+補詞階段：A源 24457，B源 49574，新增 2，歧義 0，無碼 0
+TO_BE_REVIEWED 已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt（大組 0，雜項 0 詞，共 0 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197768 行 + 尾區 4 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+tzzu: 偏激  ==>  偏激 > 自洽
+2026-11-05 05:40:52 部署（ibus restart）……
+2026-11-05 05:40:55 入庫完成
+[handpick] 收詞 1：碼位
+2026-11-05 05:45:58 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+[overrides] 名次生效: 合適 > 會議 > 會談（分 -3.19 > -4.12 > -4.13）
+[overrides] 生效: 路徑(-4.76 ↔ -4.74)口徑
+[overrides] 生效: 批註(-6.16 ↔ -5.65)批文
+[overrides] 生效: 回退(-7.21 ↔ -6.20)圓子
+[overrides] 生效: 堅定(-4.13 ↔ -3.28)大家
+[overrides] 名次生效: 原處 > 一些 > 一處（分 -3.11 > -4.88 > -5.72）
+人工次序覆蓋 7 條
+[台账] 否決詞 292 條生效（archive/rulings/rejected.txt）
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24457，B源 49574，新增 1，歧義 0，無碼 0
+TO_BE_REVIEWED 已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt（大組 0，雜項 0 詞，共 0 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 197770 行 + 尾區 4 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-05 05:46:11 部署（ibus restart）……
+error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+
+(ibus restart:3910112): GLib-GIO-CRITICAL **: 05:46:11.401: g_dbus_connection_is_closed: assertion 'G_IS_DBUS_CONNECTION (connection)' failed
+
+(ibus restart:3910112): GLib-GIO-CRITICAL **: 05:46:11.401: g_dbus_connection_is_closed: assertion 'G_IS_DBUS_CONNECTION (connection)' failed
+Can't connect to IBus.
+2026-11-05 05:46:11 入庫完成
+[handpick] 收詞 1：機讀
+2026-11-05 05:58:53 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+[overrides] 名次生效: 合適 > 會議 > 會談（分 -3.19 > -4.12 > -4.13）
+[overrides] 生效: 路徑(-4.76 ↔ -4.74)口徑
+[overrides] 生效: 批註(-6.16 ↔ -5.65)批文
+[overrides] 生效: 回退(-7.21 ↔ -6.20)圓子
+[overrides] 生效: 堅定(-4.13 ↔ -3.28)大家
+[overrides] 名次生效: 原處 > 一些 > 一處（分 -3.11 > -4.88 > -5.72）
+人工次序覆蓋 7 條
+[台账] 否決詞 292 條生效（archive/rulings/rejected.txt）
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24457，B源 49574，新增 1，歧義 0，無碼 0
+TO_BE_REVIEWED 已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt（大組 0，雜項 0 詞，共 0 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 198038 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+iayj: 李維諾夫  ==>  李維諾夫 > 機讀
+2026-11-05 05:59:06 部署（ibus restart）……
+2026-11-05 05:59:09 入庫完成
+（無可入庫詞）
+2026-11-05 06:01:49 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+[overrides] 名次生效: 合適 > 會議 > 會談（分 -3.19 > -4.12 > -4.13）
+[overrides] 生效: 路徑(-4.76 ↔ -4.74)口徑
+[overrides] 生效: 批註(-6.16 ↔ -5.65)批文
+[overrides] 生效: 回退(-7.21 ↔ -6.20)圓子
+[overrides] 生效: 堅定(-4.13 ↔ -3.28)大家
+[overrides] 名次生效: 原處 > 一些 > 一處（分 -3.11 > -4.88 > -5.72）
+人工次序覆蓋 7 條
+[台账] 否決詞 292 條生效（archive/rulings/rejected.txt）
+補詞階段：A源 24457，B源 49574，新增 0，歧義 0，無碼 0
+TO_BE_REVIEWED 已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt（大組 0，雜項 0 詞，共 0 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 198038 行 + 尾區 2 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-05 06:02:00 部署（ibus restart）……
+2026-11-05 06:02:03 入庫完成
+[handpick] 收詞 1：呆子
+2026-11-05 06:03:50 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+[overrides] 名次生效: 合適 > 會議 > 會談（分 -3.19 > -4.12 > -4.13）
+[overrides] 生效: 路徑(-4.76 ↔ -4.74)口徑
+[overrides] 生效: 批註(-6.16 ↔ -5.65)批文
+[overrides] 生效: 回退(-7.21 ↔ -6.20)圓子
+[overrides] 生效: 堅定(-4.13 ↔ -3.28)大家
+[overrides] 名次生效: 原處 > 一些 > 一處（分 -3.11 > -4.88 > -5.72）
+人工次序覆蓋 7 條
+[台账] 否決詞 292 條生效（archive/rulings/rejected.txt）
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24457，B源 49574，新增 1，歧義 0，無碼 0
+TO_BE_REVIEWED 已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt（大組 0，雜項 0 詞，共 0 詞）
+寫出 ~/.config/ibus/rime/xuma_L.dict.yaml: 主體 198038 行 + 尾區 4 行
+報告已寫出 ~/.config/ibus/rime/lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-05 06:04:00 部署（ibus restart）……

@@ -46,6 +46,12 @@ lua/codelllc09/tools/dict_pipeline/corpus/sources/*
 !lua/codelllc09/tools/dict_pipeline/log/
 lua/codelllc09/tools/dict_pipeline/log/*
 !lua/codelllc09/tools/dict_pipeline/log/.gitkeep
+# 台賬與管道明細（2026-11-05 加固）：二重歷史必須自身入庫——
+# 台賬的存在理由就是「git 之外的歷史」，它若也不在 git，硬盤壞則二重歷史與 git 同歸於盡。
+!lua/codelllc09/tools/dict_pipeline/log/IGNORED_CHANGES.log
+!lua/codelllc09/tools/dict_pipeline/log/add_commit.log
+!lua/codelllc09/tools/dict_pipeline/log/hp_removals.log
+# add_debug.log 保持忽略：內含上屏原始字符（個人擊鍵），不入庫。
 # 例外：規則補丁（方案運行必需）與審定積累（長期勿失）入庫
 !lua/codelllc09/tools/dict_pipeline/manual_overrides.txt
 # 裁定輸入 rulings/（人寫，管道讀：否決閘/定案跳過/放行清單/政策檔）——2026-11-05 分區
