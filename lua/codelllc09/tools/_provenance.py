@@ -30,6 +30,7 @@ import glob
 import hashlib
 import json
 import os
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -99,9 +100,23 @@ def _digest(rel_paths):
     return h.hexdigest()
 
 
+def _ignored_count(rel_paths):
+    """這批路徑中有幾件落在 gitignore 區。用於區分「無語料克隆」與「輸入真漂移」：
+    記錄時含忽略區數據件、驗證時一件都不含 ⇒ 該輸入整體不在場（淨室克隆），SKIP 而非 FAIL。"""
+    if not rel_paths:
+        return 0
+    try:
+        r = subprocess.run(['git', '-C', ROOT, 'check-ignore', '--stdin'],
+                           input='\n'.join(rel_paths), capture_output=True, text=True, timeout=30)
+        return len([x for x in r.stdout.splitlines() if x.strip()])
+    except Exception:
+        return 0
+
+
 def fingerprint(pattern):
     rel = _expand(pattern)
-    return {'kind': 'glob', 'pattern': pattern, 'count': len(rel), 'digest': _digest(rel)}
+    return {'kind': 'glob', 'pattern': pattern, 'count': len(rel),
+            'digest': _digest(rel), 'ignored_count': _ignored_count(rel)}
 
 
 def load():
@@ -158,9 +173,13 @@ def verify(verbose=True):
         n_absent = 0
         for inp in rec.get('inputs', []):
             if not os.path.exists(os.path.join(ROOT, _static_prefix(inp['pattern']))):
-                n_absent += 1          # 輸入整體缺席＝無語料模式（如淨室克隆），非漂移
+                n_absent += 1          # 靜態前綴目錄整個不在＝無語料模式，非漂移
                 continue
             now = fingerprint(inp['pattern'])
+            # 記錄時含忽略區數據件，而今一件不含 ⇒ 語料不在場（淨室克隆），SKIP 該輸入
+            if inp.get('ignored_count', 0) > 0 and now['ignored_count'] == 0:
+                n_absent += 1
+                continue
             if now['digest'] != inp['digest'] or now['count'] != inp['count']:
                 bad.append(f'{art}：輸入漂移 {inp["pattern"]}'
                            f'（記 {inp["count"]} 件/{inp["digest"][:8]}，'

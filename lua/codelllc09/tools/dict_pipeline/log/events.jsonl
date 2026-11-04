@@ -18,3 +18,4 @@
 {"ts": "2026-11-05T06:27:30", "actor": "cli", "action": "快照", "path": "/tmp/bk-test/rime-snapshot-20261105-062725.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
 {"ts": "2026-11-05T06:27:45", "actor": "cli", "action": "快照", "path": "/tmp/tmp.cHqwTO2TwV/rime-snapshot-20261105-062740.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
 {"ts": "2026-11-05T06:28:09", "actor": "cli", "action": "快照", "path": "/tmp/tmp.qcEKDVO6TJ/rime-snapshot-20261105-062804.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}
+{"ts": "2026-11-05T06:28:36", "actor": "cli", "action": "快照", "path": "/tmp/tmp.TLQ59VhnUN/rime-snapshot-20261105-062831.tar.gz", "detail": "git bundle --all＋不可再生區；小計：10 項｜FAIL 0｜SKIP 0", "tracked": true}

@@ -7,18 +7,21 @@
         {
           "count": 10,
           "digest": "32c9a2d2f034445789e6e3e9af0ba1fc49ee2de2e35cc5357d380eb926c3d715",
+          "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/std_tables/official/*.txt"
         },
         {
           "count": 15,
           "digest": "299dbdbea1cb58866c8b0ea36ade6b819047a7ac564dc0eabad2f9ca37a4d30a",
+          "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/std_tables/classics/*.txt"
         },
         {
           "count": 6,
           "digest": "e7d527a2c149d99c56ede319c6873ecb0a40142fe1d2afef5d4baee1349094de",
+          "ignored_count": 6,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/_mapping/*"
         }
@@ -32,12 +35,14 @@
         {
           "count": 6,
           "digest": "e7d527a2c149d99c56ede319c6873ecb0a40142fe1d2afef5d4baee1349094de",
+          "ignored_count": 6,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/_mapping/*"
         },
         {
           "count": 1,
           "digest": "f54850dc159d205ca9d41d937511bc02248500c282573a779967d8293f03824d",
+          "ignored_count": 1,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/E.subtlex/*"
         }
@@ -51,30 +56,35 @@
         {
           "count": 1,
           "digest": "f8358f3f64ded03b28485254abf35d0a07351733d2a509e77d7ed8b3a4cdeef1",
+          "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/handpicked.txt"
         },
         {
           "count": 1,
           "digest": "6c173be42590095bb93eea81307e63ce105f8b030341dfb62e44384ce0eb2697",
+          "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/manual_overrides.txt"
         },
         {
           "count": 5,
           "digest": "ecd032ea05f1d8c497a2cb686a74042547ea15f9f9d2854e5e2c7854b9443059",
+          "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/archive/rulings/*.txt"
         },
         {
           "count": 31,
           "digest": "39af7a4860ab99291b0d41009742d94f268a94231334c92be1c909ccfc56d816",
+          "ignored_count": 29,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/corpus/sources/**"
         },
         {
           "count": 1,
           "digest": "54ee4af4afd393ab65a14c7b7ac8d0ec829573ad934dc578d60132302a5e933d",
+          "ignored_count": 0,
           "kind": "glob",
           "pattern": "xuma_L.schema.yaml"
         }
