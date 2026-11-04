@@ -5,6 +5,10 @@
 > 生成閉環：`python3 gen_no_simple_data.py --verify` 重生成對比現役攔截集，零漂移即綠（2026-11-05 起規範化）。
 
 > `download/` 爲原始下载件暂存區（含影印 PDF 等大件），git 整體忽略不入库（`SHA256SUMS` 可校驗）；仓库跟踪的只有清洗後的字表。
+>
+> 事故後狀態（2026-11-05）：自 GitHub 快照恢復文本類原始件 72M（`SHA256SUMS.json` 核驗 138 件 OK）；
+> 43 件影印 PDF/大件與 pianhai 探索產出未入過 git、已永失，需要時按本表「來源」列重下；
+> `wuyinjiyun_raw.txt` 爲基線版本（基線後更新佚），清洗表 `classics_wuyinjiyun.txt` 不受影響。
 
 ## 已收錄
 

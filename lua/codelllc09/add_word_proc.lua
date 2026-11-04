@@ -43,6 +43,7 @@ local function processor(key, env)
 
   -- 本機 librime-lua 的 KeyEvent 惯用法（同 mode_hint）：解析 repr 字符串
   local r = key:repr()                      -- 形如 "Shift+Release+space"
+  do local dbg = io.open('/tmp/addkey.log', 'a'); if dbg then dbg:write(r .. '\n'); dbg:close() end end  -- TEMP DEBUG
   if r:find('Release', 1, true) then return K_NOOP end
   if r:find('Control', 1, true) or r:find('Alt', 1, true) then return K_NOOP end
   local parts = {}
@@ -60,6 +61,7 @@ local function processor(key, env)
   if not idx or idx == 0 then return K_NOOP end
 
   local item = state.menu[idx]
+  do local dbg = io.open('/tmp/addkey.log', 'a'); if dbg then dbg:write('idx=' .. tostring(idx) .. ' item=' .. (item and item.kind .. ':' .. item.text or 'NIL') .. '\n'); dbg:close() end end  -- TEMP DEBUG
   if not item then return K_NOOP end
 
   if item.kind == 'word' then
