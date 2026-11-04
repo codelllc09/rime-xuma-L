@@ -6,6 +6,8 @@ readme = "README.md"
 # 本倉庫不是可安裝的包，pyproject 只承擔兩件事：釘 Python 版本、聲明可選依賴。
 # 環境約定見 AGENTS.md：禁用 pip/pip3，一律 uv。
 requires-python = ">=3.10"
+# 版本約定（2026-11-05）：本機 3.14、CI 釘 3.13（見 .github/workflows/gate.yml）。
+# 全部腳本只用標準庫，3.10+ 皆可；不設 .python-version，避免 uv 在本機另拉解釋器。
 
 # 核心工具鏈（gen_freq_dict / check_* / _ledger / _provenance）只用標準庫，無必需依賴。
 dependencies = []

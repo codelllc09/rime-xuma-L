@@ -95,6 +95,8 @@
 - **CI**（2026-11-05 新增）：`.github/workflows/gate.yml` 在 push/PR 上跑全電池十項、
   Python 語法、提交身份白名單、敏感路徑掃描。語料不在 git，故 ③corpus／⑤tendency
   在 CI 必 SKIP——這是設計而非缺陷；需活庫語料的檢查由本機鉤子與 `backup.sh drill` 承擔。
+- **一次性設置**：`./lua/codelllc09/tools/setup.sh`——鉤子／reflog／鏡像都存在
+  `.git/config`（不入庫），克隆後必須重跑；腳本化以免恢復時漏步。
 - **恢復卡**：`RECOVERY.md` 入庫——任何 clone（含從鏡像 clone 的）都帶着它。
   事故時倉庫內腳本可能已被刪光，該卡只列**純 git／系統命令**。
 - **里程碑 tag**：每次「事故重建完成／大規模改動季結束／門禁與演練雙綠」打一個附註 tag
