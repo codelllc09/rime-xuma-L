@@ -80,15 +80,23 @@
   `tools/PROVENANCE.json`（由 `tools/_provenance.py` 維護）。三個生成器運行時
   自動刷新；新增生成物須在 `_provenance.SPEC` 聲明輸入 glob。
   `check_consistency.py` ⑦ 溯源電池比對輸入指紋——輸入漂移而產物未重生成即敗。
+- **部署前閘門**（2026-11-05）：`handpick_commit.sh` 在 `ibus restart` **之前**驗
+  詞典數據行數下限＋`check_acceptance`（44 碼首選回歸）。生成可以失敗，但失敗的生成
+  **絕不上線**——此前是「管道跑完就直接重啟」，壞詞典會被打字的人第一個發現。
+- **原子寫**（2026-11-05）：`gen_freq_dict.py` 寫詞典與報告走 `.tmp`＋`os.replace`＋fsync。
+  中斷時要麼舊檔完整、要麼新檔完整，不會留下半截詞典（半截詞典＝輸入法癱瘓）。
 - **提交門禁**（2026-11-05 加固）：`core.hooksPath` 已指向 `lua/codelllc09/tools/hooks`
   （鉤子**入庫**，克隆後在，不像 `.git/hooks` 會消失）。`pre-commit` 守兩件事——
   台賬衛生＋全電池十項，⑦溯源可抓「改了 rulings／語料卻沒重跑管道」這類最常見的漏步驟。
   新克隆需一次性執行 `git config core.hooksPath lua/codelllc09/tools/hooks`。
   確需跳過用 `git commit --no-verify`，並在提交信息說明理由；**靜默跳過即違紀**。
   `post-commit` 負責把每個提交追加進本地裸鏡像（見「歷史改寫防護」）。
+  `pre-push` 在推送前重跑電池（pre-commit 可被 `--no-verify` 繞過，推送是最後一關）。
 - **CI**（2026-11-05 新增）：`.github/workflows/gate.yml` 在 push/PR 上跑全電池十項、
   Python 語法、提交身份白名單、敏感路徑掃描。語料不在 git，故 ③corpus／⑤tendency
   在 CI 必 SKIP——這是設計而非缺陷；需活庫語料的檢查由本機鉤子與 `backup.sh drill` 承擔。
+- **恢復卡**：`RECOVERY.md` 入庫——任何 clone（含從鏡像 clone 的）都帶着它。
+  事故時倉庫內腳本可能已被刪光，該卡只列**純 git／系統命令**。
 - **里程碑 tag**：每次「事故重建完成／大規模改動季結束／門禁與演練雙綠」打一個附註 tag
   （`git tag -a` 帶說明）。下次出事時，tag 是最便宜的「已知良好點」。
 - 個人數據不入庫：`userdb/`、`/sync/`、`spool`、`add_debug.log`（含上屏原始字符＝擊鍵痕跡）、
@@ -106,6 +114,7 @@
 - **可重建集**：`corpus/sources/`（`BUILD.md` 釘版＋`SHA256SUMS`，淨室實測 29/29）、
   `cache/`（管道重算）、詞典與 lua 生成物（入庫，git 即歷史）；
 - **快照**：`tools/backup.sh create` → `~/Backups/rime/rime-snapshot-*.tar.gz`
+  （打包後自動校驗；目標盤餘量 <5G 告警；`--with-userdb` 另含個人學習庫，默認不含）
   （bundle 全史＋不可再生集＋逐件 sha256 ＋ `RESTORE.md`；默認約 29M，滾動保留 14 代）。
   **只含已提交狀態**——未提交改動不在快照內，故備份前先 commit；
 - **異地**：另一臺設備是唯一異地點，快照檔須人工拷過去（放與本機不同的一塊盤）；

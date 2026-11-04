@@ -43,6 +43,34 @@ PY
 cd "$TOOLS"
 echo "$(date '+%F %T') 重跑詞頻管道……"
 python3 gen_freq_dict.py
+
+# ── 部署前閘門（2026-11-05 加固）────────────────────────────────
+# 此前是「管道跑完就直接 ibus restart」——管道若產出壞詞典，壞詞典會被推上線，
+# 用戶下一次打字才發現。這道閘門把「上線」與「生成」分開：生成可以失敗，
+# 失敗的生成絕不上線（詞庫文件已更新但引擎未加載，git checkout 即回退）。
+echo "$(date '+%F %T') 部署前閘門：詞典完整性 + 44 碼首選回歸……"
+GATE_OK=1
+python3 - 2>/dev/null <<'PYGATE' || GATE_OK=0
+import io, os, sys
+p = os.path.join('..', '..', '..', 'xuma_L.dict.yaml')   # 腳本已 cd 到 tools/
+try:
+    n = sum(1 for l in io.open(p, encoding='utf-8') if '\t' in l)
+except Exception as e:
+    print('詞典不可讀:', e); sys.exit(1)
+if n < 150000:
+    print(f'詞典數據行僅 {n}（正常約 19.8 萬）——疑似半截或空表'); sys.exit(1)
+print(f'詞典數據行 {n}')
+PYGATE
+python3 check_acceptance.py >/tmp/gate-acceptance.log 2>&1 || GATE_OK=0
+if [ "$GATE_OK" != 1 ]; then
+  echo "✗ 部署前閘門未過，**中止部署**（引擎仍跑舊詞典；詞庫文件已更新，git checkout 可回退）"
+  tail -3 /tmp/gate-acceptance.log | sed 's/^/    /'
+  python3 "$TOOLS/_ledger.py" xuma_L.dict.yaml 部署中止 \
+    "/add 收詞後閘門未過：詞典完整性或 44 碼首選回歸失敗（詳 /tmp/gate-acceptance.log）" >/dev/null
+  exit 1
+fi
+echo "閘門通過"
+
 echo "$(date '+%F %T') 部署（ibus restart）……"
 ibus restart && sleep 3
 echo "$(date '+%F %T') 入庫完成"

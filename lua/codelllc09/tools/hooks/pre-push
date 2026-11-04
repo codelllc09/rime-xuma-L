@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# pre-push — 推送前最後一道機械門禁（2026-11-05 加固）
+#
+# 為什麼要它：pre-commit 可以被 `--no-verify` 繞過，而且提交之後仍可能改壞東西。
+# 推到遠端是最後一步，也是唯一「別人看得到」的一步——在這裏再守一次。
+#
+# 與 pre-commit 的差別：pre-push 只跑電池（不跑台賬快檢，因為台賬已在提交時驗過）。
+set -uo pipefail
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+TOOLS="$ROOT/lua/codelllc09/tools"
+[ -f "$TOOLS/check_consistency.py" ] || exit 0
+cd "$ROOT" || exit 0
+
+# 鉤子運行期間的 git 局部環境變量會帶偏子進程（同 pre-commit，實測必踩）
+while read -r _v; do unset "$_v" 2>/dev/null || true; done < <(git rev-parse --local-env-vars)
+
+if ! ( cd "$TOOLS" && python3 check_consistency.py >/tmp/rime-prepush.log 2>&1 ); then
+  echo "✗ pre-push：機械門禁未過，拒絕推送"
+  grep -E '^\[✗\]' /tmp/rime-prepush.log | sed 's/^/    /'
+  echo "  詳見 /tmp/rime-prepush.log"
+  echo "  確需推送：git push --no-verify（並在事後說明理由）"
+  exit 1
+fi
+
+# 工作區若有未提交改動，提醒「推上去的不是你以爲的那份」
+if [ -n "$(git status --porcelain)" ]; then
+  echo "提示：工作區有未提交改動，本次推送不含它們。"
+fi
+exit 0

@@ -1,0 +1,25 @@
+# 行尾與二進制標記（2026-11-05）
+# 目的：跨機器協作（另一臺設備同步）時，避免行尾轉換造成「全檔皆改」的假 diff。
+* text=auto eol=lf
+
+# 明確二進制：diff 時只報「Binary files differ」，且不做行尾轉換
+*.bin binary
+*.pickle binary
+*.pkl binary
+*.gz binary
+*.zip binary
+*.tgz binary
+*.pdf binary
+*.xls binary
+*.whl binary
+
+# 生成物：在 GitHub 上摺疊 diff，減少誤讀
+xuma_L.dict.yaml linguist-generated=true
+lua/codelllc09/no_simple_data.lua linguist-generated=true
+lua/codelllc09/pinyin_tone.lua linguist-generated=true
+
+# 圖片（內容偵測已判二進制，此處顯式化以免歧義）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary

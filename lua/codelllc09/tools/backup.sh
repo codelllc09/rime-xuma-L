@@ -41,16 +41,23 @@ die() { printf '\033[31m%s\033[0m\n' "$*" >&2; exit 1; }
 
 # ── create ────────────────────────────────────────────────────────
 cmd_create() {
-  local full=0 out="$OUT_DEFAULT"
+  local full=0 out="$OUT_DEFAULT" userdb=0
   while [ $# -gt 0 ]; do
     case "$1" in
       --full) full=1 ;;
+      --with-userdb) userdb=1 ;;
       --out) out="$2"; shift ;;
       *) die "未知參數：$1" ;;
     esac
     shift
   done
   mkdir -p "$out"
+  # 磁盤餘量：快照+鏡像長期增長，寫滿盤會連帶毀掉工作區。低於 5G 先告警。
+  local avail_g
+  avail_g="$(df -BG --output=avail "$out" 2>/dev/null | tail -1 | tr -dc '0-9')"
+  if [ -n "${avail_g:-}" ] && [ "$avail_g" -lt 5 ]; then
+    c_y "⚠ 目標盤僅餘 ${avail_g}G——請先清理再備份"
+  fi
   local stamp name tmp
   stamp="$(date '+%Y%m%d-%H%M%S')"
   name="rime-snapshot-$stamp.tar.gz"
@@ -83,6 +90,15 @@ cmd_create() {
     mkdir -p "$tmp/ignored/$(dirname "$f")"
     cp -a "$ROOT/$f" "$tmp/ignored/$f"
   done
+  if [ "$userdb" = 1 ]; then
+    c_y "   --with-userdb：含個人學習庫（userdb 含擊鍵學習記錄，默認不含）"
+    for d in xuma_L.userdb luna_pinyin.userdb stroke.userdb; do
+      [ -d "$ROOT/$d" ] || continue
+      mkdir -p "$tmp/ignored"
+      cp -a "$ROOT/$d" "$tmp/ignored/$d"
+      printf '    %-48s %s\n' "$d" "$(du -sh "$ROOT/$d" | cut -f1)"
+    done
+  fi
   if [ "$full" = 1 ]; then
     c_y "   --full：另含語料與緩存（可重建，故默認不含）"
     for d in "lua/codelllc09/tools/dict_pipeline/corpus/sources" \
@@ -189,6 +205,9 @@ MD
   chmod 600 "$out/$name"
   printf '    %s\n' "$out/$name"
   ls -lh "$out/$name" | awk '{print "    大小",$5}'
+  # 自動校驗（0.5s）：寫完立刻驗，比等到要用的那天才發現壞了強
+  c_g "⑥ 自校驗"
+  cmd_verify "$out/$name" | sed 's/^/    /' || { c_y "⚠ 新快照自校驗未過"; }
 
   # 滾動保留
   local n

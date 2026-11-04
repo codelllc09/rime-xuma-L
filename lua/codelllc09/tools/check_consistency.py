@@ -18,6 +18,8 @@
   ⑦ 溯源電池：PROVENANCE.json 中每個產物的輸入指紋須與現狀一致（輸入漂移即敗，
      說明產物與輸入的對應關係已斷——要麼重跑生成器，要麼確認變更已入庫）
   ⑧ 台賬衛生：IGNORED_CHANGES.log 四欄完整／時間非降／與 events.jsonl 雙檔對賬
+  ⑩ 對象庫完整性：git fsck --connectivity-only 零錯誤（缺對象／壞對象是恢復期的
+     致命傷，且發現得越早越好；0.01s，代價可忽略）
   ⑨ 鏡像覆蓋：本地裸鏡像（backup.sh mirror-*）須含當前 HEAD——鏡像是歷史改寫類
      事故（filter-repo／reset --hard／gc --prune=now）唯一不依賴自律的防線；
      未建鏡像時 SKIP（淨室克隆／CI 屬正常）
@@ -255,6 +257,17 @@ def battery_mirror():
              f'鏡像未覆蓋 HEAD {head[:9]}（快照 ref {n} 個）——立即 backup.sh mirror-sync')
 
 
+# ── ⑩ 對象庫完整性 ──────────────────────────────────────────────
+def battery_fsck():
+    r = run(['git', 'fsck', '--connectivity-only', '--no-progress'], timeout=180)
+    noise = [l for l in (r.stdout + r.stderr).splitlines()
+             if l.startswith(('error', 'fatal', 'missing'))]
+    if r.returncode != 0 or noise:
+        item('⑩對象庫', False, f'fsck exit={r.returncode}；{noise[:3]}')
+    else:
+        item('⑩對象庫', True, 'git fsck --connectivity-only 零錯誤')
+
+
 # ── ⑥ 確定性（--determinism，默認關）───────────────────────────
 def battery_determinism():
     outs_paths = ['xuma_L.dict.yaml',
@@ -306,6 +319,7 @@ def main():
     battery_provenance()
     battery_ledger_health()
     battery_mirror()
+    battery_fsck()
     if '--determinism' in sys.argv:
         battery_determinism()
     fails = [r for r in results if r[1] is False]

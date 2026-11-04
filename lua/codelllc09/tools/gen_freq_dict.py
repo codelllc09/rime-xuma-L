@@ -1045,12 +1045,18 @@ def main():
 
     _save_memo()
     out_path = os.path.join(RIME, 'xuma_L.dict.yaml')
-    with open(out_path, 'w', encoding='utf-8') as f:
+    # 原子寫（2026-11-05 加固）：先寫同目錄 .tmp 再 rename。中斷／斷電時要麼是舊詞典
+    # 完整，要麼是新詞典完整，絕不會留下半截——半截詞典一旦被部署就是輸入法癱瘓。
+    _tmp_out = out_path + '.tmp'
+    with open(_tmp_out, 'w', encoding='utf-8') as f:
         f.write('\n'.join(out_hdr) + '\n')
         f.write('\n'.join(GUARD) + '\n')
         for ln, content in new_lines:
             f.write(content + '\n')
         f.write('\n'.join(tail_lines) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(_tmp_out, out_path)
     print(f'寫出 {out_path}: 主體 {len(new_lines)} 行 + 尾區 {len(tail_lines)} 行')
 
     # ---- 寫出 dry-run 報告 ----
@@ -1138,8 +1144,10 @@ def main():
     rep.append('- 十源策略（2026-11-04）：能找到的語料全量入料；污染風險源（BCC近代）以低權重參與，古舊詞不會壓過現代詞；BCC古代詞表爲字表複製品，已除名')
     rep.append('- 三字新詞不自動入庫（2026-09 判例六）；存量三字詞自存於詞表（keep3.txt 豁免通道現空置），手收（handpicked）三字詞不受限')
     rep.append('- 對照詞數據：會議（人民日報 28363 / 字幕推特 360120）vs 合適（2426 / 45901）——口語語源同向，會議仍領先')
-    with open(os.path.join(ARCHIVE, 'reports', 'freq_report.md'), 'w', encoding='utf-8') as f:
+    _rep_p = os.path.join(ARCHIVE, 'reports', 'freq_report.md')
+    with open(_rep_p + '.tmp', 'w', encoding='utf-8') as f:
         f.write('\n'.join(rep) + '\n')
+    os.replace(_rep_p + '.tmp', _rep_p)
     print(f'報告已寫出 {os.path.join(ARCHIVE, "freq_report.md")}')
     # 詳細樣例直接打印到 stdout 供審
     print('\n===== 樣例碼位新舊對照 =====')
