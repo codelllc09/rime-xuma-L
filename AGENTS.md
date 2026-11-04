@@ -80,6 +80,16 @@
   `tools/PROVENANCE.json`（由 `tools/_provenance.py` 維護）。三個生成器運行時
   自動刷新；新增生成物須在 `_provenance.SPEC` 聲明輸入 glob。
   `check_consistency.py` ⑦ 溯源電池比對輸入指紋——輸入漂移而產物未重生成即敗。
+- **提交門禁**（2026-11-05 加固）：`core.hooksPath` 已指向 `lua/codelllc09/tools/hooks`
+  （鉤子**入庫**，克隆後在，不像 `.git/hooks` 會消失）。`pre-commit` 守兩件事——
+  台賬衛生＋全電池十項，⑦溯源可抓「改了 rulings／語料卻沒重跑管道」這類最常見的漏步驟。
+  新克隆需一次性執行 `git config core.hooksPath lua/codelllc09/tools/hooks`。
+  確需跳過用 `git commit --no-verify`，並在提交信息說明理由；**靜默跳過即違紀**。
+- **CI**（2026-11-05 新增）：`.github/workflows/gate.yml` 在 push/PR 上跑全電池十項、
+  Python 語法、提交身份白名單、敏感路徑掃描。語料不在 git，故 ③corpus／⑤tendency
+  在 CI 必 SKIP——這是設計而非缺陷；需活庫語料的檢查由本機鉤子與 `backup.sh drill` 承擔。
+- **里程碑 tag**：每次「事故重建完成／大規模改動季結束／門禁與演練雙綠」打一個附註 tag
+  （`git tag -a` 帶說明）。下次出事時，tag 是最便宜的「已知良好點」。
 - 個人數據不入庫：`userdb/`、`/sync/`、`spool`、`add_debug.log`（含上屏原始字符＝擊鍵痕跡）、
   `default.custom.yaml` 等；`log/` 現已部分入庫（台賬與管道明細，見留痕規定）——
   該目錄整體仍忽略，僅四件白名單放行；
@@ -121,4 +131,7 @@
 - **前置機檢**：先跑 `lua/codelllc09/tools/check_consistency.py`（白名單電池/未來日期/
   校驗單對賬/HEAD 煙測/雙檢編排；`--determinism` 供管道改動後雙 seed 復跑）——
   機械事實走腳本，人審只受理語義矛盾；
+- **取證時點**：審查報告**必須**標註取證 `HEAD` sha 與時間。缺此欄的報告，隨倉庫演進
+  會在數小時內失真卻仍讀作現狀（2026-11-05 實例：一份審計的三條主張在加固提交後已失效，
+  但因未標時點而無從察覺）。發現項若附 `檔:行`，行號亦以該 HEAD 爲準。
 - **留痕**：審查報告與答辯落 `tmp/`，並記 `dict_pipeline/log/IGNORED_CHANGES.log` 台賬。
