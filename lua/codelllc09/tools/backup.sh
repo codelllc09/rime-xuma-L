@@ -496,6 +496,20 @@ cmd_offsite() {
   c_g "完成。異地副本：$host:$rdir/$bn"
 }
 
+cmd_mirror_backfill() {
+  local m; m="$(mirror_path)"
+  [ -d "$m" ] || { echo "未建鏡像：$m"; return 1; }
+  local have n=0 c ts
+  have="$(git -C "$m" for-each-ref --format='%(objectname)' refs/snapshots | cut -c1-40 | sort -u)"
+  for c in $(git -C "$ROOT" rev-list HEAD); do
+    printf '%s\n' "$have" | grep -qx "$c" && continue
+    ts="$(git -C "$ROOT" log -1 --format=%cd --date=format:'%Y%m%d-%H%M%S' "$c")"
+    git -C "$ROOT" -c core.hooksPath=/dev/null push --quiet --force "$m" \
+        "$c:refs/snapshots/${ts}-${c:0:8}" 2>/dev/null && n=$((n+1))
+  done
+  echo "已補 $n 個缺失的快照 ref（總 $(git -C "$ROOT" rev-list HEAD --count) 個提交）"
+}
+
 case "${1:-}" in
   create) shift; cmd_create "$@" ;;
   list) shift; cmd_list "$@" ;;
@@ -506,6 +520,7 @@ case "${1:-}" in
   mirror-sync) cmd_mirror_sync ;;
   mirror-status) shift; cmd_mirror_status ;;
   mirror-restore) shift; cmd_mirror_restore "$@" ;;
+  mirror-backfill) cmd_mirror_backfill ;;
   offsite) shift; cmd_offsite "$@" ;;
   *) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac

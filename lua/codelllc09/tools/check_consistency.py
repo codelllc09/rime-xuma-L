@@ -18,6 +18,10 @@
   ⑦ 溯源電池：PROVENANCE.json 中每個產物的輸入指紋須與現狀一致（輸入漂移即敗，
      說明產物與輸入的對應關係已斷——要麼重跑生成器，要麼確認變更已入庫）
   ⑧ 台賬衛生：IGNORED_CHANGES.log 四欄完整／時間非降／與 events.jsonl 雙檔對賬
+  ⑫ 鉤子有效性：core.hooksPath 已設時，pre-commit／post-commit／pre-push 三件必須
+     存在且可執行。「鉤子檔在」不等於「鉤子會跑」——git 對不可執行的鉤子只給一行
+     hint 就跳過（2026-11-05 實例：2 個提交因 post-commit 未置可執行而漏了快照 ref）。
+     未設 hooksPath（淨室克隆／CI）屬正常，SKIP。
   ⑩ 對象庫完整性：git fsck --connectivity-only 零錯誤（缺對象／壞對象是恢復期的
      致命傷，且發現得越早越好；0.01s，代價可忽略）
   ⑨ 鏡像覆蓋：本地裸鏡像（backup.sh mirror-*）須含當前 HEAD——鏡像是歷史改寫類
@@ -257,6 +261,27 @@ def battery_mirror():
              f'鏡像未覆蓋 HEAD {head[:9]}（快照 ref {n} 個）——立即 backup.sh mirror-sync')
 
 
+# ── ⑫ 鉤子有效性 ────────────────────────────────────────────────
+def battery_hooks():
+    hp = run(['git', 'config', 'core.hooksPath']).stdout.strip()
+    if not hp:
+        item('⑫鉤子', None, 'core.hooksPath 未設（淨室克隆／CI 屬正常）——新克隆請跑 tools/setup.sh')
+        return
+    base = hp if os.path.isabs(hp) else os.path.join(ROOT, hp)
+    want = ('pre-commit', 'post-commit', 'pre-push')
+    missing = [h for h in want if not os.path.exists(os.path.join(base, h))]
+    noexec = [h for h in want
+              if os.path.exists(os.path.join(base, h))
+              and not os.access(os.path.join(base, h), os.X_OK)]
+    if missing or noexec:
+        det = []
+        if missing: det.append(f'缺檔 {missing}')
+        if noexec: det.append(f'不可執行 {noexec}（git 會靜默跳過）')
+        item('⑫鉤子', False, '；'.join(det))
+    else:
+        item('⑫鉤子', True, f'hooksPath={hp}，三件鉤子齊備且可執行')
+
+
 # ── ⑩ 對象庫完整性 ──────────────────────────────────────────────
 def battery_fsck():
     r = run(['git', 'fsck', '--connectivity-only', '--no-progress'], timeout=180)
@@ -320,6 +345,7 @@ def main():
     battery_ledger_health()
     battery_mirror()
     battery_fsck()
+    battery_hooks()
     if '--determinism' in sys.argv:
         battery_determinism()
     fails = [r for r in results if r[1] is False]

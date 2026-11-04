@@ -165,7 +165,9 @@ git filter-repo --invert-paths --paths-from-file <(echo "$ALLP" | sed 's/^/liter
    改寫都碰不到另一個目錄的裸庫，**這是唯一不依賴自律的一層**。
    絕不用 `push --mirror`（會連鏡像 ref 一起覆蓋，改寫清零後鏡像同步遭殃）。
    ⚠ 鏡像與工作區同盤，只防誤操作、不防盤壞——異地仍靠拷快照到另一臺。
-   新克隆需一次性 `backup.sh mirror-init`；`check_consistency` ⑨ 電池檢查鏡像是否覆蓋 HEAD。
+   新克隆需一次性 `backup.sh mirror-init`；`check_consistency` ⑨ 電池檢查鏡像是否覆蓋 HEAD，
+  ⑫ 電池檢查三件鉤子是否真的可執行（**鉤子檔在 ≠ 鉤子會跑**：git 對不可執行的鉤子只給
+  一行 hint 就跳過）。歷史提交若漏了快照 ref，用 `backup.sh mirror-backfill` 一次補齊。
 2. **改寫守衛**——**禁止直接運行 `filter-repo`／`filter-branch`／`reset --hard`／
    `gc --prune=now`／`branch -D` 等破壞性命令**，一律包一層：
 
