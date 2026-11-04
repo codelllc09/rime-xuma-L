@@ -351,7 +351,10 @@ cmd_mirror_sync() {
   #   refs/heads/main          —— 便民用，讓 `git clone 鏡像` 拿到東西；會移動
   #   refs/snapshots/<…>-<sha> —— **只增不刪**的歷史，恢復時真正的依據
   # clone 默認只拷 refs/heads/*，不拷 snapshots——故兩者都要。
-  git -C "$ROOT" push --quiet --force "$m" "HEAD:refs/heads/main" "HEAD:$ref" 2>/dev/null || {
+  # 必須繞過鉤子：本 push 會觸發 pre-push，而 pre-push 跑的電池⑨正是檢查
+  # 「鏡像是否覆蓋 HEAD」——尚未同步時必敗，遂成死鎖（實測踩到）。
+  git -C "$ROOT" -c core.hooksPath=/dev/null push --quiet --force "$m" \
+      "HEAD:refs/heads/main" "HEAD:$ref" 2>/dev/null || {
     echo "⚠ 鏡像同步失敗（$m）" >&2; return 0; }   # 失敗也不阻塞提交
   # 自愈：老鏡像的 HEAD 可能還指着 refs/heads/master（默認初始化值），
   # 那樣 `git clone 鏡像` 會得到空工作樹（實測踩過）。每次同步都糾正一次。

@@ -6,6 +6,12 @@
 #
 # 與 pre-commit 的差別：pre-push 只跑電池（不跑台賬快檢，因為台賬已在提交時驗過）。
 set -uo pipefail
+# 推到本地鏡像＝備份動作本身，不是對外發布，不該受門禁約束
+# （且會造成死鎖：門禁⑨檢查鏡像是否覆蓋 HEAD，同步前必然不覆蓋）
+case "${2:-}" in
+  *mirror.git*|*/Backups/rime/*) exit 0 ;;
+esac
+
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 TOOLS="$ROOT/lua/codelllc09/tools"
 [ -f "$TOOLS/check_consistency.py" ] || exit 0
