@@ -77,7 +77,13 @@ echo "$(date '+%F %T') 入庫完成"
 # 部署事件留痕（2026-11-05 加固）：此前部署結果只存在 /tmp 輪轉日誌，不留檔——
 # 出問題時無法回答「這個錯誤是哪次部署引入的」。此處固化「時刻＋引擎日誌錯誤計數」。
 L=$(ls -t /tmp/rime.ibus.*.log.INFO.* 2>/dev/null | head -1 || true)
-ERR=$( [ -n "${L:-}" ] && grep -icE "error|E[0-9]{4}" "$L" 2>/dev/null || echo 'NA')
+# grep -c 在「計數為 0」時退出碼是 1，故不能接 `|| echo NA`——那會把 ERR 變成 "0\nNA"，
+# 令下面的 [ "$ERR" = "0" ] 恆假、每次部署都誤報警（2026-11-05 冒煙測試抓到）。
+ERR='NA'
+if [ -n "${L:-}" ]; then
+  ERR=$(grep -icE "error|E[0-9]{4}" "$L" 2>/dev/null || true)
+  [ -z "$ERR" ] && ERR=0
+fi
 python3 "$TOOLS/_ledger.py" ibus 部署 "ibus restart；引擎日誌錯誤計數 ${ERR}；樣例碼位見 add_commit.log" >/dev/null
 [ "${ERR}" = "0" ] || echo "⚠ 部署後引擎日誌錯誤計數 ${ERR}（$L）"
 # 台賬（2026-11-05 加固）：統一走 _ledger 寫入口——TSV（人讀）+ events.jsonl（機讀）雙寫，

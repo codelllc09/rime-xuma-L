@@ -37,9 +37,15 @@
 cd lua/codelllc09/tools
 python3 wishd.py list  oooo          # 看同碼組全部成員（頻分／來源／手收）
 python3 wishd.py order oooo "A > B"  # 寫次序裁定（同碼校驗、重複檢測、組內其餘詞警告）
-python3 wishd.py apply               # 跑管道＋44 碼閘門＋部署
-python3 wishd_ui.py                  # 本機界面 http://127.0.0.1:8721（拖拽排序）
+python3 wishd.py add "詞1 詞2"        # 加詞入暫存（與 /add 共用 spool）
+python3 wishd.py pending             # 看「待應用」：暫存詞、已改未重跑的意願檔
+python3 wishd.py apply --yes         # 跑管道＋44 碼閘門＋部署（無 --yes 只列待辦）
+python3 wishd_ui.py                  # 本機界面 http://127.0.0.1:8721（拖拽排序／加詞／應用）
 ```
+
+**「應用」是破壞性動作，必須二次確認**——三處一致：
+CLI 要 `--yes`；Web 端先取一次性 token（綁定當時的待辦指紋，TTL 120s）再要求**手打 `APPLY`**；
+指紋一變（待辦內容被改動）token 即失效，防 TOCTOU。單擊 `confirm()` 不算確認。
 
 - **只綁 127.0.0.1**，POST 需 `X-Wishd: 1` 標頭擋 CSRF；**共享機器勿開**（能改詞庫並重跑管道＝準 RCE 面）
 - 仍**永不直接改 `xuma_L.dict.yaml`**——它只寫意願通道，改動經管道生效

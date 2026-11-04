@@ -19,8 +19,10 @@
     wishd.py search <子串>          詞庫搜尋
     wishd.py suspicious             可疑組：同分並列、異體雙形
     wishd.py overrides              現有次序裁定 + 生效狀態推定
+    wishd.py add    "詞1 詞2"       加入暫存（與 /add 共用 spool）
+    wishd.py pending                看待應用：暫存詞 / 已改未重跑的意願檔
     wishd.py order  <碼> A>B>C [--dry-run] [--note 說明]
-    wishd.py apply  [--no-deploy]   跑管道（+44碼閘門+部署）
+    wishd.py apply  --yes [--no-deploy]   跑管道（+44碼閘門+部署）；無 --yes 只列待辦
 """
 import io
 import os
@@ -38,6 +40,8 @@ DICT = os.path.join(RIME, 'xuma_L.dict.yaml')
 HP = os.path.join(FREQ, 'handpicked.txt')
 OV = os.path.join(FREQ, 'manual_overrides.txt')
 REJ = os.path.join(FREQ, 'archive', 'rulings', 'rejected.txt')
+SPOOL = os.path.join(FREQ, 'spool_pending.txt')      # 與 /add 共用同一個暫存
+STATE = os.path.join(FREQ, '.applied.json')          # 已應用指紋（派生狀態，不入庫）
 
 HAN2_4 = re.compile(r'^[\u3400-\u4dbf\u4e00-\u9fff]{2,4}$')
 
@@ -200,6 +204,91 @@ def suspicious(groups, hp, limit=40):
     return out[:limit]
 
 
+# ── 加詞（與 /add 共用 spool）────────────────────────────────────
+def load_spool():
+    if not os.path.exists(SPOOL):
+        return []
+    return [l.strip() for l in io.open(SPOOL, encoding='utf-8') if l.strip()]
+
+
+def add_words(words):
+    """校驗並追加到 spool（與 /add 同一條管道：spool → handpick_commit → 管道 → 閘門 → 部署）。
+
+    校驗與 handpick_commit.sh 一致：2–4 個純漢字、不在詞庫、不在手收清單、不在暫存。
+    禁族字與三字詞**不攔**——顯式收錄意圖壓倒黑名單（AGENTS 收錄規則第 4 條）。
+    """
+    groups, wc = load_dict()
+    hp = load_handpicked()
+    spool = load_spool()
+    added, skipped = [], []
+    for w in words:
+        w = w.strip()
+        if not w:
+            continue
+        if not HAN2_4.match(w):
+            skipped.append((w, '不是 2–4 個純漢字'))
+        elif w in wc:
+            skipped.append((w, f'已在詞庫（{"/".join(sorted(wc[w]))}）'))
+        elif w in hp:
+            skipped.append((w, '已手收'))
+        elif w in spool or w in [a for a, _ in added]:
+            skipped.append((w, '已在暫存'))
+        else:
+            added.append((w, ''))
+    if added:
+        os.makedirs(os.path.dirname(SPOOL), exist_ok=True)
+        tmp = SPOOL + '.tmp'
+        with io.open(tmp, 'w', encoding='utf-8') as f:
+            f.write(''.join(l + '\n' for l in spool + [w for w, _ in added]))
+        os.replace(tmp, SPOOL)
+        try:
+            from _ledger import note as _note
+            _note('spool_pending.txt', '加詞',
+                  '＋' + '／'.join(w for w, _ in added) + '（意願台）')
+        except Exception:
+            pass
+    return {'added': [w for w, _ in added],
+            'skipped': [{'w': w, 'why': r} for w, r in skipped]}
+
+
+# ── 待應用狀態 ──────────────────────────────────────────────────
+def _sha(path):
+    import hashlib
+    if not os.path.exists(path):
+        return ''
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()[:16]
+
+
+def pending():
+    """回傳「尚未應用到詞庫」的意願：暫存詞、改過但未重跑管道的意願檔。"""
+    import json
+    st = {}
+    if os.path.exists(STATE):
+        try:
+            st = json.load(open(STATE, encoding='utf-8'))
+        except Exception:
+            st = {}
+    cur = {'overrides_sha': _sha(OV), 'handpicked_sha': _sha(HP), 'dict_sha': _sha(DICT)}
+    dirty_ov = st.get('overrides_sha') not in (None, cur['overrides_sha'])
+    dirty_hp = st.get('handpicked_sha') not in (None, cur['handpicked_sha'])
+    return {
+        'spool': load_spool(),
+        'overrides_changed': dirty_ov,
+        'handpicked_changed': dirty_hp,
+        'first_run': not st,
+        'fingerprint': f"{cur['overrides_sha']}:{cur['handpicked_sha']}:{_sha(SPOOL)}",
+        'count': len(load_spool()) + int(dirty_ov) + int(dirty_hp),
+    }
+
+
+def mark_applied():
+    import json
+    with open(STATE, 'w', encoding='utf-8') as f:
+        json.dump({'overrides_sha': _sha(OV), 'handpicked_sha': _sha(HP),
+                   'dict_sha': _sha(DICT),
+                   'ts': datetime.datetime.now().isoformat(timespec='seconds')}, f)
+
+
 # ── 動作 ────────────────────────────────────────────────────────
 def do_order(args):
     dry = '--dry-run' in args
@@ -242,30 +331,49 @@ def do_order(args):
     return 0
 
 
-def do_apply(args):
-    """跑管道 → 部署前閘門 → 部署。與 /add 的入庫重跑同款路徑。"""
+def do_apply(args, log=print):
+    """跑管道 → 44 碼閘門 → 部署。暫存有詞時走 handpick_commit.sh（與 /add 同一條路，
+    含 spool→handpicked 的校驗與 flock）。
+
+    二次確認在本函數之外：CLI 要 --yes，Web 要一次性 token。此處只負責執行。
+    """
     no_deploy = '--no-deploy' in args
-    print('① 重跑詞頻管道……')
+    p = pending()
+    if p['spool']:
+        log(f'① 暫存有 {len(p["spool"])} 詞 → 走 handpick_commit（含管道與閘門）……')
+        r = subprocess.run(['bash', os.path.join(HERE, 'handpick_commit.sh')],
+                           cwd=HERE, capture_output=True, text=True)
+        log('\n'.join(r.stdout.splitlines()[-25:]) or '(無輸出)')
+        if r.returncode != 0:
+            log(r.stderr[-800:])
+            return r.returncode
+        mark_applied()
+        log('完成（暫存已併入手收清單並部署）')
+        return 0
+    log('① 重跑詞頻管道……')
     r = subprocess.run([sys.executable, os.path.join(HERE, 'gen_freq_dict.py')],
                        cwd=HERE, capture_output=True, text=True)
-    sys.stdout.write(r.stdout[-2500:])
+    log('\n'.join([l for l in r.stdout.splitlines()
+                    if l.startswith('[overrides') or '寫出' in l][-12:]))
     if r.returncode != 0:
-        print(r.stderr[-1500:], file=sys.stderr)
+        log(r.stderr[-1500:])
         return r.returncode
-    print('\n② 部署前閘門：44 碼首選回歸……')
+    log('② 部署前閘門：44 碼首選回歸……')
     a = subprocess.run([sys.executable, os.path.join(HERE, 'check_acceptance.py')],
                        cwd=HERE, capture_output=True, text=True)
     if a.returncode != 0:
-        print('✗ 首選回歸未過，**中止部署**（詞庫已更新，git checkout 可回退）', file=sys.stderr)
-        print(a.stdout[-800:], file=sys.stderr)
+        log('✗ 首選回歸未過，**中止部署**（詞庫已更新，git checkout 可回退）')
+        log(a.stdout[-800:])
         return 1
-    print('✓ 通過')
+    log('✓ 通過')
     if no_deploy:
-        print('\n（--no-deploy：未部署）')
+        mark_applied()
+        log('（--no-deploy：未部署）')
         return 0
-    print('\n③ 部署（ibus restart）……')
+    log('③ 部署（ibus restart）……')
     subprocess.run(['ibus', 'restart'], check=False)
-    print('完成')
+    mark_applied()
+    log('完成')
     return 0
 
 
@@ -279,7 +387,34 @@ def main():
     if cmd == 'order':
         return do_order(rest)
     if cmd == 'apply':
+        if '--yes' not in rest:
+            p = pending()
+            print('待應用：')
+            print(f'  暫存詞 {len(p["spool"])}：' + ('、'.join(p['spool'][:12]) or '（空）'))
+            print(f'  次序裁定已改動：{"是" if p["overrides_changed"] else "否"}')
+            print(f'  手收清單已改動：{"是" if p["handpicked_changed"] else "否"}')
+            print('\n確認要跑管道並部署，請加 --yes。')
+            return 2
         return do_apply(rest)
+
+    if cmd == 'add':
+        if not rest:
+            sys.exit('用法：wishd.py add "詞1 詞2 …"')
+        words = [w for a in rest for w in re.split(r'[\s,、]+', a) if w]
+        r = add_words(words)
+        for w in r['added']:
+            print(f'  ＋ {w}')
+        for s in r['skipped']:
+            print(f'  − {s["w"]}（{s["why"]}）')
+        print(f'\n已加入暫存 {len(r["added"])} 詞；下一步 wishd.py apply --yes')
+        return 0
+
+    if cmd == 'pending':
+        p = pending()
+        print(f'暫存詞 {len(p["spool"])}：' + ('、'.join(p['spool']) or '（空）'))
+        print(f'次序裁定已改動：{"是" if p["overrides_changed"] else "否"}')
+        print(f'手收清單已改動：{"是" if p["handpicked_changed"] else "否"}')
+        return 0
 
     groups, words = load_dict()
     hp = load_handpicked()
