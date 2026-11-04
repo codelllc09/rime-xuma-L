@@ -12,7 +12,7 @@ import io, os, re
 HERE = os.path.dirname(os.path.abspath(__file__))
 RIME = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 PSEUDO = os.path.join(RIME, 'xuma_spelling_pseudo.dict.yaml')
-SRC = os.path.join(HERE, 'dict_pipeline', 'corpus', 'Unihan_Readings.txt')
+SRC = os.path.join(HERE, 'dict_pipeline', 'corpus', 'sources', '_mapping', 'Unihan_Readings.txt')  # 2026-11-05 詞源收攏+映射歸位後改道
 OUT = os.path.join(HERE, '..', 'pinyin_tone.lua')
 
 TONE = {
