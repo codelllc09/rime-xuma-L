@@ -10,24 +10,24 @@
 local M = { category = nil, menu = {} }   -- category=nil 一級；數字=組索引（二級）
 
 M.groups = {
+  { key = 'simp', name = '簡繁', bool = 'simplification', values = { '漢字', '漢字→汉' } },
   { key = 'word', name = '詞長',
     options = { 'word_all', 'word_124', 'word_12', 'single_char_only' },
     values  = { '全詞', '124', '12', '單字' }, default = 3 },
-  { key = 'sp', name = '註解',
+  { key = 'charset', name = '字符集', bool = 'extended_charset', values = { '通用', '全部' } },
+  { key = 'nosimple', name = '非簡', bool = 'no_simple', values = { '通打', '非簡' } },
+  { key = 'sp', name = '打字註解',
     options = { 'xuma_spelling.off', 'xuma_spelling.py', 'xuma_spelling.pysp',
                 'xuma_spelling.bopomofo', 'xuma_spelling.lv1',
                 'xuma_spelling.lv2', 'xuma_spelling.lv3' },
     values  = { '〇註解', '拼音', '生僻拼音', '註音符', '一重', '二重', '三重' },
     default = 3 },   -- 生僻拼音（原 schema reset: 2，0 基轉 1 基）
-  { key = 'spr', name = '註解·反查',
+  { key = 'spr', name = '反查註解',
     options = { 'xuma_spelling_rvlk.off', 'xuma_spelling_rvlk.bopomofo',
                 'xuma_spelling_rvlk.lv1', 'xuma_spelling_rvlk.lv2',
                 'xuma_spelling_rvlk.lv3' },
     values  = { '〇註解', '註音符', '一重', '二重', '三重' },
     default = 1 },   -- 反查不疊加註解（原 reset: 0）
-  { key = 'simp', name = '簡繁', bool = 'simplification', values = { '漢字', '漢字→汉' } },
-  { key = 'charset', name = '字符集', bool = 'extended_charset', values = { '通用', '全部' } },
-  { key = 'nosimple', name = '非簡', bool = 'no_simple', values = { '通打', '非簡' } },
   { key = 'punct', name = '標點', bool = 'ascii_punct', values = { '。，', '．，' } },
 }
 

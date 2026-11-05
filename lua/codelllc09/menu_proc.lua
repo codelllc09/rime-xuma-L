@@ -34,7 +34,11 @@ local function processor(key, env)
   end
 
   local idx
-  if keyname == 'space' or keyname == 'KP_Space' or keyname == 'Return' or keyname == 'KP_Enter' then idx = 1
+  if keyname == 'space' or keyname == 'KP_Space' or keyname == 'Return' or keyname == 'KP_Enter' then
+    -- 空格/回車＝選**高亮項**（ibus 慣例：方向鍵移動高亮後空格確認），
+    -- 不是恒定首選——實測恒定首選令「在哪按空格都進詞長」（2026-11-05 用戶反饋）
+    local seg = ctx.composition and ctx.composition:back()
+    idx = (seg and seg.selected_index or 0) + 1
   elseif keyname:match('^%d$') then idx = tonumber(keyname)
   elseif keyname == 'semicolon' then idx = 2
   elseif keyname == 'apostrophe' then idx = 3
