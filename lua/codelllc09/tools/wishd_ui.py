@@ -934,6 +934,11 @@ button.primary:hover:not(:disabled){filter:brightness(1.08)}
 button.danger{background:var(--danger);color:var(--danger-fg);border-color:var(--danger)}
 button.danger:hover:not(:disabled){filter:brightness(1.08)}
 button.ghost{border-color:transparent;background:none;color:var(--fg-muted);padding:4px 8px}
+button.iconbtn{border:1px solid transparent;background:none;color:var(--fg-muted);padding:6px 9px;
+  font-size:15px;line-height:1;border-radius:var(--r-sm);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center}
+button.iconbtn:hover{background:var(--surface-2);color:var(--fg);border-color:var(--border)}
+button.iconbtn.on{background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
 button.sm{padding:3px 9px;font-size:12.5px}
 table{width:100%;border-collapse:separate;border-spacing:0}
 th{position:sticky;top:0;z-index:1;background:var(--surface);color:var(--fg-muted);
@@ -1061,17 +1066,17 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
   <div class="search"><input id="q" placeholder="碼（oooo）或詞（合適）" aria-label="查詢"></div>
   <button id="go" class="primary">查詢</button>
   <span class="hint"><kbd>/</kbd> 聚焦搜尋</span>
-  <button id="theme" class="ghost" title="切換深/淺色" aria-label="切換深淺色">◐</button>
+  <button id="tab-set" class="iconbtn" title="設置：開關 / 快捷鍵 / 引擎鏈 / 引用校驗" aria-label="設置"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  <button id="theme" class="iconbtn" title="切換深/淺色" aria-label="切換深淺色">◐</button>
 </header>
 
 <nav role="tablist">
   <button id="tab-order" role="tab" aria-selected="true">調序 / 加詞</button>
+  <button id="tab-dict" role="tab" aria-selected="false">字典</button>
   <button id="tab-map" role="tab" aria-selected="false">碼圖</button>
   <button id="tab-diag" role="tab" aria-selected="false">診斷</button>
-  <button id="tab-logs" role="tab" aria-selected="false">日誌</button>
-  <button id="tab-set" role="tab" aria-selected="false">設置</button>
   <button id="tab-task" role="tab" aria-selected="false">任務</button>
-  <button id="tab-dict" role="tab" aria-selected="false">字典</button>
+  <button id="tab-logs" role="tab" aria-selected="false">日誌</button>
 </nav>
 
 <main id="main">
@@ -1305,12 +1310,14 @@ function busy(on,label){
 }
 
 /* ───── 分頁籤 ───── */
-const TABS=['order','map','diag','logs','set','task','dict'];
+const TABS=['order','dict','map','diag','task','logs'];   // 由常用到少用；設置走齒輪
 function tab(which){
   TABS.forEach(k=>{
     $('#tab-'+k).setAttribute('aria-selected', k===which);
     $('#pane-'+k).hidden = k!==which;
   });
+  $('#pane-set').hidden = which!=='set';
+  $('#tab-set').classList.toggle('on', which==='set');
   $('#pane-side').hidden = which!=='order';
   $('#main').classList.toggle('dictmode', which!=='order');
   if(which==='dict' && !$('#drows').dataset.loaded) dictQuery(1);
@@ -1916,6 +1923,9 @@ THEMEBTN.onclick=()=>{
 paintTheme();
 
 document.addEventListener('keydown',e=>{
+  if(e.altKey && /^[1-6]$/.test(e.key)){
+    e.preventDefault(); tab(TABS[+e.key-1]); return;
+  }
   if(e.key==='/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)){
     e.preventDefault(); $('#q').focus(); $('#q').select();
   }
