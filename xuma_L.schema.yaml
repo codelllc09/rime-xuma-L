@@ -61,7 +61,9 @@ switches:
     reset: 1  # 每次進方案默認非簡
   # 切换热键由 xuma_spelling/lua 下的 cycle_key 和 switch_key 定义。
   # 反查中按同一热键时作用于下一组（rvlk），两组可分别设置。
-  # 默認啟用“生僻拼音”，即爲生僻字標註拼音
+  # 默認啟用“生僻拼音”，即爲生僻字標註拼音。
+  # 2026-11-05 裁定：F4 原生選單保持完整（手機端徐碼依賴原生 switches 操作），
+  # 不做瘦身；桌面端另設 /menu 二級菜單作附加入口
   - options:
     - xuma_spelling.off
     - xuma_spelling.py
@@ -93,6 +95,7 @@ engine:
     - ascii_composer
     - recognizer
     - lua_processor@*codelllc09/add_word_proc  # /add 菜单选键拦截（数字/空格/分号/引号），选中即动作不上屏
+    - lua_processor@*codelllc09/menu_proc  # /menu 二級設定菜單選鍵攔截（2026-11-05）
     - lua_processor@*ace/xuma_spelling*processor
     - key_binder
     - speller
@@ -124,6 +127,7 @@ engine:
     - lua_translator@*ace/os_tools*os_env_translator
     - lua_translator@*ace/helper
     - lua_translator@*codelllc09/add_word  # /add 加词采集菜单（尾部连缀→spool→handpicked 固化）
+    - lua_translator@*codelllc09/menu  # /menu 二級設定菜單（詞長/註解/簡繁/字符集/非簡/標點）
   filters:
     - lua_filter@*codelllc09/datetime     # /time /date 占位候选动态替换（时间日期+农历）
     - lua_filter@*codelllc09/word_mode  # 詞組長度過濾（全詞/124/12/單字四檔）
@@ -295,4 +299,5 @@ recognizer:
     os_env: '^env/\w+'
     helper: '^help/$'
     add: '^/add$'  # 加词采集菜单（2026-11-04）：尾部连缀人审收录 spool，攒批后入 handpicked 重跑词频
-    punct: '^/(?!add$)(dx[0-9]{1,16}(?:[.][0-9]{0,2})?|[0-9]0?|[A-Za-z]+)$'  # 行首 / 符号组；dx 两位小数；/add 让路专属 tag
+    menu: '^/menu$'  # 二級設定菜單（2026-11-05）：分類→取值，選中即 set_option
+    punct: '^/(?!add$|menu$)(dx[0-9]{1,16}(?:[.][0-9]{0,2})?|[0-9]0?|[A-Za-z]+)$'  # 行首 / 符号组；dx 两位小数；/add、/menu 让路专属 tag
