@@ -5,3 +5,5 @@
 identity	lua/codelllc09/tools/std_tables/official/cn_tongyongguifan_wikisource_raw.txt	b134ce47a896	人工复核放行
 identity	xuma_L.dict.yaml	11592b856ec2	用户裁定：词典编码列（字母码）/权重列（频次数值）的数据值，非身份串；每次 push 人工复核
 identity	xuma_L.dict.yaml	b134ce47a896	用户裁定：词典编码列（字母码）/权重列（频次数值）的数据值，非身份串；每次 push 人工复核
+identity	dangling	b134ce47a896	同 xuma_L.dict.yaml 條裁定：徐碼編碼列字母串／詞頻權重列數值的巧合；dangling=對賬 stash 快照殘留，不可達不隨 push
+identity	dangling	11592b856ec2	同 xuma_L.dict.yaml 條裁定：徐碼編碼列字母串／詞頻權重列數值的巧合；dangling=對賬 stash 快照殘留，不可達不隨 push
