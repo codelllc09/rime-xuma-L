@@ -55,21 +55,21 @@
       "inputs": [
         {
           "count": 1,
-          "digest": "f8358f3f64ded03b28485254abf35d0a07351733d2a509e77d7ed8b3a4cdeef1",
+          "digest": "10e0484db83e0fed555700718ddc1e284c131716940751805c0b23254b704b84",
           "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/handpicked.txt"
         },
         {
           "count": 1,
-          "digest": "c8a51b3dcc5121496795014858b6c0975c2562e01bd94169395d2abda71f573e",
+          "digest": "9da0a4191dbf99aaa03f4a43f7036300580555d9bc6dfc0dd638df377c358255",
           "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/manual_overrides.txt"
         },
         {
           "count": 5,
-          "digest": "ecd032ea05f1d8c497a2cb686a74042547ea15f9f9d2854e5e2c7854b9443059",
+          "digest": "d001615a463988d600e93f3bde6ccdd9b6e8383837db2263ed59249c1a4141ae",
           "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/archive/rulings/*.txt"
@@ -89,7 +89,7 @@
           "pattern": "xuma_L.schema.yaml"
         }
       ],
-      "output_sha256": "ee9752ce72963fd50f031086cb651796eb308f8647375f19d28045ad5c626dfd"
+      "output_sha256": "971b79aa3d159de98edaafc67989b215ac7bdc996e923e41fe0f3e1dcd349364"
     }
   },
   "note": "生成物溯源清單：產物←生成器←輸入指紋。由 _provenance.py 維護，gen_freq_dict.py / gen_no_simple_data.py / gen_pinyin_tone.py 運行時自動刷新。不含時間戳（git 提交即時間），故同一輸入必得同一文件。",

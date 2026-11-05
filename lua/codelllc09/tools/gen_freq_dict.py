@@ -478,6 +478,16 @@ def main():
         _hdr.append(line)
     m_hdr = _hdr
     # 界碑範圍式剝除：遇 '# ═' 行進入剝離態，至下一 '# ═' 行（含）結束；併入區裝飾行同剝
+    # 護欄殘行冪等清除（2026-11-05）：自舉鏈上界碑配對錯位會留下無 ═ 的護欄正文殘行
+    # （實測曾堆四份），逐行按護欄文本匹配剝除，不再全靠 ═ 配對
+    _GUARD_TXT = (
+        '# ⚠⚠⚠ 警告（AI/自動化操作必讀）⚠⚠⚠',
+        '# 本詞典存在「手收詞保護區」，權威清單：',
+        '# 凡涉及詞條刪除/清理/過濾/重排的操作，必須先核對該清單：',
+        '#   1. 清單內詞條一律視爲用戶手動收詞，禁止刪除、禁止移動、禁止改動編碼；',
+        '#   2. 任何會導致清單詞條丟失的變更，必須先向用戶說明並取得明確授權；',
+        '#   3. 無法確定時，停止操作並詢問——寧可中止，不可誤刪。',
+    )
     _ent, _skip2 = [], False
     for e in m_ent:
         if e[4].startswith('# ═'):
@@ -487,6 +497,8 @@ def main():
             continue
         if e[4].lstrip('# ').startswith('===== 併入區'):
             continue
+        if any(e[4] == g or e[4].startswith(g) for g in _GUARD_TXT):
+            continue   # 護欄正文殘行（「權威清單」行帶路徑尾経，前綴匹配兼顧）
         _ent.append(e)
     m_ent = _ent
     c_ent, e_ent = [], []   # legacy 三表已全量融入現表，不再讀取（報告仍作審計基準）
@@ -919,23 +931,11 @@ def main():
 
     for e in m_ent:  # 按主表原行序走骨架
         ln, text, code, w, raw = e
-        if text and text in hp_drop:
-            continue   # 顯式棄用：詞條與其標記一併不出
-        _nxt = ent_by_ln.get(ln + 1)
-        if MARK_RE.match(raw) and (_nxt[1] if _nxt else '') in hp_drop:
-            continue
-        if ln in m_keep:
-            if MARK_RE.match(raw):   # 標記行：sort 詞條的綁定標記已隨組輸出，原位跳過
-                nxt = m_keep.get(ln + 1) or next((x for c in m_sort.values() for x in c if x[0] == ln + 1), None)
-                continue
-            mk = mark_of.get(text)
-            if mk:
-                new_lines.append((ln, mk))
-                del mark_of[text]   # 已輸出，防 sort 組重複
-            new_lines.append((ln, raw))
-        elif code in first_sort_line and first_sort_line[code] == ln:
-            group = [(key_of('m', x), x, 'm') for x in m_sort[code]]
-            group += [(key_of(s, x), x, s) for s, idx, x in merge[code]]
+        if code in first_sort_line and first_sort_line[code] == ln:
+            # 錨點行：整組在此輸出。錨點詞自身被棄用也照常輸出倖存組員，
+            # 防整組連坐失蹤（2026-11-05 疊詞精簡實測：僅僅 thth 棄用曾連坐僅供）
+            group = [(key_of('m', x), x, 'm') for x in m_sort[code] if x[1] not in hp_drop]
+            group += [(key_of(s, x), x, s) for s, idx, x in merge[code] if x[1] not in hp_drop]
             group.sort(key=lambda t: t[0][0])
             old_order = [x[1] for x in m_sort[code]]
             new_order = [g[1][1] for g in group]
@@ -948,13 +948,28 @@ def main():
                 new_lines.append((ln, line))
             if new_order != old_order or merge[code]:
                 report_samples.append((code, old_order, [g[1][1] for g in group]))
-        # else: 主表同碼位後續詞組行 → 已在上面輸出，跳過
+            continue
+        if text and text in hp_drop:
+            continue   # 顯式棄用：詞條與其標記一併不出（非錨點的組員/keep 行）
+        _nxt = ent_by_ln.get(ln + 1)
+        if MARK_RE.match(raw) and (_nxt[1] if _nxt else '') in hp_drop:
+            continue
+        if ln in m_keep:
+            if MARK_RE.match(raw):   # 標記行：sort 詞條的綁定標記已隨組輸出，原位跳過
+                nxt = m_keep.get(ln + 1) or next((x for c in m_sort.values() for x in c if x[0] == ln + 1), None)
+                continue
+            mk = mark_of.get(text)
+            if mk:
+                new_lines.append((ln, mk))
+                del mark_of[text]   # 已輸出，防 sort 組重複
+            new_lines.append((ln, raw))
+        # else: 主表同碼位後續詞組行 → 已在錨點組輸出，跳過
 
     # 尾區：ciz/ext 的 sort 條目中，主表無該碼位 sort 錨點的 + append_raw
     tail_codes = sorted(c for c in merge if c not in first_sort_line)
     tail_lines.append('# ===== 併入區：cizutrad/extended 條目（主表無同碼詞組，按碼序）=====')
     for c in tail_codes:
-        group = [(key_of(s, x), x, s) for s, idx, x in merge[c]]
+        group = [(key_of(s, x), x, s) for s, idx, x in merge[c] if x[1] not in hp_drop]
         group.sort(key=lambda t: t[0][0])
         for keytuple, x, s in group:
             f = keytuple[1]
@@ -964,6 +979,8 @@ def main():
             tail_lines.append(render(x, f))
     tail_lines.append('# ===== 併入區：原樣保留（空文本/異常格式/非四碼/含符號）=====')
     for s, e in append_raw:
+        if e[1] and e[1] in hp_drop:   # 棄用詞含非四碼/符號形也不得復活
+            continue
         tail_lines.append(e[4])
 
     # ---- 寫出新詞典 ----
