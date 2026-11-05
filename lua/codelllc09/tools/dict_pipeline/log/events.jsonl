@@ -120,3 +120,6 @@
 {"ts": "2026-11-05T19:02:11", "actor": "cli", "action": "生成", "path": "../tmp/全碼形態清理對賬.md", "detail": "對賬 HEAD…工作區：54 全碼形態條目棄用", "tracked": true}
 {"ts": "2026-11-05T19:02:20", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-全碼正式.md", "detail": "對賬 HEAD~1…d9e2bb8：新增0 注釋0 恢復0 消失54", "tracked": true}
 {"ts": "2026-11-05T19:02:20", "actor": "cli", "action": "刪除", "path": "../tmp/詞表改動-全碼正式.md", "detail": "與快照版逐字一致，重複件清理", "tracked": true}
+{"ts": "2026-11-05T21:35:59", "actor": "cli", "action": "異地備份", "path": "yoga:D:/Backups/rime/rime-snapshot-20261105-213535.tar.gz", "detail": "快照 rime-snapshot-20261105-213535.tar.gz 投遞並校驗通過（HEAD 813717eff）", "tracked": true}
+{"ts": "2026-11-05T21:37:20", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 1904 歧義 0 無碼 0", "tracked": false}
+{"ts": "2026-11-05T21:41:27", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 1903 歧義 0 無碼 0", "tracked": false}

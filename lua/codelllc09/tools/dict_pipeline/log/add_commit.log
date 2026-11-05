@@ -377,3 +377,39 @@ TO_BE_REVIEWED 已寫出 lua/codelllc09/tools/dict_pipeline/archive/reports/TO_B
 詞典數據行 192565
 閘門通過
 2026-11-05 19:57:50 部署（ibus restart）……
+[handpick] 收詞 1：安卓
+2026-11-05 21:37:14 重跑詞頻管道……
+t2s 詞級 477 條，字級 4148 條；詞頻語源 10 個共 3358278 詞；異體變體 3895 字；權重 jieba0.27 + wordfreq0.11 + THUOCL0.09 + BCC現代0.3 + SUBTLEX0.1 + BCC文學0.03 + BCC口語0.02 + BCC近代0.02 + GoogleBooks0.05 + 語委0.005
+[overrides] 已滿足次序: 快捷 > 快感
+[overrides] 已滿足次序: 存放 > 苗族
+[overrides] 生效: 簡化(-4.80 ↔ -4.39)簡偁
+[overrides] 名次生效: 合適 > 會議 > 會談（分 -3.19 > -4.12 > -4.13）
+[overrides] 生效: 路徑(-4.76 ↔ -4.74)口徑
+[overrides] 生效: 批註(-6.16 ↔ -5.65)批文
+[overrides] 生效: 回退(-7.21 ↔ -6.20)圓子
+[overrides] 生效: 堅定(-4.13 ↔ -3.28)大家
+[overrides] 非同碼或未入庫，跳過: 原處 > 一些 > 一處
+[overrides] 名次生效: 鉤子 > 豹子 > 狗子 > 狍子（分 -5.14 > -5.40 > -5.60 > -6.29）
+[overrides] 名次生效: 閾值 > 國債 > 賤價 > 國大代表（分 -4.80 > -5.80 > -6.55 > -6.65）
+[overrides] 名次生效: 字典 > 慶典 > 序曲（分 -4.77 > -5.19 > -5.81）
+[overrides] 非同碼或未入庫，跳過: 𪺓 > 比值 > 鍵值 > 比價 > 銀價
+[overrides] 生效: 暫存(-6.57 ↔ -5.89)志在
+[overrides] 生效: 機讀(-7.54 ↔ -6.91)李維諾夫
+[overrides] 生效: 重跑(None ↔ -6.49)香吻
+[overrides] 非同碼或未入庫，跳過: 會合 > 會師 > 與會 > 懨懨 > 愈合 > 師師 > 怔怔 > 會會 > 鬼鬼 > 合會 > 師命 > 合合
+[overrides] 非同碼或未入庫，跳過: 定義 > 完美 > 家眷
+[overrides] 名次生效: 順序 > 優良 > 倒序（分 -4.31 > -4.64 > -5.66）
+[overrides] 非同碼或未入庫，跳過: 沿用 > 盜用 > 沒用 > 没用
+人工次序覆蓋 13 條
+[台账] 否決詞 4410 條生效（archive/rulings/rejected.txt）
+[H源] 手收詞補錄 1 詞
+補詞階段：A源 24457，B源 49573，新增 1904，歧義 0，無碼 0
+TO_BE_REVIEWED 已寫出 lua/codelllc09/tools/dict_pipeline/archive/reports/TO_BE_REVIEWED.txt（大組 0，雜項 0 詞，共 0 詞）
+寫出 xuma_L.dict.yaml: 主體 193834 行 + 尾區 4 行
+報告已寫出 lua/codelllc09/tools/dict_pipeline/archive/freq_report.md
+
+===== 樣例碼位新舊對照 =====
+2026-11-05 21:39:10 部署前閘門：詞典完整性 + 44 碼首選回歸……
+詞典數據行 192566
+閘門通過
+2026-11-05 21:39:11 部署（ibus restart）……
