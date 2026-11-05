@@ -193,7 +193,21 @@ def write_override(code, seq, note=''):
     """先把共享詞的舊裁定行移除，再追加新行（附註釋）。原子替換。"""
     lines = io.open(OV, encoding='utf-8').read().splitlines(True) if os.path.exists(OV) else []
     killed = {ln for ln, _ in existing_conflicts(seq)}
-    kept = [l for i, l in enumerate(lines, 1) if i not in killed]
+    # 同時清掉該碼的歷史注釋頭：只殺行不殺頭，會留下成堆空「調序」標題
+    # （同一碼調三次就有三個空標題）。頭與行一起清，寫入才冪等。
+    hdr = re.compile(r'^#\s+\d{4}-\d{2}-\d{2}\s+' + re.escape(code)
+                     + r'\s+調序（wishd')
+    kept, blank = [], 0
+    for i, l in enumerate(lines, 1):
+        if i in killed or hdr.match(l):
+            continue
+        if not l.strip():
+            blank += 1
+            if blank > 1:      # 折疊連續空行
+                continue
+        else:
+            blank = 0
+        kept.append(l)
     while kept and not kept[-1].strip():
         kept.pop()
     stamp = datetime.date.today().isoformat()

@@ -607,14 +607,22 @@ def main():
             if len(ws) == 2:
                 a, b = ws
                 fa, fb = freq_of(a)[0], freq_of(b)[0]
-                if fa is None or fb is None:
-                    print(f'[overrides] 頻分缺失，跳過: {a}({fa}) > {b}({fb})'); continue
-                if fa >= fb:
+                # 手收詞在詞典裏不帶權重，freq_of 回 None。多詞「名次」語法本就把
+                # None 視爲最低，兩詞「交換」語法卻整條跳過——結果「把某個手收詞
+                # 提到某詞之前」永遠應用不了（rkos 重跑 > 香吻 即此例）。
+                # 改爲：無頻分者以「對方分 -1e-3」的名義值參與比較，交換後它落在
+                # 對方正上方，對方只微降 0.001，不擾動同組其餘詞。
+                _f = lambda x: 'None' if x is None else f'{x:.2f}'
+                if fa is None and fb is None:
+                    print(f'[overrides] 兩詞皆無頻分，跳過: {a} > {b}'); continue
+                fa_v = (fb - 1e-3) if fa is None else fa
+                fb_v = (fa - 1e-3) if fb is None else fb
+                if fa_v >= fb_v:
                     print(f'[overrides] 已滿足次序: {a} > {b}'); continue
-                OVERRIDES[a] = fb + 1e-9   # ε 防同分
-                OVERRIDES[b] = fa
+                OVERRIDES[a] = fb_v + 1e-9   # ε 防同分
+                OVERRIDES[b] = fa_v
                 n_ov += 1
-                print(f'[overrides] 生效: {a}({fa:.2f} ↔ {fb:.2f}){b}')
+                print(f'[overrides] 生效: {a}({_f(fa)} ↔ {_f(fb)}){b}')
             else:
                 # 名次語法：成員現有分數按目標名次重排（None 視爲最低，低於全體真分-0.01 處合成遞減）
                 scs = [freq_of(w)[0] for w in ws]

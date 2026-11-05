@@ -1482,7 +1482,7 @@ $('#save').onclick=()=>{
   if(!confirm('寫入次序裁定？\n\n'+SEQ.join('  ›  '))) return;
   api('/api/commit',{method:'POST',body:JSON.stringify({code:CODE,seq:SEQ})}).then(d=>{
     if(!d.ok) return toast((d.errors||['校驗未過']).join('；'),'err',6000);
-    toast(`已寫入（取代 ${d.replaced} 條既有裁定）`,'ok'); load(CODE); refreshPending();
+    toast(`已寫入（取代 ${d.replaced} 條既有裁定）`,'ok'); load(CODE); refreshPending(); loadRecent();
   });
 };
 

@@ -160158,8 +160158,8 @@ $	dlmy
 志強	jrda	133
 地心引力	jrdc	99
 趨利避害	jrdw	1575
-志在	jrhk	1282
-暫存	jrhk	270
+暫存	jrhk	1282
+志在	jrhk	270
 斬落	jrhz	234
 輕重工業	jril	317
 軌枕	jriq	211
@@ -189802,9 +189802,9 @@ $	dlmy
 機伶	iatu	182
 機化	iatv	149
 機米	iaxm	152
-李維諾夫	iayj	123
 # [手收·勿刪·日收（2026-11-05，spool 攢批）] 機讀
-機讀	iayj	29
+機讀	iayj	123
+李維諾夫	iayj	29
 功能設計	iayy	368
 根結	ibaj	132
 根線	ibau	119
@@ -193394,9 +193394,9 @@ $	dlmy
 重映	rkkm	192
 重數	rkoe	196
 動嘴	rkol	153
-香吻	rkos	325
 # [手收·勿刪·日收（/add 攢批入庫，add_commit.log 留痕）] 重跑
-重跑	rkos
+重跑	rkos	325
+香吻	rkos	324
 重製	rkpm	229
 香風	rkqf	217
 重九	rkrj	127
