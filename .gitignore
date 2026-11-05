@@ -90,3 +90,6 @@ xuma.addon.dict.yaml
 # 本机个人配置（全局方案表/切键/独立朙月拼音定制），不入库
 default.custom.yaml
 luna_pinyin.custom.yaml
+
+# Playwright MCP 的截圖與快照（工具產物，不入庫）
+.playwright-mcp/

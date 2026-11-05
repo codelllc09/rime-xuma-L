@@ -40,3 +40,23 @@
 {"ts": "2026-11-05T07:13:34", "actor": "cli", "action": "歷史改寫", "path": "~/.config/ibus/rime", "detail": "清除历史中的 /home/<user> 绝对路径与旧 CI 黑名单里的身份串｜前 48 提交/119 件 → 後 48/119；bundle pre-rewrite-20261105-071331.bundle", "tracked": true}
 {"ts": "2026-11-05T07:15:37", "actor": "cli", "action": "異地備份", "path": "yoga:D:/Backups/rime/rime-snapshot-20261105-071509.tar.gz", "detail": "快照 rime-snapshot-20261105-071509.tar.gz 投遞並校驗通過（HEAD bec2526f9）", "tracked": true}
 {"ts": "2026-11-05T07:38:12", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 0 歧義 0 無碼 0", "tracked": false}
+{"ts": "2026-11-05T08:28:30", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "vsbz: 鉤子 > 豹子 > 狗子 > 狍子（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:29:17", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "nfte: 閾值 > 國債 > 賤價 > 國大代表（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:30:18", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "wbmh: 字典 > 慶典 > 序曲（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:35:13", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "vbte: 𪺓 > 比值 > 鍵值 > 比價 > 銀價（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:36:49", "actor": "wishd.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "a: 能力 > 能｜測試：詞組壓單字", "tracked": true}
+{"ts": "2026-11-05T08:40:00", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-9790c1e.md", "detail": "對賬 HEAD~1…9790c1e：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T08:40:04", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-9790c1e.md", "detail": "對賬 HEAD~1…9790c1e：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T08:41:32", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "jrhk: 暫存 > 志在（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:43:43", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "iayj: 機讀 > 李維諾夫（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:44:18", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "rkos: 重跑 > 香吻（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:45:01", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "rkos: 重跑 > 香吻（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:46:17", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "rkos: 重跑 > 香吻（Web UI）", "tracked": true}
+{"ts": "2026-11-05T08:49:18", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-9a13d31.md", "detail": "對賬 HEAD…9a13d31：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T08:50:45", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-268e225.md", "detail": "對賬 HEAD~1…268e225：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T09:04:50", "actor": "wishd.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "ugug: 會合 > 與會 > 會師 > 懨懨 > 愈合 > 師師 > 怔怔 > 會會 > 鬼鬼 > 合會 > 師命 > 合合｜單字魉釘首位，其下詞重排", "tracked": true}
+{"ts": "2026-11-05T09:05:53", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-5bc7f54.md", "detail": "對賬 HEAD…5bc7f54：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T09:06:19", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-5bc7f54.md", "detail": "對賬 HEAD…5bc7f54：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T09:06:35", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-49a68f1.md", "detail": "對賬 HEAD~1…49a68f1：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T09:07:23", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "ugug: 會合 > 會師 > 與會 > 懨懨 > 愈合 > 師師 > 怔怔 > 會會 > 鬼鬼 > 合會 > 師命 > 合合（Web UI）", "tracked": true}
+{"ts": "2026-11-05T09:10:06", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-d1ec911.md", "detail": "對賬 HEAD~1…d1ec911：新增0 注釋0 恢復0 消失0", "tracked": true}

@@ -75,7 +75,7 @@ def main():
     print(f'報告寫出 {out}（新增{len(added)} 注釋{len(tocom)} 恢復{len(revive)} '
           f'消失{len(gone)} 變權{len(wchg)}）')
     # 台賬（2026-11-05 加固）：統一走 _ledger 寫入口，tmp/ 報告屬忽略區→TSV+JSONL 雙寫
-    sys.path.insert(0, HERE)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from _ledger import note
     note(f'../tmp/{os.path.basename(out)}', '生成',
          f'對賬 {old_r}…{short(new_r)}：新增{len(added)} 注釋{len(tocom)} '

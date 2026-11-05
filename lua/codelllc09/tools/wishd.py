@@ -26,6 +26,7 @@
     wishd.py apply  --yes [--no-deploy]   跑管道（+44碼閘門+部署）；無 --yes 只列待辦
 """
 import io
+import json
 import os
 import re
 import shutil
@@ -90,6 +91,7 @@ def load_entries(refresh=False):
 def load_dict():
     """返回 (groups, wordcodes)：groups[code] = [(word, weight, lineno, tag)]；
     wordcodes[word] = {該詞出現過的全部碼}（一詞多碼，判同碼必須用交集）"""
+    load_entries()          # 先走 mtime 校驗：詞典被管道重寫過就重建
     if _CACHE['groups'] is not None:
         return _CACHE['groups'], _CACHE['wc']
     groups, wc = {}, {}
@@ -161,7 +163,44 @@ def check_order(code, seq, groups, words):
     if len(set.intersection(*[words[w] for w in seq])) == 0:
         err.append('這些詞沒有共同碼組')
         return False, err, []
-    rest = sorted(members - set(seq))
+    # 單字不參與重排：管道只對「詞組」建 word2codes，單字區逐字節繼承，
+    # 含單字的裁定行會被整條跳過（[overrides] 非同碼或未入庫，跳過）。
+    # 但「單字釘在原位、只調它下面的詞」是合法意願——把單字從清單剔除後
+    # 只寫詞組，效果與人意圖一致。只有當某個詞真的越過單字（改了它的相對
+    # 位置）才拒絕。剔除是就地的：呼叫方拿到的 seq 即最終要寫的內容。
+    orig = [w for w, _, _, _ in groups[code]]
+    singles = [w for w in seq if len(w) == 1]
+    if singles:
+        crossed = []
+        for s in singles:
+            if s not in orig:
+                continue
+            i_s, j_s = orig.index(s), seq.index(s)
+            for w in seq:
+                if len(w) == 1 or w not in orig:
+                    continue
+                if (orig.index(w) < i_s) != (seq.index(w) < j_s):
+                    crossed.append(s)
+                    break
+        if crossed:
+            err.append('單字不參與重排：「' + '、'.join(sorted(set(crossed)))
+                       + '」的相對位置被改動了——詞典的單字區由管道逐字節繼承，動不了。'
+                       '（若只是想調整它下面的詞，讓單字留在原位即可）')
+            return False, err, []
+        for s in singles:
+            seq.remove(s)
+        warn.append('、'.join(singles) + ' 是單字，維持原位不動，'
+                    '已從裁定中略去（單字區逐字節繼承，不參與調頻）')
+        if len(seq) < 2:
+            err.append('略去單字後不足兩詞，沒有次序可言')
+            return False, err, []
+    # 簡碼不參與調頻：一簡/二簡/三簡碼區在管道裏逐字節繼承現表原樣，
+    # word2codes 只由四碼詞組構成，故簡碼組的裁定一律被跳過。
+    if len(code) < 4:
+        err.append(f'簡碼不參與調頻：{code} 是 {len(code)} 碼組，'
+                   '一至三碼區由管道逐字節繼承，次序裁定只對四碼全碼組生效')
+        return False, err, []
+    rest = sorted(members - set(seq) - set(singles))
     if rest:
         warn.append(f'同碼組另有 {len(rest)} 詞未列入（不受次序約束，可能插入其間）：'
                     + '、'.join(rest[:8]) + ('…' if len(rest) > 8 else ''))
@@ -185,7 +224,21 @@ def write_override(code, seq, note=''):
     """先把共享詞的舊裁定行移除，再追加新行（附註釋）。原子替換。"""
     lines = io.open(OV, encoding='utf-8').read().splitlines(True) if os.path.exists(OV) else []
     killed = {ln for ln, _ in existing_conflicts(seq)}
-    kept = [l for i, l in enumerate(lines, 1) if i not in killed]
+    # 同時清掉該碼的歷史注釋頭：只殺行不殺頭，會留下成堆空「調序」標題
+    # （同一碼調三次就有三個空標題）。頭與行一起清，寫入才冪等。
+    hdr = re.compile(r'^#\s+\d{4}-\d{2}-\d{2}\s+' + re.escape(code)
+                     + r'\s+調序（wishd')
+    kept, blank = [], 0
+    for i, l in enumerate(lines, 1):
+        if i in killed or hdr.match(l):
+            continue
+        if not l.strip():
+            blank += 1
+            if blank > 1:      # 折疊連續空行
+                continue
+        else:
+            blank = 0
+        kept.append(l)
     while kept and not kept[-1].strip():
         kept.pop()
     stamp = datetime.date.today().isoformat()
@@ -200,6 +253,207 @@ def write_override(code, seq, note=''):
 
 def parse_seq(text):
     return [w.strip() for w in re.split(r'\s*>\s*', text.strip()) if w.strip()]
+
+
+# ── 診斷：探測可能不合理的詞頻（只用詞典自身，不依賴語料）────────
+CONFLICT_CACHE = os.path.join(FREQ, 'cache', 'source_conflicts.json')
+
+
+def _source_files():
+    import glob
+    pats = ('A.jieba_dict.txt', 'B.wordfreq_jieba_zh.txt', 'C.thuocl/THUOCL_*.txt',
+            'D.bcc_*.txt', 'G.bcc_*.txt', 'H.bcc_*.txt', 'I.bcc_*.txt',
+            'E.subtlex/SUBTLEX-CH-WF.txt', 'K.googlebooks/chi_1gram_word_freq.txt',
+            'L.yuwei_word_freq.txt')
+    out = []
+    for pat in pats:
+        out += sorted(glob.glob(os.path.join(FREQ, 'corpus', 'sources', pat)))
+    return out
+
+
+def _conflict_sig():
+    """緩存簽名：詞典改過、或任一語源檔換過，就重算。"""
+    try:
+        parts = [f"{os.path.getmtime(DICT):.0f}", f"{os.path.getsize(DICT)}"]
+        for p in _source_files():
+            parts.append(f"{os.path.getmtime(p):.0f}:{os.path.getsize(p)}")
+        return '|'.join(parts)
+    except OSError:
+        return ''
+
+
+def source_conflicts(topn=None, refresh=False):
+    """四碼全碼組內，各語源對成員相對次序的判斷互相矛盾之處。
+
+    為什麼值得看：混合分是把十個語源的意見加權平均後的一個數——它會把爭執
+    抹平。同一組裏「甲 > 乙」這件事，jieba 說東、BCC 說西，平均下來誰也不服，
+    排序只反映權重表的偏好而非語言事實。衝突越多，這一格越該由人拍板。
+
+    只統計四碼組：一至三碼區在管道裏逐字節繼承，根本不參與調頻。
+    只比次序不比數值：同一源內比大小，歸一化常數與權重都會抵消。
+    """
+    sig = _conflict_sig()
+    cache = None
+    if not refresh:
+        try:
+            with io.open(CONFLICT_CACHE, encoding='utf-8') as f:
+                cache = json.load(f)
+            if cache.get('sig') != sig:
+                cache = None
+        except Exception:
+            cache = None
+    if cache is None:
+        sys.path.insert(0, HERE)
+        import gen_freq_dict as P
+        SRC = P.build_sources()
+        letters = [k for k, n, tb, wt in SRC]
+        t2s, _, _ = P.load_t2s()
+        groups, _ = load_dict()
+        vec = {}
+        for code, rs in groups.items():
+            if len(code) != 4:
+                continue
+            for w, _, _, _ in rs:
+                if w in vec:
+                    continue
+                s = t2s(w)
+                vec[w] = tuple(tb.get(s) for k, n, tb, wt in SRC)
+        codes = []
+        for code, rs in groups.items():
+            if len(code) != 4 or len(rs) < 2:
+                continue
+            ws = [r[0] for r in rs]
+            pairs = []
+            for i in range(len(ws)):
+                va = vec.get(ws[i])
+                if not va:
+                    continue
+                for j in range(i + 1, len(ws)):
+                    vb = vec.get(ws[j])
+                    if not vb:
+                        continue
+                    ga, gb = [], []
+                    for k in range(len(letters)):
+                        x, y = va[k], vb[k]
+                        if x is None or y is None:
+                            continue
+                        if x > y:
+                            ga.append(letters[k])
+                        elif y > x:
+                            gb.append(letters[k])
+                    if ga and gb:            # 兩個方向都有人投，才是真爭執
+                        pairs.append({'a': ws[i], 'b': ws[j],
+                                      'ga': ''.join(ga), 'gb': ''.join(gb)})
+            if pairs:
+                codes.append({'code': code, 'n': len(pairs), 'of': len(ws),
+                              'pairs': pairs[:12]})
+        codes.sort(key=lambda x: (-x['n'], -x['of'], x['code']))
+        cache = {'sig': sig, 'letters': letters, 'codes': codes,
+                 'n_codes': len(codes), 'n_pairs': sum(c['n'] for c in codes)}
+        try:
+            os.makedirs(os.path.dirname(CONFLICT_CACHE), exist_ok=True)
+            tmp = CONFLICT_CACHE + '.tmp'
+            with io.open(tmp, 'w', encoding='utf-8') as f:
+                json.dump(cache, f, ensure_ascii=False)
+            os.replace(tmp, CONFLICT_CACHE)
+        except OSError:
+            pass
+    out = dict(cache)
+    if topn:
+        out['codes'] = out['codes'][:topn]
+    return out
+
+
+def diagnose(limit=60):
+    """原則：**只在同一尺標內比較**。
+
+    詞典裏有兩套權重尺標——簡碼區（1–3 碼）是從原表逐字節繼承的舊值，全碼區（4 碼）
+    是管道重算的 10^score×1e9。跨區比大小沒有意義（例：內容 簡碼 1.24e9 / 全碼 30.5 萬），
+    故所有判據要麼同組內、要麼只看「是否為零」這類尺標無關的性質。
+    """
+    groups, wc = load_dict()
+    rows_of = {}
+    for w, code, wt, ln, tag, sec in load_entries():
+        rows_of.setdefault(w, []).append((code, int(wt) if wt and wt.isdigit() else 0, ln))
+    charw = {w: max(v for _, v, _ in rs) for w, rs in rows_of.items() if len(w) == 1}
+    # 常用門檻取「非零字頻」的中位數——七萬多個擴展區字權重為 0，含零取中位數會得到 0
+    nz = sorted(v for v in charw.values() if v > 0)
+    common = nz[len(nz) // 2] if nz else 0
+    HAN = re.compile(r'^[\u3400-\u4dbf\u4e00-\u9fff]+$')
+
+    same_wt, zero_common, long_over_short, overflow = [], [], [], []
+    for code, rs in groups.items():
+        ranked = sorted(rs, key=lambda r: -(int(r[1]) if r[1].isdigit() else 0))
+        bywt = {}
+        for w, wt, ln, tag in ranked:
+            v = int(wt) if wt and wt.isdigit() else 0
+            if len(w) < 2 or not HAN.match(w):
+                continue
+            bywt.setdefault(v, []).append(w)
+            if v == 0 and common > 0:
+                comps = [charw.get(c, 0) for c in w]
+                if comps and min(comps) >= common:
+                    zero_common.append({'w': w, 'code': code, 'minchar': min(comps)})
+            if len(code) == 4 and v > 10 ** 9:
+                overflow.append({'w': w, 'code': code, 'wt': v})
+        for v, ws in bywt.items():
+            if len(set(ws)) > 1 or len(ws) > 1:
+                same_wt.append({'code': code, 'wt': v, 'words': ws})
+        for a in range(len(ranked)):
+            for b in range(a + 1, len(ranked)):
+                wa, wb = ranked[a][0], ranked[b][0]
+                if len(wa) > len(wb) >= 2 and HAN.match(wa):
+                    long_over_short.append({'code': code, 'hi': wa, 'lo': wb,
+                                            'hiwt': ranked[a][1], 'lowt': ranked[b][1]})
+                    break
+
+    invert = []
+    for w, rs in rows_of.items():
+        if len(rs) < 2 or len(w) < 2:
+            continue
+        ranks = []
+        for code, v, ln in rs:
+            names = [r[0] for r in sorted(groups[code],
+                     key=lambda r: -(int(r[1]) if r[1].isdigit() else 0))]
+            ranks.append((names.index(w) + 1, len(names), code))
+        if len(ranks) < 2:
+            continue
+        pcts = [(n / tot) if tot > 1 else 0 for n, tot, _ in ranks]
+        if max(pcts) - min(pcts) >= 0.6:
+            invert.append({'w': w,
+                           'ranks': [{'code': c, 'rank': n, 'of': tot} for n, tot, c in ranks]})
+
+    sc = source_conflicts(topn=limit)
+    ov_codes = set(override_index().keys())   # 已裁定過的碼：界面默認沉底
+    NM = {'a': 'jieba', 'b': 'wordfreq', 'c': 'THUOCL', 'd': 'BCC現代', 'e': 'SUBTLEX',
+          'g': 'BCC文學', 'h': 'BCC口語', 'i': 'BCC近代', 'k': 'GoogleBooks', 'l': '語委'}
+    out = {
+        'F': {'name': '詞源排序衝突', 'n': sc['n_codes'],
+              'desc': '四碼組內，各語源對誰排前面的意見不一致的配對數——越多越靠前。'
+                      '混合分把爭執平均掉了，這類碼位最該由人拍板。'
+                      '源代號：' + ' '.join(f'{k}={v}' for k, v in NM.items()),
+              'items': [dict(c, decided=c['code'] in ov_codes,
+                             pairs=[dict(p, ga_names=[NM.get(x, x) for x in p['ga']],
+                                         gb_names=[NM.get(x, x) for x in p['gb']])
+                                    for p in c['pairs']])
+                        for c in sc['codes']]},
+        'A': {'name': '同組同分（不同詞）', 'n': len(same_wt),
+              'desc': '同一碼組內不同詞拿到完全相同的頻分——多半是缺頻回退到同一默認值，或異體並列',
+              'items': sorted(same_wt, key=lambda x: -len(x['words']))[:limit]},
+        'B': {'name': '零頻分但字皆常用', 'n': len(zero_common),
+              'desc': '組成字都不算冷僻，詞本身卻沒有頻分——語料缺該詞，排序會沉底',
+              'items': sorted(zero_common, key=lambda x: -x['minchar'])[:limit]},
+        'C': {'name': '長詞壓短詞', 'n': len(long_over_short),
+              'desc': '同碼組內字數更多的詞排在同碼短詞之前——不一定是錯，但值得看一眼',
+              'items': long_over_short[:limit]},
+        'D': {'name': '跨區排名倒掛', 'n': len(invert),
+              'desc': '同一個詞在簡碼組與全碼組的相對名次差距 ≥60%——兩套權重尺標不一致所致，僅供參考',
+              'items': invert[:limit]},
+        'E': {'name': '全碼區權重溢出', 'n': len(overflow),
+              'desc': '4 碼條目權重 >1e9，而重算規則下 p≤1 ⇒ 應 ≤1e9；非 0 即為真異常',
+              'items': overflow[:limit]},
+    }
+    return out
 
 
 # ── 展示層 ──────────────────────────────────────────────────────
@@ -237,6 +491,85 @@ def suspicious(groups, hp, limit=40):
             if len(ws) >= 2:
                 out.append((code, '同分並列', ws, wt))
     return out[:limit]
+
+
+# ── 裁定索引：哪些碼位被人工動過次序 ────────────────────────────
+def override_index():
+    """返回 {code: {'line': 行號, 'words': [...], 'satisfied': bool}}。
+
+    「調過詞頻」的唯一權威記錄就是 manual_overrides.txt——不管是在網頁、CLI
+    還是手改檔案寫進去的，都算。判定是否已滿足用詞典現序（= 上次管道生效的結果）。
+    """
+    groups, wc = load_dict()
+    out = {}
+    for ln, ws, raw in load_overrides():
+        if not all(w in wc for w in ws):
+            continue
+        shared = set.intersection(*[wc[w] for w in ws])
+        if not shared:
+            continue
+        for code in shared:
+            ranked = [r[0] for r in sorted(groups[code],
+                      key=lambda r: -(int(r[1]) if r[1].isdigit() else 0))]
+            idx = {w: ranked.index(w) for w in ws if w in ranked}
+            ok = all(idx[ws[i]] < idx[ws[i + 1]]
+                     for i in range(len(ws) - 1) if ws[i] in idx and ws[i + 1] in idx)
+            out.setdefault(code, {'line': ln, 'words': ws, 'satisfied': ok,
+                                  'valid': all(len(w) >= 2 for w in ws)})
+    return out
+
+
+_OVHDR = re.compile(r'^#\s+\d{4}-\d{2}-\d{2}\s+([0-9a-zA-Z]+)\s+調序')
+
+
+def list_overrides():
+    """已調序的碼：一行裁定一條，按行號倒序（最近寫的在前）。
+
+    碼優先取裁定上方的注釋頭（`# 日期 碼 調序（wishd）`）；手寫無頭的行再退回
+    「該行在 override_index 裏對應的碼」。這樣連無效裁定（含單字、簡碼組）也會
+    現形——否則它們會從清單裏憑空消失，人只看得到「有效」的那幾條。
+    """
+    groups, wc = load_dict()
+    ov = override_index()
+    by_line = {d['line']: c for c, d in ov.items()}
+    rows, cur = [], None
+    if not os.path.exists(OV):
+        return {'rows': [], 'counts': {'total': 0, 'ok': 0, 'pending': 0, 'invalid': 0}}
+    for i, l in enumerate(io.open(OV, encoding='utf-8'), 1):
+        m = _OVHDR.match(l)
+        if m:
+            cur = m.group(1).lower()
+            continue
+        body = l.split('#')[0].strip()
+        if not body:
+            continue
+        ws = [w for w in re.split(r'\s*>\s*', body) if w]
+        code = cur or by_line.get(i, '')
+        why = ''
+        if len(ws) < 2:
+            why = '至少要兩個詞'
+        elif any(len(w) == 1 for w in ws):
+            why = '含單字（單字區逐字節繼承）'
+        elif code and len(code) < 4:
+            why = '簡碼組不參與調頻'
+        elif not code:
+            why = '碼不明'
+        elif code not in groups:
+            why = '查無此碼'
+        elif any(w not in wc for w in ws):
+            why = '有詞不在庫'
+        elif set.intersection(*[wc[w] for w in ws]) == set() or code not in set.intersection(*[wc[w] for w in ws]):
+            why = '詞與碼不同組'
+        status = 'invalid' if why else ('ok' if ov.get(code, {}).get('satisfied') else 'pending')
+        rows.append({'code': code, 'words': ws, 'line': i,
+                     'raw': body, 'status': status, 'why': why})
+        cur = None
+    rows.sort(key=lambda r: -r['line'])
+    counts = {'total': len(rows),
+              'ok': sum(1 for r in rows if r['status'] == 'ok'),
+              'pending': sum(1 for r in rows if r['status'] == 'pending'),
+              'invalid': sum(1 for r in rows if r['status'] == 'invalid')}
+    return {'rows': rows, 'counts': counts}
 
 
 # ── 加詞（與 /add 共用 spool）────────────────────────────────────

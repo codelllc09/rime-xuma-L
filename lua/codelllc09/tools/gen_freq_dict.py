@@ -357,14 +357,16 @@ def load_variants_raw():
                 if b: graph[a].add(b); graph[b].add(a)
     return {k: sorted(v) for k, v in graph.items()}
 
-def make_scorer():
-    """十語源加權混合：score = log10(Σ_i w_i·p_i)，缺失源貢獻 0（總權重 0.995，l 源 0.005 見 SRC 表）
+def build_sources():
+    """構建十語源表：[(字母, 表名, 表, 權重)]，總權重恆為 1。
+
+    抽成獨立函數供意願台複用（診斷頁要按語源逐個比對排序意見，不能只用混合分）。
     權重原則：現代主流源高權重；污染風險源（近代/古代/單一小表）低權重入料不棄料；
-    bcc 現代核心 = 多領域+新聞兩表概率級 MAX 合併（同 THUOCL 跨表慣例）"""
+    bcc 現代核心 = 多領域+新聞兩表概率級 MAX 合併（同 THUOCL 跨表慣例）。"""
     jieba = load_jieba()
     wf = load_wordfreq()
     if not jieba and not wf:
-        return (lambda s: (None, 'nocorpus')), 0, []   # 無語料模式：頻分恆缺失
+        return []
     def _pmax(f1, f2):
         """兩表各自歸一化後取 max，合成單表"""
         t1 = sum(f1.values()) or 1
@@ -390,7 +392,14 @@ def make_scorer():
         ('k', 'GoogleBooks', load_googlebooks(),                                       0.05),
         ('l', '語委',         load_yuwei(),                                             0.005),
     ]
-    SRC = [(k, n, t, w) for k, n, t, w in SRC if t]
+    return [(k, n, t, w) for k, n, t, w in SRC if t]
+
+
+def make_scorer():
+    """十語源加權混合：score = log10(Σ_i w_i·p_i)，缺失源貢獻 0（總權重 0.995，l 源 0.005 見 SRC 表）"""
+    SRC = build_sources()
+    if not SRC:
+        return (lambda s: (None, 'nocorpus')), 0, []   # 無語料模式：頻分恆缺失
     # 打分備忘：詞→(score, tag) 持久緩存；語料/權重不變時重跑只評新詞
     _sfiles = []
     import glob as _glob
@@ -607,14 +616,22 @@ def main():
             if len(ws) == 2:
                 a, b = ws
                 fa, fb = freq_of(a)[0], freq_of(b)[0]
-                if fa is None or fb is None:
-                    print(f'[overrides] 頻分缺失，跳過: {a}({fa}) > {b}({fb})'); continue
-                if fa >= fb:
+                # 手收詞在詞典裏不帶權重，freq_of 回 None。多詞「名次」語法本就把
+                # None 視爲最低，兩詞「交換」語法卻整條跳過——結果「把某個手收詞
+                # 提到某詞之前」永遠應用不了（rkos 重跑 > 香吻 即此例）。
+                # 改爲：無頻分者以「對方分 -1e-3」的名義值參與比較，交換後它落在
+                # 對方正上方，對方只微降 0.001，不擾動同組其餘詞。
+                _f = lambda x: 'None' if x is None else f'{x:.2f}'
+                if fa is None and fb is None:
+                    print(f'[overrides] 兩詞皆無頻分，跳過: {a} > {b}'); continue
+                fa_v = (fb - 1e-3) if fa is None else fa
+                fb_v = (fa - 1e-3) if fb is None else fb
+                if fa_v >= fb_v:
                     print(f'[overrides] 已滿足次序: {a} > {b}'); continue
-                OVERRIDES[a] = fb + 1e-9   # ε 防同分
-                OVERRIDES[b] = fa
+                OVERRIDES[a] = fb_v + 1e-9   # ε 防同分
+                OVERRIDES[b] = fa_v
                 n_ov += 1
-                print(f'[overrides] 生效: {a}({fa:.2f} ↔ {fb:.2f}){b}')
+                print(f'[overrides] 生效: {a}({_f(fa)} ↔ {_f(fb)}){b}')
             else:
                 # 名次語法：成員現有分數按目標名次重排（None 視爲最低，低於全體真分-0.01 處合成遞減）
                 scs = [freq_of(w)[0] for w in ws]
