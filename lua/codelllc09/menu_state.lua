@@ -21,7 +21,7 @@ M.groups = {
                 'xuma_spelling.bopomofo', 'xuma_spelling.lv1',
                 'xuma_spelling.lv2', 'xuma_spelling.lv3' },
     values  = { '〇註解', '拼音', '生僻拼音', '註音符', '一重', '二重', '三重' },
-    default = 3 },   -- 生僻拼音（原 schema reset: 2，0 基轉 1 基）
+    default = 1 },   -- 〇註解（2026-11-05 用戶裁定；原 schema reset: 2 生僻拼音）
   { key = 'spr', name = '反查註解',
     options = { 'xuma_spelling_rvlk.off', 'xuma_spelling_rvlk.bopomofo',
                 'xuma_spelling_rvlk.lv1', 'xuma_spelling_rvlk.lv2',

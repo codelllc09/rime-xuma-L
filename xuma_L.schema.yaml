@@ -48,6 +48,7 @@ switches:
   # 字符集两档（2026-09-07）：通用=只出基本区(U+4E00–9FFF)+符号等非汉字；
   # 全部=放开扩展区生僻字（词典中 66,382 个单字在扩展区）。Ctrl+Shift+5 可切
   - name: extended_charset
+    reset: 0  # 默認通用（2026-11-05 顯式化）
     states: [ 通用, 全部 ]
   # 非簡模式（2026-09-07 修訂）：詞表只出繁體標準形；簡體僅能經 Super+F 簡化轉換輸出。
   # 攔截集=OpenCC s2t 會轉換 ∩ Big5（繁體標準集）不可編碼，再經官方字表（臺灣地區國字標準/
@@ -61,7 +62,7 @@ switches:
     reset: 1  # 每次進方案默認非簡
   # 切换热键由 xuma_spelling/lua 下的 cycle_key 和 switch_key 定义。
   # 反查中按同一热键时作用于下一组（rvlk），两组可分别设置。
-  # 默認啟用“生僻拼音”，即爲生僻字標註拼音。
+  # 默認啟用〇註解（2026-11-05 用戶裁定：原默認生僻拼音改為不標註；想要拼音 Ctrl+C 或 /menu 切）
   # 2026-11-05 裁定：F4 原生選單保持完整（手機端徐碼依賴原生 switches 操作），
   # 不做瘦身；桌面端另設 /menu 二級菜單作附加入口
   - options:
@@ -73,7 +74,7 @@ switches:
     - xuma_spelling.lv2
     - xuma_spelling.lv3
     states: [ 〇註解, 拼音, 生僻拼音, 註音符, 一重註解, 二重註解, 三重註解 ]
-    reset: 2
+    reset: 0
   - options:
     - xuma_spelling_rvlk.off
     - xuma_spelling_rvlk.bopomofo
