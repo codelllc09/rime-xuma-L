@@ -112,3 +112,5 @@
 {"ts": "2026-11-05T18:34:16", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 1903 歧義 0 無碼 0", "tracked": false}
 {"ts": "2026-11-05T18:41:27", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-一簡首字精簡.md", "detail": "對賬 HEAD…4b7bf3c：新增0 注釋0 恢復0 消失2647", "tracked": true}
 {"ts": "2026-11-05T18:41:27", "actor": "cli", "action": "生成", "path": "../tmp/一簡首字精簡對賬.md", "detail": "對賬 HEAD…工作區；重命名自默認輸出名", "tracked": true}
+{"ts": "2026-11-05T18:41:54", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-一簡正式.md", "detail": "對賬 HEAD~1…1f6ae2c：新增0 注釋0 恢復0 消失2647", "tracked": true}
+{"ts": "2026-11-05T18:41:54", "actor": "cli", "action": "刪除", "path": "../tmp/詞表改動-一簡正式.md", "detail": "與快照版逐字一致，重複件清理", "tracked": true}
