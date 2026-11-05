@@ -83,9 +83,9 @@ switches:
   #- name: xuma_postpone_fullcode  # 仅作用于单字。
     #reset: 1
     #states: [ ＝原始排序, ↓全码后置 ]
-  - options: [ word_all, word_12, single_char_only ]
-    states: [ 全詞, 12, 單字 ]
-    reset: 1  # 默認 12 模式（單字＋二字詞）
+  - options: [ word_all, word_124, word_12, single_char_only ]
+    states: [ 全詞, 124, 12, 單字 ]
+    reset: 2  # 默認 12 模式（單字＋二字詞）
 
 engine:
   processors:
@@ -126,7 +126,7 @@ engine:
     - lua_translator@*codelllc09/add_word  # /add 加词采集菜单（尾部连缀→spool→handpicked 固化）
   filters:
     - lua_filter@*codelllc09/datetime     # /time /date 占位候选动态替换（时间日期+农历）
-    - lua_filter@*codelllc09/word_mode  # 詞組長度過濾（全詞/12/單字三檔）
+    - lua_filter@*codelllc09/word_mode  # 詞組長度過濾（全詞/124/12/單字四檔）
     - lua_filter@*codelllc09/no_simple  # 非簡模式（須在 simplifier 之前：先攔原生簡形，再轉換獲存者）
     # charset_filter@gb2312/@gbk/@big5 已移除（2026-09-06）：librime 1.16 内建
     # charset_filter 不支持带参命名空间，这三项是纯 no-op，只会每次击键刷 3 条
