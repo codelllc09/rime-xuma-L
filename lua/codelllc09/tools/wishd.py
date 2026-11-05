@@ -91,6 +91,7 @@ def load_entries(refresh=False):
 def load_dict():
     """返回 (groups, wordcodes)：groups[code] = [(word, weight, lineno, tag)]；
     wordcodes[word] = {該詞出現過的全部碼}（一詞多碼，判同碼必須用交集）"""
+    load_entries()          # 先走 mtime 校驗：詞典被管道重寫過就重建
     if _CACHE['groups'] is not None:
         return _CACHE['groups'], _CACHE['wc']
     groups, wc = {}, {}
@@ -162,21 +163,44 @@ def check_order(code, seq, groups, words):
     if len(set.intersection(*[words[w] for w in seq])) == 0:
         err.append('這些詞沒有共同碼組')
         return False, err, []
-    # 單字不參與重排：管道只對「詞組」建 word2codes，單字區逐字節繼承。
-    # 含單字的裁定會被管道跳過（[overrides] 非同碼或未入庫，跳過），
-    # 用戶看到的現象是「拖過去了，應用後又彈回原位」。
-    single = [w for w in seq if len(w) == 1]
-    if single:
-        err.append('單字不參與重排：「' + '、'.join(single)
-                   + '」是單字，詞典的單字區由管道逐字節繼承，次序裁定只對詞組生效')
-        return False, err, []
+    # 單字不參與重排：管道只對「詞組」建 word2codes，單字區逐字節繼承，
+    # 含單字的裁定行會被整條跳過（[overrides] 非同碼或未入庫，跳過）。
+    # 但「單字釘在原位、只調它下面的詞」是合法意願——把單字從清單剔除後
+    # 只寫詞組，效果與人意圖一致。只有當某個詞真的越過單字（改了它的相對
+    # 位置）才拒絕。剔除是就地的：呼叫方拿到的 seq 即最終要寫的內容。
+    orig = [w for w, _, _, _ in groups[code]]
+    singles = [w for w in seq if len(w) == 1]
+    if singles:
+        crossed = []
+        for s in singles:
+            if s not in orig:
+                continue
+            i_s, j_s = orig.index(s), seq.index(s)
+            for w in seq:
+                if len(w) == 1 or w not in orig:
+                    continue
+                if (orig.index(w) < i_s) != (seq.index(w) < j_s):
+                    crossed.append(s)
+                    break
+        if crossed:
+            err.append('單字不參與重排：「' + '、'.join(sorted(set(crossed)))
+                       + '」的相對位置被改動了——詞典的單字區由管道逐字節繼承，動不了。'
+                       '（若只是想調整它下面的詞，讓單字留在原位即可）')
+            return False, err, []
+        for s in singles:
+            seq.remove(s)
+        warn.append('、'.join(singles) + ' 是單字，維持原位不動，'
+                    '已從裁定中略去（單字區逐字節繼承，不參與調頻）')
+        if len(seq) < 2:
+            err.append('略去單字後不足兩詞，沒有次序可言')
+            return False, err, []
     # 簡碼不參與調頻：一簡/二簡/三簡碼區在管道裏逐字節繼承現表原樣，
     # word2codes 只由四碼詞組構成，故簡碼組的裁定一律被跳過。
     if len(code) < 4:
         err.append(f'簡碼不參與調頻：{code} 是 {len(code)} 碼組，'
                    '一至三碼區由管道逐字節繼承，次序裁定只對四碼全碼組生效')
         return False, err, []
-    rest = sorted(members - set(seq))
+    rest = sorted(members - set(seq) - set(singles))
     if rest:
         warn.append(f'同碼組另有 {len(rest)} 詞未列入（不受次序約束，可能插入其間）：'
                     + '、'.join(rest[:8]) + ('…' if len(rest) > 8 else ''))

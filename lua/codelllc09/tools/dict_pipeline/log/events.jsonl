@@ -54,3 +54,6 @@
 {"ts": "2026-11-05T08:46:17", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "rkos: 重跑 > 香吻（Web UI）", "tracked": true}
 {"ts": "2026-11-05T08:49:18", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-9a13d31.md", "detail": "對賬 HEAD…9a13d31：新增0 注釋0 恢復0 消失0", "tracked": true}
 {"ts": "2026-11-05T08:50:45", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-268e225.md", "detail": "對賬 HEAD~1…268e225：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T09:04:50", "actor": "wishd.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "ugug: 會合 > 與會 > 會師 > 懨懨 > 愈合 > 師師 > 怔怔 > 會會 > 鬼鬼 > 合會 > 師命 > 合合｜單字魉釘首位，其下詞重排", "tracked": true}
+{"ts": "2026-11-05T09:05:53", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-5bc7f54.md", "detail": "對賬 HEAD…5bc7f54：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T09:06:19", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-5bc7f54.md", "detail": "對賬 HEAD…5bc7f54：新增0 注釋0 恢復0 消失0", "tracked": true}
