@@ -1,7 +1,7 @@
 -- word_mode.lua -- 詞組長度過濾器，三檔切換
--- options: [word_all, word_124, single_char_only]
+-- options: [word_all, word_12, single_char_only]
 --   word_all          = 全詞組（不過濾）
---   word_124          = 僅單字/雙字詞/四字詞
+--   word_12           = 僅單字/二字詞（2026-11-05 由 124 檔改制：四字詞讓路，想要成語去全詞檔）
 --   single_char_only  = 僅單字
 -- 默認（無選項激活）= 全詞組
 
@@ -35,10 +35,10 @@ local function filter(input, env)
     for cand in input:iter() do yield(cand) end
     return
   end
-  if ctx:get_option('word_124') then
+  if ctx:get_option('word_12') then
     for cand in input:iter() do
       local n = char_count(cand.text)
-      if n == 1 or n == 2 or n == 4 then yield(cand) end
+      if n == 1 or n == 2 then yield(cand) end
     end
     return
   end
