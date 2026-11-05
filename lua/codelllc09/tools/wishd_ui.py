@@ -19,7 +19,9 @@
 import io
 import json
 import os
+import re
 import secrets
+import subprocess
 import sys
 import threading
 import time
@@ -418,6 +420,103 @@ def api_commit(payload):
     return {'ok': True, 'replaced': n, 'warnings': warn}
 
 
+# ── 日誌中心 ────────────────────────────────────────────────────
+# 白名單制：只允許讀取下列具名來源，拒絕任意路徑（這是個綁在 127.0.0.1 的服務，
+# 但「能讀任意檔案」仍然是個不必要的口子）。
+LOG_SOURCES = {
+    'events':      ('事件台賬',      ('file', 'dict_pipeline/log/events.jsonl'), 'jsonl'),
+    'ledger':      ('人讀台賬',      ('file', 'dict_pipeline/log/IGNORED_CHANGES.log'), 'tsv'),
+    'add_commit':  ('入庫明細',      ('file', 'dict_pipeline/log/add_commit.log'), 'text'),
+    'hp_removals': ('棄用審計',      ('file', 'dict_pipeline/log/hp_removals.log'), 'text'),
+    'engine':      ('引擎日誌（最新）', ('glob', '/tmp/rime.ibus.*.log.INFO.*'), 'text'),
+    'precommit':   ('提交門禁',      ('path', '/tmp/rime-precommit.log'), 'text'),
+    'prepush':     ('推送門禁',      ('path', '/tmp/rime-prepush.log'), 'text'),
+    'privacy':     ('隱私門禁',      ('path', '/tmp/rime-prepush-privacy.log'), 'text'),
+    'drill':       ('演練輸出',      ('path', '/tmp/rime-drill-det.log'), 'text'),
+    'daemon':      ('意願台服務',    ('path', '/tmp/wishd.log'), 'text'),
+    'git':         ('提交歷史',      ('git', ''), 'text'),
+}
+
+
+def _resolve(kind, arg):
+    import glob as _glob
+    if kind == 'file':
+        return os.path.join(HERE, arg)
+    if kind == 'path':
+        return arg
+    if kind == 'glob':
+        hits = sorted(_glob.glob(arg))
+        return hits[-1] if hits else None
+    return None
+
+
+def api_log_list():
+    out = []
+    for k, (name, spec, kind) in LOG_SOURCES.items():
+        p = _resolve(spec[0], spec[1])
+        st = None
+        if spec[0] == 'git':
+            n = len(subprocess.run(['git', '-C', wishd.RIME, 'log', '--oneline'],
+                                   capture_output=True, text=True).stdout.splitlines())
+            out.append({'key': k, 'name': name, 'kind': 'text', 'exists': True,
+                        'size': n, 'unit': '條', 'mtime': ''})
+            continue
+        if p and os.path.exists(p):
+            st = os.stat(p)
+        out.append({'key': k, 'name': name, 'kind': kind, 'exists': bool(st),
+                    'size': st.st_size if st else 0, 'unit': 'B',
+                    'mtime': time.strftime('%m-%d %H:%M',
+                                           time.localtime(st.st_mtime)) if st else '',
+                    'file': os.path.basename(p) if p else ''})
+    return {'sources': out}
+
+
+def api_log(key, n=300, q='', errors=False, action=''):
+    if key not in LOG_SOURCES:
+        return {'error': '未知來源'}
+    name, spec, kind = LOG_SOURCES[key]
+    if spec[0] == 'git':
+        args = ['git', '-C', wishd.RIME, 'log', f'-{n}', '--date=short',
+                '--format=%h  %ad  %s']
+        if q:
+            args += ['--grep', q, '-i']
+        r = subprocess.run(args, capture_output=True, text=True)
+        return {'name': name, 'text': r.stdout, 'file': '(git)'}
+
+    p = _resolve(spec[0], spec[1])
+    if not p or not os.path.exists(p):
+        return {'name': name, 'text': '', 'file': '(不存在)', 'missing': True}
+    import collections as _c
+    raw = open(p, encoding='utf-8', errors='replace').read().splitlines()
+    if kind == 'jsonl':
+        items, acts = [], _c.Counter()
+        for ln in raw:
+            try:
+                r = json.loads(ln)
+            except Exception:
+                continue
+            acts[r.get('action', '')] += 1
+            if action and r.get('action') != action:
+                continue
+            if q and q not in ln:
+                continue
+            items.append(f"{r.get('ts','')[5:19].replace('T',' ')}  "
+                         f"{r.get('action',''):<6} {r.get('path','')[:34]:<34} "
+                         f"{r.get('detail','')}")
+        return {'name': name, 'text': '\n'.join(items[-n:]),
+                'file': os.path.basename(p), 'actions': dict(acts),
+                'total': len(items)}
+    lines = raw
+    if errors:
+        lines = [l for l in lines
+                 if re.search(r'error|ERROR|E[0-9]{4}|fatal|Traceback', l)]
+    if q:
+        lines = [l for l in lines if q in l]
+    return {'name': name, 'text': '\n'.join(lines[-n:]),
+            'file': os.path.basename(p), 'total': len(lines),
+            'lines': len(raw)}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'wishd/1.1'
 
@@ -451,6 +550,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps(api_dict(q), ensure_ascii=False))
         if u.path == '/api/map':
             return self._send(200, json.dumps(api_map(q), ensure_ascii=False))
+        if u.path == '/api/logs':
+            return self._send(200, json.dumps(api_log_list(), ensure_ascii=False))
+        if u.path == '/api/log':
+            n = int(q.get('lines', ['300'])[0] or 300)
+            return self._send(200, json.dumps(
+                api_log(q.get('key', ['events'])[0], n,
+                        q.get('q', [''])[0],
+                        q.get('errors', ['0'])[0] == '1',
+                        q.get('action', [''])[0]), ensure_ascii=False))
         if u.path == '/api/override-codes':
             return self._send(200, json.dumps(api_override_codes(), ensure_ascii=False))
         if u.path == '/api/learn':
@@ -626,6 +734,14 @@ code,.mono{font-family:var(--mono);font-size:12.5px}
 .pill{display:inline-flex;gap:6px;align-items:center;background:var(--surface-2);border:1px solid var(--border);
   border-radius:999px;padding:2px 10px;font-size:13px}
 .empty{color:var(--fg-faint);text-align:center;padding:28px 10px;font-size:13px}
+.logwrap{display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px}
+.loglist{border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
+.loglist .src{padding:8px 11px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
+.loglist .src:last-child{border-bottom:0}
+.loglist .src:hover{background:var(--surface-2)}
+.loglist .src.on{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.loglist .src.off{color:var(--fg-faint);cursor:default}
+.loglist .src .m{display:block;font-size:11px;color:var(--fg-faint);font-weight:400}
 .map{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
 .cell{position:relative;aspect-ratio:1/1;border-radius:var(--r-sm);border:1px solid var(--border);
   display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
@@ -701,6 +817,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
   <button id="tab-order" role="tab" aria-selected="true">調序 / 加詞</button>
   <button id="tab-map" role="tab" aria-selected="false">碼圖</button>
   <button id="tab-diag" role="tab" aria-selected="false">診斷</button>
+  <button id="tab-logs" role="tab" aria-selected="false">日誌</button>
   <button id="tab-dict" role="tab" aria-selected="false">字典</button>
 </nav>
 
@@ -756,6 +873,32 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
      <div class="row"><button id="learnbtn">跑一次擬合</button>
        <span class="muted" style="font-size:12.5px">約 2 秒</span></div>
      <div id="learnout" style="margin-top:12px"></div>
+   </div>
+ </section>
+
+ <section id="pane-logs" role="tabpanel" hidden>
+   <div class="card">
+     <h2>日誌中心</h2>
+     <p class="sub">所有落盤的記錄。灰掉的表示該檔案目前不存在（多為本輪尚未觸發）。</p>
+     <div class="logwrap">
+       <div class="loglist" id="loglist"><div class="skel" style="width:80%"></div></div>
+       <div>
+         <div class="row" style="margin-bottom:10px">
+           <input id="logq" placeholder="搜尋…" style="width:200px">
+           <select id="loglines"><option value="200">末 200 行</option>
+             <option value="500" selected>末 500 行</option>
+             <option value="2000">末 2000 行</option></select>
+           <label class="row" style="gap:5px;color:var(--fg-muted);font-size:13px">
+             <input type="checkbox" id="logerr">只看錯誤</label>
+           <select id="logact" style="display:none"></select>
+           <button id="logreload" class="sm">重新載入</button>
+           <label class="row" style="gap:5px;color:var(--fg-muted);font-size:13px">
+             <input type="checkbox" id="logauto">每 3 秒</label>
+           <span id="logmeta" class="muted" style="font-size:12.5px"></span>
+         </div>
+         <pre class="log" id="logout" style="max-height:64vh">—</pre>
+       </div>
+     </div>
    </div>
  </section>
 
@@ -815,7 +958,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
      <pre class="log" id="out">—</pre>
    </div>
    <div class="card">
-     <h2>最近動態</h2>
+     <h2>最近動態 <a id="tololgs" style="float:right;font-size:12px;font-weight:400;cursor:pointer;color:var(--primary)">全部日誌 →</a></h2>
      <div id="recent"><div class="skel" style="width:70%"></div></div>
    </div>
  </aside>
@@ -866,7 +1009,7 @@ function busy(on,label){
 }
 
 /* ───── 分頁籤 ───── */
-const TABS=['order','map','diag','dict'];
+const TABS=['order','map','diag','logs','dict'];
 function tab(which){
   TABS.forEach(k=>{
     $('#tab-'+k).setAttribute('aria-selected', k===which);
@@ -877,9 +1020,12 @@ function tab(which){
   if(which==='dict' && !$('#drows').dataset.loaded) dictQuery(1);
   if(which==='map' && !$('#mapgrid').dataset.loaded) mapGo('');
   if(which==='diag' && !$('#diagrows').dataset.loaded) diagLoad();
+  if(which==='logs'){ if(!$('#loglist').dataset.loaded){$('#loglist').dataset.loaded='1';logList();logLoad();} }
+  if(which!=='logs'){ clearInterval(LAUTO); LAUTO=null; $('#logauto').checked=false; }
 }
 $('#tab-map').onclick=()=>tab('map');
 $('#tab-diag').onclick=()=>tab('diag');
+$('#tab-logs').onclick=()=>tab('logs');
 $('#tab-order').onclick=()=>tab('order');
 $('#tab-dict').onclick=()=>tab('dict');
 
@@ -1194,6 +1340,53 @@ function renderDiag(){
   });
 }
 
+/* ───── 日誌中心 ───── */
+let LKEY='events', LAUTO=null;
+function fmtSize(s){return s>1048576?(s/1048576).toFixed(1)+'M':s>1024?(s/1024).toFixed(1)+'K':s+'B';}
+function logList(){
+  api('/api/logs').then(d=>{
+    $('#loglist').innerHTML=d.sources.map(s=>
+      `<div class="src${s.key===LKEY?' on':''}${s.exists?'':' off'}" data-k="${s.key}" data-ok="${s.exists}">
+        ${esc(s.name)}<span class="m">${s.exists?(s.unit==='條'?s.size+' 條':fmtSize(s.size)+' · '+s.mtime):'（無）'}${s.file?' · '+esc(s.file):''}</span>
+      </div>`).join('');
+    $('#loglist').querySelectorAll('.src').forEach(el=>{
+      if(el.dataset.ok!=='true') return;
+      el.onclick=()=>{LKEY=el.dataset.k;$('#logact').style.display='none';logList();logLoad();};
+    });
+  });
+}
+function logLoad(){
+  const p=new URLSearchParams({key:LKEY,lines:$('#loglines').value,
+    q:$('#logq').value.trim(),errors:$('#logerr').checked?'1':'0',
+    action:$('#logact').value||''});
+  api('/api/log?'+p).then(d=>{
+    if(d.error){$('#logout').textContent=d.error;return;}
+    $('#logout').textContent=d.text||'（無內容）';
+    $('#logout').scrollTop=$('#logout').scrollHeight;
+    let m=d.name+(d.file?' · '+d.file:'');
+    if(d.total!=null) m+=` · ${d.total} 條`;
+    if(d.lines!=null) m+=`（檔內共 ${d.lines} 行）`;
+    if(d.missing) m+=' · 檔案不存在';
+    $('#logmeta').textContent=m;
+    // events 專屬：動作篩選
+    if(d.actions){
+      const sel=$('#logact');
+      sel.style.display='';
+      sel.innerHTML='<option value="">全部動作</option>'+Object.entries(d.actions)
+        .sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<option value="${esc(k)}">${esc(k)} (${v})</option>`).join('');
+      if(p.get('action')) sel.value=p.get('action');
+    } else $('#logact').style.display='none';
+  });
+}
+$('#logreload').onclick=logLoad;
+$('#logq').addEventListener('keydown',e=>{if(e.key==='Enter')logLoad();});
+['#loglines','#logerr'].forEach(s=>$(s).onchange=logLoad);
+$('#logact').onchange=logLoad;
+$('#logauto').onchange=e=>{
+  clearInterval(LAUTO); LAUTO=null;
+  if(e.target.checked) LAUTO=setInterval(logLoad,3000);
+};
+
 /* ───── 權重學習原型 ───── */
 $('#learnbtn').onclick=()=>{
   $('#learnbtn').disabled=true; $('#learnout').innerHTML='<div class="skel" style="width:60%"></div>';
@@ -1274,6 +1467,7 @@ $('#dlgok').onclick=()=>{
   });
 };
 
+$('#tololgs').onclick=()=>tab('logs');
 function loadRecent(){
   api('/api/recent').then(d=>{
     $('#recent').innerHTML=d.rows.length?d.rows.map(r=>
