@@ -657,6 +657,102 @@ def api_settings():
             'yaml_error': sc.get('__error__') or df.get('__error__')}
 
 
+# ── 任務中心：把重要腳本接成界面操作 ────────────────────────────
+# level: safe＝只讀，直接跑；warn＝會改檔案，需確認；danger＝會部署/對外，需手打任務名
+PY, BASH = sys.executable, 'bash'
+TASKS = {
+    # 檢查（只讀）
+    'check': ('一致性電池（15 項）', '檢查', 'safe',
+              [PY, 'check_consistency.py'], 600),
+    'acceptance': ('44 碼首選回歸', '檢查', 'safe', [PY, 'check_acceptance.py'], 300),
+    'tendency': ('字形傾向', '檢查', 'safe', [PY, 'check_tendency.py'], 300),
+    'verify_nsd': ('攔截集零漂移', '檢查', 'safe',
+                   [PY, 'gen_no_simple_data.py', '--verify'], 300),
+    'provenance': ('溯源對賬', '檢查', 'safe', [PY, '_provenance.py', '--verify'], 300),
+    'ledger': ('台賬衛生', '檢查', 'safe', [PY, '_ledger.py', '--selfcheck'], 120),
+    'privacy': ('隱私門禁', '檢查', 'safe', [BASH, 'privacy-gate.sh'], 300),
+    'predelete': ('刪除前清點', '檢查', 'safe', [BASH, 'pre-delete-check.sh'], 300),
+    'mirror_status': ('鏡像狀態', '檢查', 'safe', [BASH, 'backup.sh', 'mirror-status'], 120),
+    'backup_verify': ('校驗最新快照', '檢查', 'safe', [BASH, 'backup.sh', 'verify'], 300),
+    # 生成（改檔案，不部署）
+    'pipeline': ('重跑詞頻管道', '生成', 'warn', [PY, 'gen_freq_dict.py'], 900),
+    'nsd': ('重生成攔截集', '生成', 'warn', [PY, 'gen_no_simple_data.py'], 300),
+    'tone': ('重生成拼音調', '生成', 'warn', [PY, 'gen_pinyin_tone.py'], 300),
+    # 工作流
+    'transcribe': ('待審批注轉抄', '工作流', 'warn', [PY, 'transcribe_review.py'], 300),
+    'handpick': ('spool 入庫（管道＋閘門＋部署）', '工作流', 'danger',
+                 [BASH, 'handpick_commit.sh'], 900),
+    # 備份
+    'backup': ('生成快照', '備份', 'warn', [BASH, 'backup.sh', 'create'], 900),
+    'drill': ('災難演練（造→還原→門禁）', '備份', 'warn', [BASH, 'backup.sh', 'drill'], 1800),
+    'offsite': ('投遞異地', '備份', 'danger', [BASH, 'backup.sh', 'offsite', '--fresh'], 1800),
+    'mirror_sync': ('鏡像同步', '備份', 'warn', [BASH, 'backup.sh', 'mirror-sync'], 300),
+    # 一鍵
+    'checkall': ('一鍵全檢（電池＋雙檢＋溯源＋台賬＋隱私）', '檢查', 'safe', None, 1800),
+}
+CHECKALL = ['check_consistency.py', 'check_acceptance.py', 'check_tendency.py']
+
+
+def api_tasks():
+    return {'tasks': [{'key': k, 'name': v[0], 'group': v[1], 'level': v[2],
+                       'timeout': v[4]} for k, v in TASKS.items()]}
+
+
+def run_task(key, extra=None):
+    """在背景執行白名單任務；輸出寫進 JOB。"""
+    if key not in TASKS:
+        return False, '未知任務'
+    name, group, level, argv, timeout = TASKS[key]
+    if argv is None:                                   # 一鍵全檢
+        argv = None
+    def work():
+        t0 = time.time()
+        with JOB_LOCK:
+            JOB.update(state='running', log='', started=t0, mode=name,
+                       elapsed=None)
+        def log(s):
+            with JOB_LOCK:
+                JOB['log'] += str(s) + '\n'
+        try:
+            if key == 'checkall':
+                rc = 0
+                for script in ('check_consistency.py', 'check_acceptance.py',
+                               'check_tendency.py', '_provenance.py',
+                               '_ledger.py'):
+                    args = [PY, script] + (['--verify'] if script == '_provenance.py'
+                                           else ['--selfcheck'] if script == '_ledger.py' else [])
+                    log('── ' + script + ' ──')
+                    r = subprocess.run(args, cwd=HERE, capture_output=True, text=True,
+                                       timeout=600)
+                    body = (r.stdout or '') + (r.stderr or '')
+                    log('\n'.join(body.splitlines()[-14:]))
+                    log(f'   exit={r.returncode}')
+                    rc = rc or r.returncode
+            else:
+                cmd = list(argv)
+                if key == 'diff':
+                    pass
+                r = subprocess.run(cmd, cwd=HERE, capture_output=True, text=True,
+                                   timeout=timeout)
+                body = (r.stdout or '') + (r.stderr or '')
+                log(body[-8000:] or '(無輸出)')
+                rc = r.returncode
+            with JOB_LOCK:
+                JOB['state'] = 'done' if rc == 0 else 'failed'
+                JOB['elapsed'] = round(time.time() - t0, 1)
+                JOB['rc'] = rc
+        except subprocess.TimeoutExpired:
+            with JOB_LOCK:
+                JOB['state'] = 'failed'
+                JOB['log'] += f'\n✗ 逾時（{timeout}s）'
+        except Exception as e:
+            with JOB_LOCK:
+                JOB['state'] = 'failed'
+                JOB['log'] += f'\n✗ {e}'
+    threading.Thread(target=work, daemon=True).start()
+    return True, ''
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'wishd/1.1'
 
@@ -690,6 +786,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps(api_dict(q), ensure_ascii=False))
         if u.path == '/api/map':
             return self._send(200, json.dumps(api_map(q), ensure_ascii=False))
+        if u.path == '/api/tasks':
+            return self._send(200, json.dumps(api_tasks(), ensure_ascii=False))
         if u.path == '/api/settings':
             return self._send(200, json.dumps(api_settings(), ensure_ascii=False))
         if u.path == '/api/logs':
@@ -738,6 +836,17 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == '/api/add':
             return self._send(200, json.dumps(wishd.add_words(payload.get('words') or []),
                                               ensure_ascii=False))
+        if self.path == '/api/run':
+            key = payload.get('key') or ''
+            lvl = TASKS.get(key, (None, None, 'safe'))[2]
+            if lvl == 'danger' and (payload.get('confirm') or '') != 'APPLY':
+                return self._send(400, json.dumps({'ok': False, 'error': '危險操作需明文輸入 APPLY'}))
+            with JOB_LOCK:
+                if JOB['state'] == 'running':
+                    return self._send(409, json.dumps({'ok': False, 'error': '已有任務在跑'}))
+            ok, why = run_task(key)
+            return self._send(200 if ok else 400,
+                              json.dumps({'ok': ok, 'error': why}, ensure_ascii=False))
         if self.path == '/api/apply-token':
             tok, p = issue_token()
             return self._send(200, json.dumps({'token': tok, 'pending': p, 'ttl': TOKEN_TTL},
@@ -961,6 +1070,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
   <button id="tab-diag" role="tab" aria-selected="false">診斷</button>
   <button id="tab-logs" role="tab" aria-selected="false">日誌</button>
   <button id="tab-set" role="tab" aria-selected="false">設置</button>
+  <button id="tab-task" role="tab" aria-selected="false">任務</button>
   <button id="tab-dict" role="tab" aria-selected="false">字典</button>
 </nav>
 
@@ -1042,6 +1152,19 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
          <pre class="log" id="logout" style="max-height:64vh">—</pre>
        </div>
      </div>
+   </div>
+ </section>
+
+ <section id="pane-task" role="tabpanel" hidden>
+   <div class="card">
+     <h2>任務中心</h2>
+     <p class="sub">把倉庫的重要腳本接成按鈕。<b>檢查</b>類只讀、直接跑；<b>生成</b>類會改檔案、需確認；
+       <b>危險</b>類會部署或對外投遞、需手打 <code>APPLY</code>。所有任務在背景執行，輸出即時回顯。</p>
+     <div id="taskgroups"></div>
+   </div>
+   <div class="card">
+     <h2>輸出 <span id="taskname" class="muted" style="font-weight:400;font-size:12.5px"></span></h2>
+     <pre class="log" id="taskout" style="max-height:52vh">—</pre>
    </div>
  </section>
 
@@ -1182,7 +1305,7 @@ function busy(on,label){
 }
 
 /* ───── 分頁籤 ───── */
-const TABS=['order','map','diag','logs','set','dict'];
+const TABS=['order','map','diag','logs','set','task','dict'];
 function tab(which){
   TABS.forEach(k=>{
     $('#tab-'+k).setAttribute('aria-selected', k===which);
@@ -1195,12 +1318,14 @@ function tab(which){
   if(which==='diag' && !$('#diagrows').dataset.loaded) diagLoad();
   if(which==='logs'){ if(!$('#loglist').dataset.loaded){$('#loglist').dataset.loaded='1';logList();logLoad();} }
   if(which==='set' && !$('#set-switches').dataset.loaded){$('#set-switches').dataset.loaded='1';setLoad();}
+  if(which==='task' && !$('#taskgroups').dataset.loaded){$('#taskgroups').dataset.loaded='1';taskLoad();}
   if(which!=='logs'){ clearInterval(LAUTO); LAUTO=null; $('#logauto').checked=false; }
 }
 $('#tab-map').onclick=()=>tab('map');
 $('#tab-diag').onclick=()=>tab('diag');
 $('#tab-logs').onclick=()=>tab('logs');
 $('#tab-set').onclick=()=>tab('set');
+$('#tab-task').onclick=()=>tab('task');
 $('#tab-order').onclick=()=>tab('order');
 $('#tab-dict').onclick=()=>tab('dict');
 
@@ -1513,6 +1638,59 @@ function renderDiag(){
   [...$('#diagrows').children].forEach(tr=>{
     if(tr.dataset.c) tr.onclick=()=>openGroup(tr.dataset.c);
   });
+}
+
+/* ───── 任務中心 ───── */
+let TASKS=[], TPOLL=null;
+function taskLoad(){
+  api('/api/tasks').then(d=>{
+    TASKS=d.tasks;
+    const order=['檢查','生成','工作流','備份'];
+    const by={}; d.tasks.forEach(x=>{(by[x.group]=by[x.group]||[]).push(x);});
+    $('#taskgroups').innerHTML=order.filter(g=>by[g]).map(g=>
+      `<div style="margin-bottom:16px"><div style="font-size:12.5px;color:var(--fg-muted);margin-bottom:6px">${g}</div>
+       <div class="row" style="gap:8px">${by[g].map(x=>{
+         const cls=x.level==='danger'?'danger':(x.level==='warn'?'':'primary');
+         return `<button class="taskbtn ${cls}" data-k="${x.key}" data-lv="${x.level}" data-n="${esc(x.name)}">${esc(x.name)}</button>`;
+       }).join('')}</div></div>`).join('');
+    $('#taskgroups').querySelectorAll('.taskbtn').forEach(b=>b.onclick=()=>taskRun(b));
+  });
+}
+function taskRun(btn){
+  const key=btn.dataset.k, lv=btn.dataset.lv, name=btn.dataset.n;
+  const go=()=>api('/api/run',{method:'POST',body:JSON.stringify({key,confirm:'APPLY'})})
+    .then(d=>{
+      if(!d.ok){toast(d.error||'啟動失敗','err');return;}
+      $('#taskname').textContent='· '+name;
+      toast('已開始：'+name,'info',1800);
+      startTaskPoll();
+    });
+  if(lv==='safe') return go();
+  if(lv==='warn'){
+    if(!confirm('執行「'+name+'」？\n\n這會改動檔案或跑較久，但不會部署。')) return;
+    return go();
+  }
+  // danger：需手打 APPLY
+  const inp=prompt('危險操作：'+name+'\n會部署或對外投遞。\n\n輸入 APPLY 以確認：');
+  if((inp||'').toUpperCase()!=='APPLY') return toast('已取消','warn');
+  go();
+}
+function startTaskPoll(){
+  clearInterval(TPOLL);
+  const t0=Date.now();
+  TPOLL=setInterval(()=>{
+    const sec=Math.round((Date.now()-t0)/1000);
+    api('/api/job').then(j=>{
+      $('#taskout').textContent=(j.log||'…')+'\n──────── 已 '+sec+'s';
+      $('#taskout').scrollTop=$('#taskout').scrollHeight;
+      if(j.state!=='running'){
+        clearInterval(TPOLL);
+        toast(j.state==='done'?('完成（'+(j.elapsed||sec)+'s）'):('失敗（rc='+(j.rc??'?')+'）'),
+              j.state==='done'?'ok':'err',5000);
+        refreshPending(); loadRecent();
+      }
+    });
+  },900);
 }
 
 /* ───── 設置 ───── */
