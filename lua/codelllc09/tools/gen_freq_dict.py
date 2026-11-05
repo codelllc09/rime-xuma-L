@@ -800,7 +800,7 @@ def main():
             seen_simp.add(simp)
     # H 源：手收詞清單補錄（handpicked.txt 新增詞自動入庫，編碼按官方規則推導）
     #   正常詞=保護；-詞=顯式棄用（授權從詞庫刪除，審計入 log/hp_removals.log）
-    handpicked, hp_drop = [], set()
+    handpicked, hp_drop, hp_drop_ent = [], set(), set()
     if os.path.exists(hp_path2 := os.path.join(FREQ, 'handpicked.txt')):
         _g = None
         for _l in open(hp_path2, encoding='utf-8'):
@@ -808,7 +808,11 @@ def main():
             if _s.startswith('## '): _g = _s[3:]; continue
             if not _s or _s.startswith('#'): continue
             if _s.startswith('-') and len(_s) > 1:
-                hp_drop.add(_s[1:])
+                if '\t' in _s[1:]:
+                    _w, _c = _s[1:].split('\t', 1)
+                    hp_drop_ent.add((_w, _c.strip()))   # 條目級：僅刪該詞×碼形態
+                else:
+                    hp_drop.add(_s[1:])
             else:
                 handpicked.append((_s, _g or '手收'))
     h_add, h_fail = 0, []
@@ -934,8 +938,10 @@ def main():
         if code in first_sort_line and first_sort_line[code] == ln:
             # 錨點行：整組在此輸出。錨點詞自身被棄用也照常輸出倖存組員，
             # 防整組連坐失蹤（2026-11-05 疊詞精簡實測：僅僅 thth 棄用曾連坐僅供）
-            group = [(key_of('m', x), x, 'm') for x in m_sort[code] if x[1] not in hp_drop]
-            group += [(key_of(s, x), x, s) for s, idx, x in merge[code] if x[1] not in hp_drop]
+            group = [(key_of('m', x), x, 'm') for x in m_sort[code]
+                     if x[1] not in hp_drop and (x[1], x[2]) not in hp_drop_ent]
+            group += [(key_of(s, x), x, s) for s, idx, x in merge[code]
+                      if x[1] not in hp_drop and (x[1], x[2]) not in hp_drop_ent]
             group.sort(key=lambda t: t[0][0])
             old_order = [x[1] for x in m_sort[code]]
             new_order = [g[1][1] for g in group]
@@ -969,7 +975,8 @@ def main():
     tail_codes = sorted(c for c in merge if c not in first_sort_line)
     tail_lines.append('# ===== 併入區：cizutrad/extended 條目（主表無同碼詞組，按碼序）=====')
     for c in tail_codes:
-        group = [(key_of(s, x), x, s) for s, idx, x in merge[c] if x[1] not in hp_drop]
+        group = [(key_of(s, x), x, s) for s, idx, x in merge[c]
+                 if x[1] not in hp_drop and (x[1], x[2]) not in hp_drop_ent]
         group.sort(key=lambda t: t[0][0])
         for keytuple, x, s in group:
             f = keytuple[1]
@@ -979,7 +986,7 @@ def main():
             tail_lines.append(render(x, f))
     tail_lines.append('# ===== 併入區：原樣保留（空文本/異常格式/非四碼/含符號）=====')
     for s, e in append_raw:
-        if e[1] and e[1] in hp_drop:   # 棄用詞含非四碼/符號形也不得復活
+        if e[1] and (e[1] in hp_drop or (e[1], e[2]) in hp_drop_ent):   # 棄用詞含非四碼/符號形也不得復活
             continue
         tail_lines.append(e[4])
 
@@ -1063,12 +1070,19 @@ def main():
         sys.exit(1)
     # 刪除審計：棄用詞若確在本次輸入詞庫中，記入 log（追加式事件流水）
     dropped_now = [w for w in hp_drop if w in set(e[1] for e in m_ent)]
-    if dropped_now:
+    _in_pairs = {(e[1], e[2]) for e in m_ent if e[1]}
+    dropped_ent_now = sorted(p for p in hp_drop_ent if p in _in_pairs)
+    if dropped_now or dropped_ent_now:
         log_dir = os.path.join(FREQ, 'log')
         os.makedirs(log_dir, exist_ok=True)
         with open(os.path.join(log_dir, 'hp_removals.log'), 'a', encoding='utf-8') as f:
-            f.write(f'[{today}] 棄用 {len(dropped_now)} 詞：' + ' '.join(sorted(dropped_now)) + '\n')
-        print(f'[H源] 棄用刪除 {len(dropped_now)} 詞（審計：dict_pipeline/log/hp_removals.log）')
+            if dropped_now:
+                f.write(f'[{today}] 棄用 {len(dropped_now)} 詞：' + ' '.join(sorted(dropped_now)) + '\n')
+            if dropped_ent_now:
+                f.write(f'[{today}] 條目棄用 {len(dropped_ent_now)} 形：'
+                        + ' '.join(f'{w}×{c}' for w, c in dropped_ent_now) + '\n')
+        print(f'[H源] 棄用刪除 {len(dropped_now)} 詞／條目棄用 {len(dropped_ent_now)} 形'
+              f'（審計：dict_pipeline/log/hp_removals.log）')
 
     # 無語料模式禁寫盤：詞頻全休眠時重排結果無意義且有破壞性（全部沉底），僅作護欄診斷
     _letters = {k for k, _, _ in SRC_DESC}

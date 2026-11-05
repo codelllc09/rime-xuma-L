@@ -116,6 +116,8 @@ def load_handpicked_parts():
         if not l or l.startswith('#') or l.startswith('## '):
             continue
         if l.startswith('-') and len(l) > 1:
+            if '\t' in l[1:]:
+                continue   # 條目級棄用 -詞<TAB>碼：詞本身仍活，不作詞級處理（見 drop_entries）
             drop.add(l[1:])
         else:
             add.add(l)
@@ -692,6 +694,60 @@ def drop_words(words, reason=''):
             'rejected_added': new_rej}
 
 
+def drop_entries(pairs, reason=''):
+    """條目級棄用：刪除「詞×碼」單一形態，詞經其他碼（如簡碼）仍存活。
+
+    handpicked 棄用區寫 `-詞<TAB>碼`（管線僅刪該形態）；**不寫 rejected**
+    （詞仍活，詞級否決會誤傷簡碼形態與補詞）。
+    """
+    import io as _io
+    live = set()
+    started = False
+    for l in _io.open(DICT, encoding='utf-8'):
+        l = l.rstrip('\n')
+        if not started:
+            if l == '...': started = True
+            continue
+        if not l.strip() or l.lstrip().startswith('#'): continue
+        c = l.split('\t')
+        if len(c) >= 2: live.add((c[0], c[1].strip()))
+    marked = set()
+    if os.path.exists(HP):
+        for l in _io.open(HP, encoding='utf-8'):
+            l = l.strip()
+            if l.startswith('-') and '\t' in l[1:]:
+                w, c = l[1:].split('\t', 1)
+                marked.add((w, c.strip()))
+    done, skipped = [], []
+    for w, c in pairs:
+        if (w, c) in marked:
+            skipped.append((w, c, '已標記條目棄用（待應用）')); continue
+        if (w, c) not in live:
+            skipped.append((w, c, '詞庫無此詞×碼條目')); continue
+        done.append((w, c))
+    if not done:
+        return {'dropped': [], 'skipped': [{'w': w, 'c': c, 'why': r} for w, c, r in skipped]}
+    lines = _io.open(HP, encoding='utf-8').read().splitlines(True) if os.path.exists(HP) else []
+    while lines and not lines[-1].strip():
+        lines.pop()
+    stamp = datetime.date.today().isoformat()
+    need_hdr = '## 棄用' not in ''.join(lines)
+    tail = ([f'\n## 棄用（wishd，{stamp} 起；行首 - 表示從詞庫刪除）\n'] if need_hdr else ['\n'])
+    tail += [f'-{w}\t{c}\n' for w, c in done]
+    tmp = HP + '.tmp'
+    with _io.open(tmp, 'w', encoding='utf-8') as f:
+        f.write(''.join(lines) + ''.join(tail))
+    os.replace(tmp, HP)
+    try:
+        from _ledger import note as _note
+        _note('handpicked.txt', '條目棄用',
+              '−' + '／'.join(f'{w}×{c}' for w, c in done)
+              + (f'｜{reason}' if reason else ''))
+    except Exception:
+        pass
+    return {'dropped': done, 'skipped': [{'w': w, 'c': c, 'why': r} for w, c, r in skipped]}
+
+
 # ── 待應用狀態 ──────────────────────────────────────────────────
 def _sha(path):
     import hashlib
@@ -848,6 +904,29 @@ def main():
         for s in r['skipped']:
             print(f'  − {s["w"]}（{s["why"]}）')
         print(f'\n已加入暫存 {len(r["added"])} 詞；下一步 wishd.py apply --yes')
+        return 0
+
+    if cmd == 'dropcode':
+        if not rest:
+            sys.exit('用法：wishd.py dropcode "詞1=碼1 詞2=碼2" [--note 理由]')
+        reason = ''
+        if '--note' in rest:
+            i = rest.index('--note')
+            reason = rest[i + 1] if i + 1 < len(rest) else ''
+            rest = rest[:i] + rest[i + 2:]
+        pairs = []
+        for tok in ' '.join(rest).split():
+            if '=' not in tok:
+                sys.exit(f'格式應爲 詞=碼：{tok}')
+            w, c = tok.split('=', 1)
+            pairs.append((w, c))
+        r = drop_entries(pairs, reason)
+        for w, c in r['dropped']:
+            print(f'  − {w}×{c}')
+        for s in r['skipped']:
+            print(f'  · {s["w"]}×{s["c"]}（{s["why"]}）')
+        if r['dropped']:
+            print(f'\n已標記條目棄用 {len(r["dropped"])} 條；下一步 wishd.py apply --yes')
         return 0
 
     if cmd == 'drop':

@@ -114,3 +114,7 @@
 {"ts": "2026-11-05T18:41:27", "actor": "cli", "action": "生成", "path": "../tmp/一簡首字精簡對賬.md", "detail": "對賬 HEAD…工作區；重命名自默認輸出名", "tracked": true}
 {"ts": "2026-11-05T18:41:54", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-一簡正式.md", "detail": "對賬 HEAD~1…1f6ae2c：新增0 注釋0 恢復0 消失2647", "tracked": true}
 {"ts": "2026-11-05T18:41:54", "actor": "cli", "action": "刪除", "path": "../tmp/詞表改動-一簡正式.md", "detail": "與快照版逐字一致，重複件清理", "tracked": true}
+{"ts": "2026-11-05T18:47:24", "actor": "wishd.py", "action": "條目棄用", "path": "handpicked.txt", "detail": "−這種×yzrr／這次×yzxq／有點×hsml／中國×oknf／一起×gujd／是个×kguk／一些×gulv／地方×jbyu／的話×usyr／有關×hsna／地區×jbfo／內心×mvrx／內容×mvwu／當時×nqkj／我國×pfnf／然後×sjsa／這樣×yzix／這些×yzlv／這麼×yzwa／這裏×yzwk／家裏×wgwk／能力×ascl／能够×asso／能源×aszg／以及×cwaw／以下×cwjw／以前×cwxs／大概×fdib／大幅×fdmg／一切×gufd／一下×gujw／一般×gurq／一个×guuk／一定×guwg／一次×guxq／有限×hsbb／有趣×hsjh／有些×hslv／有效×hsyt／地位×jbty／上述×lsiw／上去×lsja／上下×lsjw／上午×lspe／上次×lsxq／上市×lsym／上海×lszp／中央×okmf／中午×okpe／中心×okrx／多少×qqcp／然而×sjge／家庭×wgwr／道路×xtov｜一簡首字精簡補遺：55留詞僅保簡碼形態，全碼形態條目棄用（用戶裁定：一些 gl保留 gulv不要）", "tracked": true}
+{"ts": "2026-11-05T18:55:24", "actor": "cli", "action": "修改", "path": "archive/rulings/驗收基準.txt", "detail": "條目級棄用後基準回歸：gulv 一些→原處（一些僅存gl簡碼）；jbyu 地方→教書育人（地方僅存簡碼）", "tracked": true}
+{"ts": "2026-11-05T19:02:11", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-全碼形態清理.md", "detail": "對賬 HEAD…20c23f6：新增0 注釋0 恢復0 消失54", "tracked": true}
+{"ts": "2026-11-05T19:02:11", "actor": "cli", "action": "生成", "path": "../tmp/全碼形態清理對賬.md", "detail": "對賬 HEAD…工作區：54 全碼形態條目棄用", "tracked": true}
