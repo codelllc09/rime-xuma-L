@@ -962,7 +962,6 @@ def main():
             continue
         if ln in m_keep:
             if MARK_RE.match(raw):   # 標記行：sort 詞條的綁定標記已隨組輸出，原位跳過
-                nxt = m_keep.get(ln + 1) or next((x for c in m_sort.values() for x in c if x[0] == ln + 1), None)
                 continue
             mk = mark_of.get(text)
             if mk:
@@ -1069,7 +1068,9 @@ def main():
               f' 清單可能被誤編輯，請人工覈對 handpicked.txt（刪詞請顯式寫 -詞）。')
         sys.exit(1)
     # 刪除審計：棄用詞若確在本次輸入詞庫中，記入 log（追加式事件流水）
-    dropped_now = [w for w in hp_drop if w in set(e[1] for e in m_ent)]
+    _ent_texts = {e[1] for e in m_ent}   # 提出循環外：原寫在推導條件內，每詞重建集合，
+    # 4118 棄用詞×19.7萬條=8.1億次迭代＝今日 116s 劣化的全部來源（2026-11-05 profile 實錄）
+    dropped_now = [w for w in hp_drop if w in _ent_texts]
     _in_pairs = {(e[1], e[2]) for e in m_ent if e[1]}
     dropped_ent_now = sorted(p for p in hp_drop_ent if p in _in_pairs)
     if dropped_now or dropped_ent_now:
