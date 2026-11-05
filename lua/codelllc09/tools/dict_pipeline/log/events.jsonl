@@ -91,3 +91,5 @@
 {"ts": "2026-11-05T17:22:34", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 268 歧義 0 無碼 0", "tracked": false}
 {"ts": "2026-11-05T17:28:28", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-疊詞精簡第一批.md", "detail": "對賬 HEAD…06c94d0：新增2 注釋0 恢復0 消失826", "tracked": true}
 {"ts": "2026-11-05T17:28:37", "actor": "cli", "action": "重命名", "path": "../tmp/疊詞精簡第一批對賬.md", "detail": "擺正輸出名；對賬 HEAD…工作區：新增2 消失826 變權8（變權=14復原詞中8詞經語料重估權）", "tracked": true}
+{"ts": "2026-11-05T17:29:28", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-疊詞精簡第一批正式.md", "detail": "對賬 HEAD~1…e6cd145：新增2 注釋0 恢復0 消失826", "tracked": true}
+{"ts": "2026-11-05T17:29:28", "actor": "cli", "action": "刪除", "path": "../tmp/詞表改動-疊詞精簡第一批正式.md", "detail": "與快照版逐字一致，重複件清理；留存=疊詞精簡第一批對賬.md", "tracked": true}
