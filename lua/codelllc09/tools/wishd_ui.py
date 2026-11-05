@@ -943,6 +943,12 @@ button.iconbtn:hover{background:var(--surface-2);color:var(--fg);border-color:va
 button.iconbtn.on{background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
 button.sm{padding:3px 9px;font-size:12.5px}
 table{width:100%;border-collapse:separate;border-spacing:0}
+table.diagtable{table-layout:fixed}
+table.diagtable td{overflow-wrap:anywhere}
+a.jump{color:var(--primary);text-decoration:none;cursor:pointer}
+a.jump:hover{text-decoration:underline}
+a.jump.code{font-family:var(--mono);background:var(--surface-2);padding:1px 6px;
+  border-radius:var(--r-sm);border:1px solid var(--border)}
 th{position:sticky;top:0;z-index:1;background:var(--surface);color:var(--fg-muted);
   font-size:12px;font-weight:600;letter-spacing:.03em;text-align:left;padding:8px 10px;
   border-bottom:1px solid var(--border)}
@@ -1136,7 +1142,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
      <div class="diag-tabs" id="diagtabs" hidden></div>
      <div class="stats" id="diagdesc" style="margin-bottom:10px"></div>
      <div class="scroll" style="max-height:60vh">
-       <table><thead><tr><th style="width:34%">詞／碼</th><th>細節</th><th style="width:90px"></th></tr></thead>
+       <table class="diagtable"><thead><tr><th style="width:34%">詞／碼</th><th>細節</th><th style="width:90px"></th></tr></thead>
          <tbody id="diagrows"><tr><td colspan="3"><div class="empty">載入中…</div></td></tr></tbody></table>
      </div>
    </div>
@@ -1690,10 +1696,12 @@ function renderDiag(){
   $('#diagdesc').textContent=v.desc;
   const rows=v.items.map(it=>{
     if(DCUR==='F'){
+      const jw=w=>`<a class="jump" data-jump="${esc(it.code)}" href="#order/${esc(it.code)}">${esc(w)}</a>`;
       const ps=it.pairs.slice(0,2).map(p=>
-        `${esc(p.a)} vs ${esc(p.b)}　<span style="color:var(--warn)">${p.ga_names.join('·')}</span>`
+        `${jw(p.a)} vs ${jw(p.b)}　<span style="color:var(--warn)">${p.ga_names.join('·')}</span>`
         +` ↔ <span style="color:var(--primary)">${p.gb_names.join('·')}</span>`).join('<br>');
-      return {main:`<code>${esc(it.code)}</code> 衝突 <b>${it.n}</b> 對／組內 ${it.of} 詞`,
+      return {main:`<a class="jump code" data-jump="${esc(it.code)}" href="#order/${esc(it.code)}">${esc(it.code)}</a>`
+                   +` 衝突 <b>${it.n}</b> 對／組內 ${it.of} 詞`,
               det:ps, code:it.code};
     }
     if(DCUR==='A'){
@@ -1723,10 +1731,14 @@ function renderDiag(){
     `<tr class="clickable" data-c="${esc(r.code)}"><td>${r.main}</td><td style="color:var(--fg-muted)">${r.det}</td>
      <td><button class="sm ghost">調序</button></td></tr>`).join('')
     :'<tr><td colspan="3"><div class="empty">此類無命中</div></td></tr>';
-  [...$('#diagrows').children].forEach(tr=>{
-    if(tr.dataset.c) tr.onclick=()=>openGroup(tr.dataset.c);
-  });
 }
+// 委託在容器上：每次重繪 innerHTML 都不會丟事件；碼、詞、列尾按鈕一律可點
+$('#diagrows').addEventListener('click',e=>{
+  const j=e.target.closest('[data-jump]');
+  if(j){ e.preventDefault(); openGroup(j.dataset.jump); return; }
+  const tr=e.target.closest('tr[data-c]');
+  if(tr) openGroup(tr.dataset.c);
+});
 
 /* ───── 任務中心 ───── */
 let TASKS=[], TPOLL=null;
