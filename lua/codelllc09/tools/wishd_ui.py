@@ -1353,6 +1353,11 @@ addEventListener('popstate', applyHash);
 let CURTAB='order';
 $('#tab-order').onclick=()=>tab('order');
 $('#tab-dict').onclick=()=>tab('dict');
+$('#tab-map').onclick=()=>tab('map');
+$('#tab-diag').onclick=()=>tab('diag');
+$('#tab-task').onclick=()=>tab('task');
+$('#tab-logs').onclick=()=>tab('logs');
+$('#tab-set').onclick=()=>tab('set');
 
 /* ───── 同碼組 ───── */
 function renderGroup(d){
@@ -1443,7 +1448,7 @@ function load(key){
 $('#go').onclick=()=>{
   const k=$('#q').value.trim(); if(!k)return;
   if(!$('#pane-dict').hidden){$('#dw').value=k;$('#dc').value='';dictQuery(1);}
-  else {tab('order'); load(k);}
+  else {openGroup(k);}
 };
 $('#q').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click();});
 
