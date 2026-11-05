@@ -357,14 +357,16 @@ def load_variants_raw():
                 if b: graph[a].add(b); graph[b].add(a)
     return {k: sorted(v) for k, v in graph.items()}
 
-def make_scorer():
-    """十語源加權混合：score = log10(Σ_i w_i·p_i)，缺失源貢獻 0（總權重 0.995，l 源 0.005 見 SRC 表）
+def build_sources():
+    """構建十語源表：[(字母, 表名, 表, 權重)]，總權重恆為 1。
+
+    抽成獨立函數供意願台複用（診斷頁要按語源逐個比對排序意見，不能只用混合分）。
     權重原則：現代主流源高權重；污染風險源（近代/古代/單一小表）低權重入料不棄料；
-    bcc 現代核心 = 多領域+新聞兩表概率級 MAX 合併（同 THUOCL 跨表慣例）"""
+    bcc 現代核心 = 多領域+新聞兩表概率級 MAX 合併（同 THUOCL 跨表慣例）。"""
     jieba = load_jieba()
     wf = load_wordfreq()
     if not jieba and not wf:
-        return (lambda s: (None, 'nocorpus')), 0, []   # 無語料模式：頻分恆缺失
+        return []
     def _pmax(f1, f2):
         """兩表各自歸一化後取 max，合成單表"""
         t1 = sum(f1.values()) or 1
@@ -390,7 +392,14 @@ def make_scorer():
         ('k', 'GoogleBooks', load_googlebooks(),                                       0.05),
         ('l', '語委',         load_yuwei(),                                             0.005),
     ]
-    SRC = [(k, n, t, w) for k, n, t, w in SRC if t]
+    return [(k, n, t, w) for k, n, t, w in SRC if t]
+
+
+def make_scorer():
+    """十語源加權混合：score = log10(Σ_i w_i·p_i)，缺失源貢獻 0（總權重 0.995，l 源 0.005 見 SRC 表）"""
+    SRC = build_sources()
+    if not SRC:
+        return (lambda s: (None, 'nocorpus')), 0, []   # 無語料模式：頻分恆缺失
     # 打分備忘：詞→(score, tag) 持久緩存；語料/權重不變時重跑只評新詞
     _sfiles = []
     import glob as _glob

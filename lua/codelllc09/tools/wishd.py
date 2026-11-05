@@ -26,6 +26,7 @@
     wishd.py apply  --yes [--no-deploy]   跑管道（+44碼閘門+部署）；無 --yes 只列待辦
 """
 import io
+import json
 import os
 import re
 import shutil
@@ -169,6 +170,12 @@ def check_order(code, seq, groups, words):
         err.append('單字不參與重排：「' + '、'.join(single)
                    + '」是單字，詞典的單字區由管道逐字節繼承，次序裁定只對詞組生效')
         return False, err, []
+    # 簡碼不參與調頻：一簡/二簡/三簡碼區在管道裏逐字節繼承現表原樣，
+    # word2codes 只由四碼詞組構成，故簡碼組的裁定一律被跳過。
+    if len(code) < 4:
+        err.append(f'簡碼不參與調頻：{code} 是 {len(code)} 碼組，'
+                   '一至三碼區由管道逐字節繼承，次序裁定只對四碼全碼組生效')
+        return False, err, []
     rest = sorted(members - set(seq))
     if rest:
         warn.append(f'同碼組另有 {len(rest)} 詞未列入（不受次序約束，可能插入其間）：'
@@ -225,6 +232,114 @@ def parse_seq(text):
 
 
 # ── 診斷：探測可能不合理的詞頻（只用詞典自身，不依賴語料）────────
+CONFLICT_CACHE = os.path.join(FREQ, 'cache', 'source_conflicts.json')
+
+
+def _source_files():
+    import glob
+    pats = ('A.jieba_dict.txt', 'B.wordfreq_jieba_zh.txt', 'C.thuocl/THUOCL_*.txt',
+            'D.bcc_*.txt', 'G.bcc_*.txt', 'H.bcc_*.txt', 'I.bcc_*.txt',
+            'E.subtlex/SUBTLEX-CH-WF.txt', 'K.googlebooks/chi_1gram_word_freq.txt',
+            'L.yuwei_word_freq.txt')
+    out = []
+    for pat in pats:
+        out += sorted(glob.glob(os.path.join(FREQ, 'corpus', 'sources', pat)))
+    return out
+
+
+def _conflict_sig():
+    """緩存簽名：詞典改過、或任一語源檔換過，就重算。"""
+    try:
+        parts = [f"{os.path.getmtime(DICT):.0f}", f"{os.path.getsize(DICT)}"]
+        for p in _source_files():
+            parts.append(f"{os.path.getmtime(p):.0f}:{os.path.getsize(p)}")
+        return '|'.join(parts)
+    except OSError:
+        return ''
+
+
+def source_conflicts(topn=None, refresh=False):
+    """四碼全碼組內，各語源對成員相對次序的判斷互相矛盾之處。
+
+    為什麼值得看：混合分是把十個語源的意見加權平均後的一個數——它會把爭執
+    抹平。同一組裏「甲 > 乙」這件事，jieba 說東、BCC 說西，平均下來誰也不服，
+    排序只反映權重表的偏好而非語言事實。衝突越多，這一格越該由人拍板。
+
+    只統計四碼組：一至三碼區在管道裏逐字節繼承，根本不參與調頻。
+    只比次序不比數值：同一源內比大小，歸一化常數與權重都會抵消。
+    """
+    sig = _conflict_sig()
+    cache = None
+    if not refresh:
+        try:
+            with io.open(CONFLICT_CACHE, encoding='utf-8') as f:
+                cache = json.load(f)
+            if cache.get('sig') != sig:
+                cache = None
+        except Exception:
+            cache = None
+    if cache is None:
+        sys.path.insert(0, HERE)
+        import gen_freq_dict as P
+        SRC = P.build_sources()
+        letters = [k for k, n, tb, wt in SRC]
+        t2s, _, _ = P.load_t2s()
+        groups, _ = load_dict()
+        vec = {}
+        for code, rs in groups.items():
+            if len(code) != 4:
+                continue
+            for w, _, _, _ in rs:
+                if w in vec:
+                    continue
+                s = t2s(w)
+                vec[w] = tuple(tb.get(s) for k, n, tb, wt in SRC)
+        codes = []
+        for code, rs in groups.items():
+            if len(code) != 4 or len(rs) < 2:
+                continue
+            ws = [r[0] for r in rs]
+            pairs = []
+            for i in range(len(ws)):
+                va = vec.get(ws[i])
+                if not va:
+                    continue
+                for j in range(i + 1, len(ws)):
+                    vb = vec.get(ws[j])
+                    if not vb:
+                        continue
+                    ga, gb = [], []
+                    for k in range(len(letters)):
+                        x, y = va[k], vb[k]
+                        if x is None or y is None:
+                            continue
+                        if x > y:
+                            ga.append(letters[k])
+                        elif y > x:
+                            gb.append(letters[k])
+                    if ga and gb:            # 兩個方向都有人投，才是真爭執
+                        pairs.append({'a': ws[i], 'b': ws[j],
+                                      'ga': ''.join(ga), 'gb': ''.join(gb)})
+            if pairs:
+                codes.append({'code': code, 'n': len(pairs), 'of': len(ws),
+                              'pairs': pairs[:12]})
+        codes.sort(key=lambda x: (-x['n'], -x['of'], x['code']))
+        cache = {'sig': sig, 'letters': letters, 'codes': codes,
+                 'n_codes': len(codes), 'n_pairs': sum(c['n'] for c in codes)}
+        try:
+            os.makedirs(os.path.dirname(CONFLICT_CACHE), exist_ok=True)
+            tmp = CONFLICT_CACHE + '.tmp'
+            with io.open(tmp, 'w', encoding='utf-8') as f:
+                json.dump(cache, f, ensure_ascii=False)
+            os.replace(tmp, CONFLICT_CACHE)
+        except OSError:
+            pass
+    out = dict(cache)
+    if topn:
+        out['codes'] = out['codes'][:topn]
+    return out
+
+
 def diagnose(limit=60):
     """原則：**只在同一尺標內比較**。
 
@@ -284,7 +399,18 @@ def diagnose(limit=60):
             invert.append({'w': w,
                            'ranks': [{'code': c, 'rank': n, 'of': tot} for n, tot, c in ranks]})
 
-    return {
+    sc = source_conflicts(topn=limit)
+    NM = {'a': 'jieba', 'b': 'wordfreq', 'c': 'THUOCL', 'd': 'BCC現代', 'e': 'SUBTLEX',
+          'g': 'BCC文學', 'h': 'BCC口語', 'i': 'BCC近代', 'k': 'GoogleBooks', 'l': '語委'}
+    out = {
+        'F': {'name': '詞源排序衝突', 'n': sc['n_codes'],
+              'desc': '四碼組內，各語源對誰排前面的意見不一致的配對數——越多越靠前。'
+                      '混合分把爭執平均掉了，這類碼位最該由人拍板。'
+                      '源代號：' + ' '.join(f'{k}={v}' for k, v in NM.items()),
+              'items': [dict(c, pairs=[dict(p, ga_names=[NM.get(x, x) for x in p['ga']],
+                                            gb_names=[NM.get(x, x) for x in p['gb']])
+                                       for p in c['pairs']])
+                        for c in sc['codes']]},
         'A': {'name': '同組同分（不同詞）', 'n': len(same_wt),
               'desc': '同一碼組內不同詞拿到完全相同的頻分——多半是缺頻回退到同一默認值，或異體並列',
               'items': sorted(same_wt, key=lambda x: -len(x['words']))[:limit]},
@@ -301,6 +427,7 @@ def diagnose(limit=60):
               'desc': '4 碼條目權重 >1e9，而重算規則下 p≤1 ⇒ 應 ≤1e9；非 0 即為真異常',
               'items': overflow[:limit]},
     }
+    return out
 
 
 # ── 展示層 ──────────────────────────────────────────────────────

@@ -974,7 +974,7 @@ table.plain th{background:var(--surface)}
 .vrow .grip{color:var(--fg-faint);cursor:grab;user-select:none;text-align:center;line-height:1}
 .vrow.locked{opacity:.72;background:var(--surface-2)}
 .vrow.locked .grip{cursor:not-allowed;opacity:.35}
-.vrow.locked .word::after{content:"單";font-size:10px;margin-left:6px;padding:0 4px;border-radius:3px;
+.vrow.onechar .word::after{content:"單";font-size:10px;margin-left:6px;padding:0 4px;border-radius:3px;
   background:var(--border);color:var(--fg-muted);vertical-align:2px}
 .vrow .flags{display:flex;gap:4px;justify-content:flex-end;flex-wrap:nowrap;overflow:hidden}
 .badge{white-space:nowrap}
@@ -1383,8 +1383,10 @@ function renderGroup(d){
       +(ratio?`<span>首位/次位 <b>${ratio.toFixed(ratio<10?2:0)}×</b></span>`:'')
       +(d.overrides.length?`<span style="color:var(--warn)">● 已調過（裁定 ${d.overrides.length} 條）</span>`
         :`<span style="color:var(--fg-faint)">未調過</span>`)
-      +(()=>{const n=d.members.filter(m=>[...m.w].length===1).length;
-             return n?`<span style="color:var(--fg-faint)">${n} 個單字不可調</span>`:'';})();
+      +((CODE||'').length<4
+         ?`<span style="color:var(--fg-faint)">簡碼組不參與調頻</span>`
+         :(()=>{const n=d.members.filter(m=>[...m.w].length===1).length;
+                return n?`<span style="color:var(--fg-faint)">${n} 個單字不可調</span>`:'';})());
   } else $('#gstats').innerHTML='';
 
   const box=$('#rows'); box.innerHTML='';
@@ -1395,8 +1397,10 @@ function renderGroup(d){
     const w=parseFloat(m.wt)||0;
     const pct=sumW>0?(w/sumW*100):0;
     const el=document.createElement('div');
-    const isSingle=[...m.w].length===1;
-    el.className='vrow'+(isSingle?' locked':'');
+    const onechar=[...m.w].length===1;
+    const shortCode=(CODE||'').length<4;      // 一至三碼區逐字節繼承，不參與調頻
+    const isSingle=shortCode||onechar;
+    el.className='vrow'+(isSingle?' locked':'')+(onechar?' onechar':'');
     el.draggable=!isSingle; el.tabIndex=0; el.dataset.w=m.w;
     // 線性刻度：柱長＝該詞頻分 / 組內最大。對數會把 8 倍差距壓成 1.2 倍，失真。
     const bw=w?Math.max(1.5,(w/maxW)*100):0;
@@ -1411,7 +1415,8 @@ function renderGroup(d){
       +`<div class="flags">${m.hp?'<span class="badge hp">手收</span>':''}`
       +`${ovWords.has(m.w)?'<span class="badge" style="color:var(--primary);border-color:var(--primary)">裁定</span>':''}`
       +`</div>`;
-    el.title=(isSingle?'單字不參與重排（管道逐字節繼承字碼區）\n':'')
+    el.title=(shortCode?'簡碼不參與調頻（一至三碼區逐字節繼承）\n'
+             :onechar?'單字不參與重排（管道逐字節繼承字碼區）\n':'')
              +(m.tag?m.tag+'\n':'')+'行 '+m.line;
     if(!isSingle){
     el.addEventListener('dragstart',()=>{DRAG=el;el.classList.add('dragging');});
@@ -1639,7 +1644,7 @@ function mapGo(prefix){
 function openGroup(code){ CODE=code; $('#q').value=code; load(code); tab('order'); window.scrollTo(0,0); }
 
 /* ───── 診斷 ───── */
-let DIAG=null, DCUR='A';
+let DIAG=null, DCUR='F';
 function diagLoad(){
   api('/api/diag').then(d=>{
     DIAG=d; $('#diagrows').dataset.loaded='1';
@@ -1653,6 +1658,13 @@ function renderDiag(){
   const v=DIAG[DCUR];
   $('#diagdesc').textContent=v.desc;
   const rows=v.items.map(it=>{
+    if(DCUR==='F'){
+      const ps=it.pairs.slice(0,2).map(p=>
+        `${esc(p.a)} vs ${esc(p.b)}　<span style="color:var(--warn)">${p.ga_names.join('·')}</span>`
+        +` ↔ <span style="color:var(--primary)">${p.gb_names.join('·')}</span>`).join('<br>');
+      return {main:`<code>${esc(it.code)}</code> 衝突 <b>${it.n}</b> 對／組內 ${it.of} 詞`,
+              det:ps, code:it.code};
+    }
     if(DCUR==='A'){
       const ws=it.words.join(' / ');
       return {main:`<code>${esc(it.code)}</code> ${esc(ws)}`,
