@@ -270,6 +270,52 @@ def api_dict(params):
             'grouped': grouped, 'rows': page_rows}
 
 
+def api_map(params):
+    """碼空間熱力地圖：給定前綴，返回 26 個字母分支的詞數／碼組數。
+
+    徐碼最長 4 碼，故樹深 4；到第 4 層即為一個完整碼組。
+    著色用 log(1+count) 歸一，否則 a 開頭（十萬詞）與 z 開頭會差幾個數量級、全糊成一片。
+    """
+    import math
+    g = lambda k, d='': (params.get(k, [d])[0] if isinstance(params.get(k), list) else params.get(k, d)) or d
+    prefix = g('prefix').lower()
+    if prefix and (not prefix.isalpha() or len(prefix) > 4):
+        return {'error': 'prefix 必須是 1–4 個字母'}
+    entries = wishd.load_entries()
+    words = {}
+    for w, c, wt, ln, tag, sec in entries:
+        if not c.startswith(prefix):
+            continue
+        words[c] = words.get(c, 0) + 1
+    total_words = sum(words.values())
+    exact = words.get(prefix, 0) if prefix else 0
+
+    kids = {}
+    for ch in 'abcdefghijklmnopqrstuvwxyz':
+        kids[ch] = {'letter': ch, 'words': 0, 'groups': 0}
+    for c, n in words.items():
+        if len(c) <= len(prefix):
+            continue
+        d = kids[c[len(prefix)]]
+        d['words'] += n
+        d['groups'] += 1
+    # 熱度＝本層內的線性歸一（min..max）。用對數會把 4k–11k 壓成 0.90–1.00，全糊成一片。
+    mx = max(v['words'] for v in kids.values()) or 1
+    mn = min(v['words'] for v in kids.values())
+    span = (mx - mn) or 1
+    for v in kids.values():
+        v['heat'] = round((v['words'] - mn) / span, 3)
+    return {'prefix': prefix, 'depth': len(prefix),
+            'total_words': total_words, 'total_groups': len(words),
+            'exact_words': exact, 'max': mx,
+            'children': sorted(kids.values(), key=lambda v: -v['words'])}
+
+
+def api_diag():
+    """探測可疑詞頻：只用詞典自身能算出的矛盾，不需語料。"""
+    return wishd.diagnose()
+
+
 def api_dict_stats():
     import collections
     entries = wishd.load_entries()
@@ -359,6 +405,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, json.dumps(dict(JOB), ensure_ascii=False))
         if u.path == '/api/dict':
             return self._send(200, json.dumps(api_dict(q), ensure_ascii=False))
+        if u.path == '/api/map':
+            return self._send(200, json.dumps(api_map(q), ensure_ascii=False))
+        if u.path == '/api/diag':
+            return self._send(200, json.dumps(api_diag(), ensure_ascii=False))
         if u.path == '/api/dict/stats':
             return self._send(200, json.dumps(api_dict_stats(), ensure_ascii=False))
         if u.path == '/api/pending':
@@ -528,6 +578,24 @@ code,.mono{font-family:var(--mono);font-size:12.5px}
 .pill{display:inline-flex;gap:6px;align-items:center;background:var(--surface-2);border:1px solid var(--border);
   border-radius:999px;padding:2px 10px;font-size:13px}
 .empty{color:var(--fg-faint);text-align:center;padding:28px 10px;font-size:13px}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.cell{position:relative;aspect-ratio:1/1;border-radius:var(--r-sm);border:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+  background:var(--surface);transition:transform .1s,box-shadow .1s;user-select:none}
+.cell:hover{transform:translateY(-1px);box-shadow:var(--sh-2);border-color:var(--border-strong)}
+.cell .L{font-family:var(--mono);font-size:19px;font-weight:700;line-height:1}
+.cell .N{font-size:11px;color:var(--fg-muted);font-variant-numeric:tabular-nums;margin-top:3px}
+.cell.dark .L,.cell.dark .N{color:#fff}
+.cell.dark .N{opacity:.85}
+.cell.exact::after{content:"";position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;
+  background:var(--ok)}
+.cell.empty{background:var(--surface-2);border-style:dashed;cursor:default;opacity:.5}
+.cell.empty:hover{transform:none;box-shadow:none}
+.crumbs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:13px}
+.crumbs a{color:var(--primary);cursor:pointer;text-decoration:none;font-family:var(--mono)}
+.crumbs a:hover{text-decoration:underline}
+.diag-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.diag-tabs button.on{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
 .stats{display:flex;gap:16px;flex-wrap:wrap;color:var(--fg-muted);font-size:12.5px}
 .stats b{color:var(--fg);font-variant-numeric:tabular-nums}
 pre.log{background:#0b1220;color:#a7f3d0;padding:12px;border-radius:var(--r-sm);overflow:auto;
@@ -580,6 +648,8 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
 
 <nav role="tablist">
   <button id="tab-order" role="tab" aria-selected="true">調序 / 加詞</button>
+  <button id="tab-map" role="tab" aria-selected="false">碼圖</button>
+  <button id="tab-diag" role="tab" aria-selected="false">診斷</button>
   <button id="tab-dict" role="tab" aria-selected="false">字典</button>
 </nav>
 
@@ -603,6 +673,30 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
      <textarea id="newword" placeholder="2–4 個漢字，多個用空格或換行分隔"></textarea>
      <div class="row" style="margin-top:10px">
        <button id="addbtn" class="primary">加入暫存</button>
+     </div>
+   </div>
+ </section>
+
+ <section id="pane-map" role="tabpanel" hidden>
+   <div class="card">
+     <h2>同碼詞地圖</h2>
+     <p class="sub">每個格子是一個碼前綴，<b>顏色越深＝該分支下同碼詞越多</b>。點格子往下鑽，到第 4 層就是一個完整碼組。</p>
+     <div class="crumbs" id="crumbs"></div>
+     <div class="stats" id="mapstats" style="margin-bottom:12px"></div>
+     <div class="map" id="mapgrid"></div>
+     <div class="row" style="margin-top:14px" id="mapexact"></div>
+   </div>
+ </section>
+
+ <section id="pane-diag" role="tabpanel" hidden>
+   <div class="card">
+     <h2>詞頻診斷</h2>
+     <p class="sub">只用詞典自身能算出的矛盾，不需語料。皆為「提示」而非「錯誤」——詞頻本就允許反直覺。</p>
+     <div class="diag-tabs" id="diagtabs"></div>
+     <div class="stats" id="diagdesc" style="margin-bottom:10px"></div>
+     <div class="scroll" style="max-height:60vh">
+       <table><thead><tr><th style="width:34%">詞／碼</th><th>細節</th><th style="width:90px"></th></tr></thead>
+         <tbody id="diagrows"><tr><td colspan="3"><div class="empty">載入中…</div></td></tr></tbody></table>
      </div>
    </div>
  </section>
@@ -713,16 +807,20 @@ function busy(on,label){
 }
 
 /* ───── 分頁籤 ───── */
+const TABS=['order','map','diag','dict'];
 function tab(which){
-  const order=which==='order';
-  $('#tab-order').setAttribute('aria-selected',order);
-  $('#tab-dict').setAttribute('aria-selected',!order);
-  $('#pane-order').hidden=!order;
-  $('#pane-dict').hidden=order;
-  $('#pane-side').hidden=!order;
-  $('#main').classList.toggle('dictmode',!order);
-  if(!order && !$('#drows').dataset.loaded) dictQuery(1);
+  TABS.forEach(k=>{
+    $('#tab-'+k).setAttribute('aria-selected', k===which);
+    $('#pane-'+k).hidden = k!==which;
+  });
+  $('#pane-side').hidden = which!=='order';
+  $('#main').classList.toggle('dictmode', which!=='order');
+  if(which==='dict' && !$('#drows').dataset.loaded) dictQuery(1);
+  if(which==='map' && !$('#mapgrid').dataset.loaded) mapGo('');
+  if(which==='diag' && !$('#diagrows').dataset.loaded) diagLoad();
 }
+$('#tab-map').onclick=()=>tab('map');
+$('#tab-diag').onclick=()=>tab('diag');
 $('#tab-order').onclick=()=>tab('order');
 $('#tab-dict').onclick=()=>tab('dict');
 
@@ -941,6 +1039,96 @@ api('/api/dict/stats').then(s=>{
     +`<span>手收 <b>${s.handpicked.toLocaleString()}</b></span>`
     +`<span>有標記 <b>${s.tagged.toLocaleString()}</b></span>`;
 });
+
+/* ───── 碼圖 ───── */
+let MPREFIX='';
+function mapGo(prefix){
+  MPREFIX=prefix;
+  api('/api/map?prefix='+encodeURIComponent(prefix)).then(d=>{
+    if(d.error){toast(d.error,'err');return;}
+    $('#mapgrid').dataset.loaded='1';
+    // 麵包屑
+    let cr='<span style="color:var(--fg-faint)">碼空間</span>';
+    for(let i=1;i<=prefix.length;i++){
+      const p=prefix.slice(0,i);
+      cr+=' <span style="color:var(--fg-faint)">/</span> <a data-p="'+p+'">'+p+'</a>';
+    }
+    $('#crumbs').innerHTML=cr;
+    $('#crumbs').querySelectorAll('a').forEach(a=>a.onclick=()=>mapGo(a.dataset.p));
+    $('#mapstats').innerHTML=`第 ${d.depth+1} 層　<b>${d.total_words.toLocaleString()}</b> 詞`
+      +`　<b>${d.total_groups.toLocaleString()}</b> 個碼`
+      +(prefix?`　前綴本身是碼：<b>${d.exact_words}</b> 詞`:'');
+    // 格子
+    $('#mapgrid').innerHTML=d.children.map(c=>{
+      const h=c.heat;                       // 0..1 線性
+      const pct=c.words?Math.round(6+h*88):0;
+      const dark=h>0.55;
+      const empty=c.words? '':' empty';
+      const bg=c.words?`background:color-mix(in srgb, var(--primary) ${pct}%, var(--surface))`:'';
+      return `<div class="cell${dark?' dark':''}${empty}" data-l="${c.letter}" data-n="${c.words}" style="${bg}">
+        <div class="L">${c.letter}</div><div class="N">${c.words?c.words.toLocaleString():'·'}</div></div>`;
+    }).join('');
+    $('#mapgrid').querySelectorAll('.cell').forEach(el=>{
+      el.onclick=()=>{
+        if(!+el.dataset.n) return;
+        const np=prefix+el.dataset.l;
+        if(np.length>=4) openGroup(np); else mapGo(np);
+      };
+    });
+    // 前綴本身是一個碼 → 直接可調序
+    $('#mapexact').innerHTML = (prefix && d.exact_words)
+      ? `<button class="primary" id="mapexactbtn">打開碼組 ${prefix}（${d.exact_words} 詞）→ 調序</button>` : '';
+    const b=$('#mapexactbtn'); if(b) b.onclick=()=>openGroup(prefix);
+  });
+}
+function openGroup(code){ tab('order'); $('#q').value=code; load(code); window.scrollTo(0,0); }
+
+/* ───── 診斷 ───── */
+let DIAG=null, DCUR='A';
+function diagLoad(){
+  api('/api/diag').then(d=>{
+    DIAG=d; $('#diagrows').dataset.loaded='1';
+    $('#diagtabs').innerHTML=Object.entries(d).map(([k,v])=>
+      `<button data-k="${k}" class="${k===DCUR?'on':''}">${v.name} <span class="muted">${v.n}</span></button>`).join('');
+    $('#diagtabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{DCUR=b.dataset.k;diagLoad();});
+    renderDiag();
+  });
+}
+function renderDiag(){
+  const v=DIAG[DCUR];
+  $('#diagdesc').textContent=v.desc;
+  const rows=v.items.map(it=>{
+    if(DCUR==='A'){
+      const ws=it.words.join(' / ');
+      return {main:`<code>${esc(it.code)}</code> ${esc(ws)}`,
+              det:`${it.words.length} 個詞同為 ${(+it.wt).toLocaleString()}`,
+              code:it.code};
+    }
+    if(DCUR==='B'){
+      return {main:`<b>${esc(it.w)}</b> <code>${esc(it.code)}</code>`,
+              det:`最冷組成字 ${(+it.minchar).toLocaleString()}，本詞無頻分`, code:it.code};
+    }
+    if(DCUR==='C'){
+      return {main:`<code>${esc(it.code)}</code> ${esc(it.hi)} > ${esc(it.lo)}`,
+              det:`${esc(it.hi)} ${(+it.hiwt).toLocaleString()} vs ${esc(it.lo)} ${(+it.lowt).toLocaleString()}`,
+              code:it.code};
+    }
+    if(DCUR==='D'){
+      return {main:`<b>${esc(it.w)}</b>`,
+              det:it.ranks.map(r=>`${r.code}: 第 ${r.rank}/${r.of}`).join('　'),
+              code:it.ranks[0].code};
+    }
+    return {main:`${esc(it.w)} <code>${esc(it.code)}</code>`,
+            det:`權重 ${(+it.wt).toLocaleString()}`, code:it.code};
+  });
+  $('#diagrows').innerHTML=rows.length?rows.map(r=>
+    `<tr class="clickable" data-c="${esc(r.code)}"><td>${r.main}</td><td style="color:var(--fg-muted)">${r.det}</td>
+     <td><button class="sm ghost">調序</button></td></tr>`).join('')
+    :'<tr><td colspan="3"><div class="empty">此類無命中</div></td></tr>';
+  [...$('#diagrows').children].forEach(tr=>{
+    if(tr.dataset.c) tr.onclick=()=>openGroup(tr.dataset.c);
+  });
+}
 
 /* ───── 待應用 ───── */
 function refreshPending(){

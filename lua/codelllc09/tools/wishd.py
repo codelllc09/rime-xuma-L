@@ -202,6 +202,85 @@ def parse_seq(text):
     return [w.strip() for w in re.split(r'\s*>\s*', text.strip()) if w.strip()]
 
 
+# ── 診斷：探測可能不合理的詞頻（只用詞典自身，不依賴語料）────────
+def diagnose(limit=60):
+    """原則：**只在同一尺標內比較**。
+
+    詞典裏有兩套權重尺標——簡碼區（1–3 碼）是從原表逐字節繼承的舊值，全碼區（4 碼）
+    是管道重算的 10^score×1e9。跨區比大小沒有意義（例：內容 簡碼 1.24e9 / 全碼 30.5 萬），
+    故所有判據要麼同組內、要麼只看「是否為零」這類尺標無關的性質。
+    """
+    groups, wc = load_dict()
+    rows_of = {}
+    for w, code, wt, ln, tag, sec in load_entries():
+        rows_of.setdefault(w, []).append((code, int(wt) if wt and wt.isdigit() else 0, ln))
+    charw = {w: max(v for _, v, _ in rs) for w, rs in rows_of.items() if len(w) == 1}
+    # 常用門檻取「非零字頻」的中位數——七萬多個擴展區字權重為 0，含零取中位數會得到 0
+    nz = sorted(v for v in charw.values() if v > 0)
+    common = nz[len(nz) // 2] if nz else 0
+    HAN = re.compile(r'^[\u3400-\u4dbf\u4e00-\u9fff]+$')
+
+    same_wt, zero_common, long_over_short, overflow = [], [], [], []
+    for code, rs in groups.items():
+        ranked = sorted(rs, key=lambda r: -(int(r[1]) if r[1].isdigit() else 0))
+        bywt = {}
+        for w, wt, ln, tag in ranked:
+            v = int(wt) if wt and wt.isdigit() else 0
+            if len(w) < 2 or not HAN.match(w):
+                continue
+            bywt.setdefault(v, []).append(w)
+            if v == 0 and common > 0:
+                comps = [charw.get(c, 0) for c in w]
+                if comps and min(comps) >= common:
+                    zero_common.append({'w': w, 'code': code, 'minchar': min(comps)})
+            if len(code) == 4 and v > 10 ** 9:
+                overflow.append({'w': w, 'code': code, 'wt': v})
+        for v, ws in bywt.items():
+            if len(set(ws)) > 1 or len(ws) > 1:
+                same_wt.append({'code': code, 'wt': v, 'words': ws})
+        for a in range(len(ranked)):
+            for b in range(a + 1, len(ranked)):
+                wa, wb = ranked[a][0], ranked[b][0]
+                if len(wa) > len(wb) >= 2 and HAN.match(wa):
+                    long_over_short.append({'code': code, 'hi': wa, 'lo': wb,
+                                            'hiwt': ranked[a][1], 'lowt': ranked[b][1]})
+                    break
+
+    invert = []
+    for w, rs in rows_of.items():
+        if len(rs) < 2 or len(w) < 2:
+            continue
+        ranks = []
+        for code, v, ln in rs:
+            names = [r[0] for r in sorted(groups[code],
+                     key=lambda r: -(int(r[1]) if r[1].isdigit() else 0))]
+            ranks.append((names.index(w) + 1, len(names), code))
+        if len(ranks) < 2:
+            continue
+        pcts = [(n / tot) if tot > 1 else 0 for n, tot, _ in ranks]
+        if max(pcts) - min(pcts) >= 0.6:
+            invert.append({'w': w,
+                           'ranks': [{'code': c, 'rank': n, 'of': tot} for n, tot, c in ranks]})
+
+    return {
+        'A': {'name': '同組同分（不同詞）', 'n': len(same_wt),
+              'desc': '同一碼組內不同詞拿到完全相同的頻分——多半是缺頻回退到同一默認值，或異體並列',
+              'items': sorted(same_wt, key=lambda x: -len(x['words']))[:limit]},
+        'B': {'name': '零頻分但字皆常用', 'n': len(zero_common),
+              'desc': '組成字都不算冷僻，詞本身卻沒有頻分——語料缺該詞，排序會沉底',
+              'items': sorted(zero_common, key=lambda x: -x['minchar'])[:limit]},
+        'C': {'name': '長詞壓短詞', 'n': len(long_over_short),
+              'desc': '同碼組內字數更多的詞排在同碼短詞之前——不一定是錯，但值得看一眼',
+              'items': long_over_short[:limit]},
+        'D': {'name': '跨區排名倒掛', 'n': len(invert),
+              'desc': '同一個詞在簡碼組與全碼組的相對名次差距 ≥60%——兩套權重尺標不一致所致，僅供參考',
+              'items': invert[:limit]},
+        'E': {'name': '全碼區權重溢出', 'n': len(overflow),
+              'desc': '4 碼條目權重 >1e9，而重算規則下 p≤1 ⇒ 應 ≤1e9；非 0 即為真異常',
+              'items': overflow[:limit]},
+    }
+
+
 # ── 展示層 ──────────────────────────────────────────────────────
 def fmt_group(code, groups, hp, mark=()):
     rows = groups.get(code, [])
