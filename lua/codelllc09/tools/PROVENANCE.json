@@ -62,7 +62,7 @@
         },
         {
           "count": 1,
-          "digest": "37e2e8a2fe9bdebd7f4c752da4c8d3432e06131dd77a008852e323ae636224cd",
+          "digest": "c8a51b3dcc5121496795014858b6c0975c2562e01bd94169395d2abda71f573e",
           "ignored_count": 0,
           "kind": "glob",
           "pattern": "lua/codelllc09/tools/dict_pipeline/manual_overrides.txt"
@@ -89,7 +89,7 @@
           "pattern": "xuma_L.schema.yaml"
         }
       ],
-      "output_sha256": "2085b80469ac4b122453892c9a5eb85d1fd5d667113d670344c25e9ff3bbc27d"
+      "output_sha256": "ee9752ce72963fd50f031086cb651796eb308f8647375f19d28045ad5c626dfd"
     }
   },
   "note": "生成物溯源清單：產物←生成器←輸入指紋。由 _provenance.py 維護，gen_freq_dict.py / gen_no_simple_data.py / gen_pinyin_tone.py 運行時自動刷新。不含時間戳（git 提交即時間），故同一輸入必得同一文件。",
