@@ -27,7 +27,7 @@ local function translator(input, seg, env)
     for gi, gr in ipairs(S.groups) do
       S.menu[#S.menu + 1] = { group_idx = gi }
       local c = Candidate('menu', seg.start, seg._end, gr.name,
-                          gr.values[S.current(gr, ctx)] .. ' ›')
+                          '：' .. gr.values[S.current(gr, ctx)] .. ' ›')
       c.preedit = input .. '\t' .. '設定'
       yield(c)
     end
