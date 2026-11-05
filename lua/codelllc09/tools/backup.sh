@@ -38,6 +38,16 @@ KEEP=14
 _CLEAN=""
 _rm_clean() { [ -n "${_CLEAN:-}" ] && rm -rf $_CLEAN; _CLEAN=""; }
 
+# 暫存一律落盤，不進 /tmp。理由（2026-11-05 實測）：/tmp 是 7.6G tmpfs，
+# 別的會話一佔到八成，快照解壓就報 "Disk quota exceeded"——而失敗點是
+# MANIFEST.json 寫不進去，表現成 JSON 解析空檔，看着像快照壞了。
+# 還原/演練這種最要緊的時刻撞上才是真事故，故統一走磁盤。
+backup_tmp() {
+  local base="${BACKUP_TMP_BASE:-$OUT_DEFAULT}"
+  mkdir -p "$base" 2>/dev/null || base=/var/tmp
+  mktemp -d -p "$base" .work.XXXXXX 2>/dev/null || mktemp -d
+}
+
 c_g() { printf '\033[32m%s\033[0m\n' "$*"; }
 c_y() { printf '\033[33m%s\033[0m\n' "$*"; }
 die() { printf '\033[31m%s\033[0m\n' "$*" >&2; exit 1; }
@@ -64,7 +74,7 @@ cmd_create() {
   local stamp name tmp
   stamp="$(date '+%Y%m%d-%H%M%S')"
   name="rime-snapshot-$stamp.tar.gz"
-  tmp="$(mktemp -d)"
+  tmp="$(backup_tmp)"
   _CLEAN="$tmp"; trap '_rm_clean' RETURN
 
   c_g "① git bundle（全史 --all）"
@@ -247,7 +257,8 @@ pick_latest() {
 cmd_verify() {
   local f="${1:-$(pick_latest)}"
   [ -n "$f" ] && [ -f "$f" ] || die "找不到快照"
-  local tmp; tmp="$(mktemp -d)"; _CLEAN="$tmp"; trap '_rm_clean' RETURN
+  local tmp; tmp="$(backup_tmp)"
+  _CLEAN="$tmp"; trap '_rm_clean' RETURN
   tar -xzf "$f" -C "$tmp"
   [ -f "$tmp/repo.bundle" ] || die "缺 repo.bundle"
   git bundle verify "$tmp/repo.bundle" >/dev/null 2>&1 || die "bundle 校驗失敗"
@@ -277,7 +288,7 @@ cmd_restore() {
   [ -f "$f" ] || die "找不到快照：$f"
   [ -e "$dest" ] && [ -n "$(ls -A "$dest" 2>/dev/null)" ] && die "目標目錄非空：$dest"
   mkdir -p "$dest"
-  local tmp; tmp="$(mktemp -d)"; _CLEAN="$tmp"; trap '_rm_clean' RETURN
+  local tmp; tmp="$(backup_tmp)"; _CLEAN="$tmp"; trap '_rm_clean' RETURN
   tar -xzf "$f" -C "$tmp"
   git clone --quiet "$tmp/repo.bundle" "$dest"
   cp -a "$tmp/ignored/." "$dest/" 2>/dev/null || true
@@ -289,8 +300,8 @@ cmd_restore() {
 cmd_drill() {
   local T0; T0=$(date +%s)
   c_g "災難演練：造快照 → 還原到臨時目錄 → 門禁復跑"
-  local out; out="$(mktemp -d)"
-  local work; work="$(mktemp -d)"
+  local out; out="$(backup_tmp)"
+  local work; work="$(backup_tmp)"
   _CLEAN="$out $work"; trap '_rm_clean' RETURN
   cmd_create --out "$out" >/dev/null
   local snap; snap="$(ls -1 "$out"/rime-snapshot-*.tar.gz | head -1)"
