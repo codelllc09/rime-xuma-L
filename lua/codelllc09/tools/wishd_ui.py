@@ -517,6 +517,146 @@ def api_log(key, n=300, q='', errors=False, action=''):
             'lines': len(raw)}
 
 
+# ── 設置：開關 / 快捷鍵 / 引擎鏈 / 引用校驗 ──────────────────────
+def _yaml(path):
+    try:
+        import yaml
+        return yaml.safe_load(io.open(path, encoding='utf-8')) or {}
+    except Exception as e:
+        return {'__error__': f'{type(e).__name__}: {e}'}
+
+
+def _walk_lua_refs(node, out):
+    """從配置樹裏找出所有 lua_*@*模組 引用。"""
+    if isinstance(node, str):
+        # 形如 lua_filter@*ace/xuma_spelling*filter@xmsp —— 模組是第一個 * 之後、
+        # 第二個 * 之前那段；第二段是命名空間/組件名，不是檔名的一部分
+        m = re.search(r'lua_(translator|filter|processor|segmentor)@\*?([^@]+)', node)
+        if m:
+            mod = m.group(2).split('*')[0].strip()
+            out.append((m.group(1), mod))
+    elif isinstance(node, list):
+        for x in node:
+            _walk_lua_refs(x, out)
+    elif isinstance(node, dict):
+        for v in node.values():
+            _walk_lua_refs(v, out)
+
+
+def _lua_requires(path):
+    """掃出 lua 檔裏的 require('...')——隱藏依賴就是這麼漏掉的。"""
+    out = []
+    try:
+        for i, line in enumerate(io.open(path, encoding='utf-8'), 1):
+            for m in re.finditer(r"require\s*\(?\s*['\"]([^'\"]+)['\"]", line):
+                out.append((m.group(1), i))
+    except Exception:
+        pass
+    return out
+
+
+def api_settings():
+    schema_path = os.path.join(wishd.RIME, 'xuma_L.schema.yaml')
+    default_path = os.path.join(wishd.RIME, 'build', 'default.yaml')
+    sc = _yaml(schema_path)
+    df = _yaml(default_path)
+
+    # ① 開關
+    switches = []
+    for sw in (sc.get('switches') or []):
+        if not isinstance(sw, dict):
+            continue
+        if 'options' in sw:
+            switches.append({'group': True, 'name': '(選項組)', 'states': sw.get('states') or [],
+                             'reset': sw.get('reset'), 'options': sw['options']})
+        else:
+            switches.append({'group': False, 'name': sw.get('name', ''),
+                             'states': sw.get('states') or [], 'reset': sw.get('reset'),
+                             'options': [sw.get('name', '')]})
+
+    # ② 快捷鍵（兩處來源合併）
+    keys = []
+
+    def kb(bindings, src):
+        for b in (bindings or []):
+            if not isinstance(b, dict):
+                continue
+            act = b.get('toggle') or b.get('send') or b.get('select') or b.get('command')
+            if b.get('accept'):
+                keys.append({'key': b['accept'], 'act': str(act or ''),
+                             'when': b.get('when', ''), 'src': src})
+    kb((sc.get('key_bindings') or {}).get('__append'), 'schema')
+    kb((sc.get('key_bindings') or {}).get('__include') if False else None, 'schema')
+    kb((df.get('key_binder') or {}).get('bindings'), 'default')
+
+    # 拼寫插件的 switch_key / cycle_key
+    for k, v in (sc.get('xuma_spelling') or {}).items():
+        if k in ('switch_key', 'cycle_key') and isinstance(v, str):
+            keys.append({'key': v, 'act': k, 'when': '非簡模式組內', 'src': 'xuma_spelling'})
+    xsp = sc.get('xuma_spelling')
+    if isinstance(xsp, dict):
+        for k in ('switch_key', 'cycle_key'):
+            if isinstance(xsp.get(k), str):
+                pass
+
+    # ③ 引擎鏈
+    eng = sc.get('engine') or {}
+    chain = []
+    for stage in ('processors', 'segmentors', 'translators', 'filters', 'punctuators'):
+        items = eng.get(stage) or []
+        for it in items:
+            if not isinstance(it, str):
+                continue
+            m = re.search(r'lua_(translator|filter|processor|segmentor)@\*?([^@]+)', it)
+            chain.append({'stage': stage, 'item': it,
+                          'lua': m.group(2).split('*')[0].strip() if m else None})
+
+    # ④ 引用校驗：配置 → lua 檔
+    refs = []
+    _walk_lua_refs(eng, refs)
+    seen = set()
+    ref_status = []
+    LUADIR = os.path.join(wishd.RIME, 'lua')
+    for kind, mod in refs:
+        if (kind, mod) in seen:
+            continue
+        seen.add((kind, mod))
+        rel = mod if mod.endswith('.lua') else mod + '.lua'
+        p = os.path.join(LUADIR, rel)
+        ref_status.append({'kind': kind, 'module': mod, 'file': rel,
+                           'exists': os.path.exists(p)})
+
+    # ⑤ lua 檔內部 require 的模組是否都在
+    req_status = []
+    for k, mod in sorted(seen):
+        rel = mod if mod.endswith('.lua') else mod + '.lua'
+        p = os.path.join(LUADIR, rel)
+        if not os.path.exists(p):
+            continue
+        for dep, ln in _lua_requires(p):
+            dp = os.path.join(LUADIR, dep + '.lua')
+            if not os.path.exists(dp):
+                dp2 = os.path.join(LUADIR, dep, 'init.lua')
+                if os.path.exists(dp2):
+                    continue
+                req_status.append({'from': rel, 'need': dep, 'line': ln})
+
+    # ⑥ 部署狀態：詞典檔案 vs 編譯產物
+    dict_p = os.path.join(wishd.RIME, 'xuma_L.dict.yaml')
+    bins = [os.path.join(wishd.RIME, 'build', f) for f in
+            ('xuma_L.table.bin', 'xuma_L.prism.bin', 'xuma_L.reverse.bin')]
+    bins = [b for b in bins if os.path.exists(b)]
+    deploy = {'dict_mtime': os.path.getmtime(dict_p) if os.path.exists(dict_p) else 0,
+              'bin_mtime': max([os.path.getmtime(b) for b in bins] or [0]),
+              'bins': len(bins)}
+    deploy['stale'] = bool(deploy['dict_mtime'] and deploy['bin_mtime']
+                           and deploy['dict_mtime'] > deploy['bin_mtime'] + 1)
+
+    return {'switches': switches, 'keys': keys, 'chain': chain,
+            'refs': ref_status, 'requires': req_status, 'deploy': deploy,
+            'yaml_error': sc.get('__error__') or df.get('__error__')}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'wishd/1.1'
 
@@ -550,6 +690,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps(api_dict(q), ensure_ascii=False))
         if u.path == '/api/map':
             return self._send(200, json.dumps(api_map(q), ensure_ascii=False))
+        if u.path == '/api/settings':
+            return self._send(200, json.dumps(api_settings(), ensure_ascii=False))
         if u.path == '/api/logs':
             return self._send(200, json.dumps(api_log_list(), ensure_ascii=False))
         if u.path == '/api/log':
@@ -818,6 +960,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
   <button id="tab-map" role="tab" aria-selected="false">碼圖</button>
   <button id="tab-diag" role="tab" aria-selected="false">診斷</button>
   <button id="tab-logs" role="tab" aria-selected="false">日誌</button>
+  <button id="tab-set" role="tab" aria-selected="false">設置</button>
   <button id="tab-dict" role="tab" aria-selected="false">字典</button>
 </nav>
 
@@ -899,6 +1042,36 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
          <pre class="log" id="logout" style="max-height:64vh">—</pre>
        </div>
      </div>
+   </div>
+ </section>
+
+ <section id="pane-set" role="tabpanel" hidden>
+   <div id="setalert"></div>
+   <div class="card">
+     <h2>開關</h2>
+     <p class="sub">來自 <code>xuma_L.schema.yaml</code> 的 <code>switches</code>。「預設」是每次進入方案時的初值。</p>
+     <table><thead><tr><th style="width:22%">名稱</th><th>狀態</th><th style="width:14%">預設</th></tr></thead>
+       <tbody id="set-switches"></tbody></table>
+   </div>
+   <div class="card">
+     <h2>快捷鍵</h2>
+     <p class="sub">合併 schema 的 <code>key_bindings</code>、<code>build/default.yaml</code> 的 <code>key_binder</code>、與拼寫插件的 switch/cycle 鍵。</p>
+     <div class="row" style="margin-bottom:10px">
+       <select id="keysrc"><option value="own">只看方案自訂</option>
+         <option value="all">全部（含 Rime 內建導航鍵）</option></select>
+       <span id="keymeta" class="muted" style="font-size:12.5px"></span>
+     </div>
+     <table><thead><tr><th style="width:20%">鍵</th><th style="width:26%">動作</th>
+       <th style="width:22%">條件</th><th>來源</th></tr></thead><tbody id="set-keys"></tbody></table>
+   </div>
+   <div class="card">
+     <h2>引擎鏈</h2>
+     <p class="sub">候選從產生到輸出的順序。<span class="badge" style="color:var(--ok)">lua</span> 標記的條目會檢查對應檔案是否存在。</p>
+     <div id="set-chain"></div>
+   </div>
+   <div class="card">
+     <h2>引用校驗</h2>
+     <div id="set-refs"></div>
    </div>
  </section>
 
@@ -1009,7 +1182,7 @@ function busy(on,label){
 }
 
 /* ───── 分頁籤 ───── */
-const TABS=['order','map','diag','logs','dict'];
+const TABS=['order','map','diag','logs','set','dict'];
 function tab(which){
   TABS.forEach(k=>{
     $('#tab-'+k).setAttribute('aria-selected', k===which);
@@ -1021,11 +1194,13 @@ function tab(which){
   if(which==='map' && !$('#mapgrid').dataset.loaded) mapGo('');
   if(which==='diag' && !$('#diagrows').dataset.loaded) diagLoad();
   if(which==='logs'){ if(!$('#loglist').dataset.loaded){$('#loglist').dataset.loaded='1';logList();logLoad();} }
+  if(which==='set' && !$('#set-switches').dataset.loaded){$('#set-switches').dataset.loaded='1';setLoad();}
   if(which!=='logs'){ clearInterval(LAUTO); LAUTO=null; $('#logauto').checked=false; }
 }
 $('#tab-map').onclick=()=>tab('map');
 $('#tab-diag').onclick=()=>tab('diag');
 $('#tab-logs').onclick=()=>tab('logs');
+$('#tab-set').onclick=()=>tab('set');
 $('#tab-order').onclick=()=>tab('order');
 $('#tab-dict').onclick=()=>tab('dict');
 
@@ -1337,6 +1512,75 @@ function renderDiag(){
     :'<tr><td colspan="3"><div class="empty">此類無命中</div></td></tr>';
   [...$('#diagrows').children].forEach(tr=>{
     if(tr.dataset.c) tr.onclick=()=>openGroup(tr.dataset.c);
+  });
+}
+
+/* ───── 設置 ───── */
+let SETKEYS=[];
+function renderKeys(){
+  const all=$('#keysrc').value==='all';
+  const seen=new Set();
+  const rows=SETKEYS.filter(k=>{
+    if(!all && k.src==='default') return false;
+    const key=k.key+'|'+k.act+'|'+k.when;
+    if(seen.has(key))return false; seen.add(key); return true;
+  });
+  const own=SETKEYS.filter(k=>k.src!=='default').length;
+  $('#keymeta').textContent=`方案自訂 ${own} 條 · 內建導航 ${SETKEYS.length-own} 條`;
+  $('#set-keys').innerHTML=rows.map(k=>
+    `<tr><td><kbd>${esc(k.key)}</kbd></td><td><code>${esc(k.act)}</code></td>
+     <td style="color:var(--fg-muted)">${esc(k.when||'always')}</td>
+     <td><span class="badge">${esc(k.src)}</span></td></tr>`).join('');
+}
+$('#keysrc').onchange=renderKeys;
+function setLoad(){
+  api('/api/settings').then(d=>{
+    if(d.yaml_error){$('#setalert').innerHTML='<div class="card" style="border-color:var(--danger)">YAML 解析失敗：'+esc(d.yaml_error)+'</div>';}
+    const dep=d.deploy;
+    $('#setalert').innerHTML = dep.stale
+      ? `<div class="card" style="border-left:3px solid var(--warn)">
+           <b style="color:var(--warn)">⚠ 詞典比編譯產物新</b>
+           <div class="sub" style="margin:4px 0 0">xuma_L.dict.yaml 的修改時間晚於 build/*.bin
+           ${dep.bins} 個編譯檔 —— 改完詞典沒有重新部署。執行 <code>ibus restart</code>（Windows 爲「重新部署」）後此提示消失。</div></div>`
+      : `<div class="card" style="border-left:3px solid var(--ok)"><b style="color:var(--ok)">✓ 已部署</b>
+           <span class="sub" style="margin-left:8px">詞典與編譯產物同步（${dep.bins} 個 bin）</span></div>`;
+
+    // 開關
+    $('#set-switches').innerHTML=d.switches.map(s=>{
+      const st=(s.states||[]).map((x,i)=>i===s.reset?`<b>${esc(x)}</b>`:esc(x)).join(' / ');
+      return `<tr><td><code>${esc(s.name)}</code>${s.group?' <span class="badge">組</span>':''}</td>
+        <td>${st||'—'}</td><td class="num">${s.reset!=null?s.reset:'—'}</td></tr>`;
+    }).join('');
+
+    // 快捷鍵（去重；可只看方案自訂）
+    SETKEYS = d.keys;
+    renderKeys();
+
+    // 引擎鏈
+    const byStage={};
+    d.chain.forEach(c=>{(byStage[c.stage]=byStage[c.stage]||[]).push(c);});
+    $('#set-chain').innerHTML=Object.entries(byStage).map(([st,items])=>
+      `<div style="margin-bottom:10px"><div style="font-size:12.5px;color:var(--fg-muted);margin-bottom:4px">${esc(st)}（${items.length}）</div>
+       <div class="row" style="gap:6px">${items.map((c,i)=>{
+         const nm=c.lua?c.lua.split('/').pop():c.item.replace(/^lua_/,'');
+         const bad=c.lua && !d.refs.find(r=>r.module===c.lua&&r.exists);
+         return `<span class="pill"${bad?' style="border-color:var(--danger);color:var(--danger)"':''}
+           title="${esc(c.item)}">${i?'<span style="color:var(--fg-faint)">›</span> ':''}${esc(nm)}</span>`;
+       }).join('')}</div></div>`).join('');
+
+    // 引用校驗
+    const bad=d.refs.filter(r=>!r.exists);
+    let h=`<div class="stats" style="margin-bottom:8px"><span>lua 模組引用 <b>${d.refs.length}</b></span>
+      <span style="color:${bad.length?'var(--danger)':'var(--ok)'}">缺失 <b>${bad.length}</b></span>
+      <span style="color:${d.requires.length?'var(--warn)':'var(--ok)'}">缺 require <b>${d.requires.length}</b></span></div>`;
+    h+='<table><thead><tr><th>模組</th><th>檔案</th><th style="width:10%">狀態</th></tr></thead><tbody>'
+      +d.refs.map(r=>`<tr><td><code>${esc(r.module)}</code> <span class="badge">${esc(r.kind)}</span></td>
+         <td style="color:var(--fg-muted)">lua/${esc(r.file)}</td>
+         <td>${r.exists?'<span style="color:var(--ok)">✓</span>':'<span style="color:var(--danger)">✗</span>'}</td></tr>`).join('')
+      +(d.requires.length?d.requires.map(q=>`<tr><td colspan="3" style="color:var(--warn)">
+         ${esc(q.from)}:${q.line} require('${esc(q.need)}') 找不到檔案</td></tr>`).join(''):'')
+      +'</tbody></table>';
+    $('#set-refs').innerHTML=h;
   });
 }
 
