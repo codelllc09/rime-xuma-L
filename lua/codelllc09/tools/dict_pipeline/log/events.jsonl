@@ -118,3 +118,5 @@
 {"ts": "2026-11-05T18:55:24", "actor": "cli", "action": "修改", "path": "archive/rulings/驗收基準.txt", "detail": "條目級棄用後基準回歸：gulv 一些→原處（一些僅存gl簡碼）；jbyu 地方→教書育人（地方僅存簡碼）", "tracked": true}
 {"ts": "2026-11-05T19:02:11", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-全碼形態清理.md", "detail": "對賬 HEAD…20c23f6：新增0 注釋0 恢復0 消失54", "tracked": true}
 {"ts": "2026-11-05T19:02:11", "actor": "cli", "action": "生成", "path": "../tmp/全碼形態清理對賬.md", "detail": "對賬 HEAD…工作區：54 全碼形態條目棄用", "tracked": true}
+{"ts": "2026-11-05T19:02:20", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-全碼正式.md", "detail": "對賬 HEAD~1…d9e2bb8：新增0 注釋0 恢復0 消失54", "tracked": true}
+{"ts": "2026-11-05T19:02:20", "actor": "cli", "action": "刪除", "path": "../tmp/詞表改動-全碼正式.md", "detail": "與快照版逐字一致，重複件清理", "tracked": true}
