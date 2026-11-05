@@ -493,6 +493,59 @@ def override_index():
     return out
 
 
+_OVHDR = re.compile(r'^#\s+\d{4}-\d{2}-\d{2}\s+([0-9a-zA-Z]+)\s+調序')
+
+
+def list_overrides():
+    """已調序的碼：一行裁定一條，按行號倒序（最近寫的在前）。
+
+    碼優先取裁定上方的注釋頭（`# 日期 碼 調序（wishd）`）；手寫無頭的行再退回
+    「該行在 override_index 裏對應的碼」。這樣連無效裁定（含單字、簡碼組）也會
+    現形——否則它們會從清單裏憑空消失，人只看得到「有效」的那幾條。
+    """
+    groups, wc = load_dict()
+    ov = override_index()
+    by_line = {d['line']: c for c, d in ov.items()}
+    rows, cur = [], None
+    if not os.path.exists(OV):
+        return {'rows': [], 'counts': {'total': 0, 'ok': 0, 'pending': 0, 'invalid': 0}}
+    for i, l in enumerate(io.open(OV, encoding='utf-8'), 1):
+        m = _OVHDR.match(l)
+        if m:
+            cur = m.group(1).lower()
+            continue
+        body = l.split('#')[0].strip()
+        if not body:
+            continue
+        ws = [w for w in re.split(r'\s*>\s*', body) if w]
+        code = cur or by_line.get(i, '')
+        why = ''
+        if len(ws) < 2:
+            why = '至少要兩個詞'
+        elif any(len(w) == 1 for w in ws):
+            why = '含單字（單字區逐字節繼承）'
+        elif code and len(code) < 4:
+            why = '簡碼組不參與調頻'
+        elif not code:
+            why = '碼不明'
+        elif code not in groups:
+            why = '查無此碼'
+        elif any(w not in wc for w in ws):
+            why = '有詞不在庫'
+        elif set.intersection(*[wc[w] for w in ws]) == set() or code not in set.intersection(*[wc[w] for w in ws]):
+            why = '詞與碼不同組'
+        status = 'invalid' if why else ('ok' if ov.get(code, {}).get('satisfied') else 'pending')
+        rows.append({'code': code, 'words': ws, 'line': i,
+                     'raw': body, 'status': status, 'why': why})
+        cur = None
+    rows.sort(key=lambda r: -r['line'])
+    counts = {'total': len(rows),
+              'ok': sum(1 for r in rows if r['status'] == 'ok'),
+              'pending': sum(1 for r in rows if r['status'] == 'pending'),
+              'invalid': sum(1 for r in rows if r['status'] == 'invalid')}
+    return {'rows': rows, 'counts': counts}
+
+
 # ── 加詞（與 /add 共用 spool）────────────────────────────────────
 def load_spool():
     if not os.path.exists(SPOOL):

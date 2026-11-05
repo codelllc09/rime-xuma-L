@@ -799,6 +799,8 @@ class Handler(BaseHTTPRequestHandler):
                         q.get('q', [''])[0],
                         q.get('errors', ['0'])[0] == '1',
                         q.get('action', [''])[0]), ensure_ascii=False))
+        if u.path == '/api/overrides':
+            return self._send(200, json.dumps(wishd.list_overrides(), ensure_ascii=False))
         if u.path == '/api/override-codes':
             return self._send(200, json.dumps(api_override_codes(), ensure_ascii=False))
         if u.path == '/api/learn':
@@ -971,6 +973,8 @@ table.plain th{background:var(--surface)}
 .vrow .wt{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--fg);text-align:right}
 .vrow .pct{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--fg-faint);text-align:right}
 .vrow .ln{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--fg-faint);text-align:right}
+.ovrow{display:flex;gap:10px;align-items:center;padding:7px 8px;border-radius:6px;font-size:13.5px}
+.ovrow:hover{background:var(--surface-2)}
 .vrow .grip{color:var(--fg-faint);cursor:grab;user-select:none;text-align:center;line-height:1}
 .vrow.locked{opacity:.72;background:var(--surface-2)}
 .vrow.locked .grip{cursor:not-allowed;opacity:.35}
@@ -1099,6 +1103,12 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
    </div>
 
    <div class="card">
+     <h2>已調序的碼 <span class="muted" id="ovcount" style="font-weight:400"></span></h2>
+     <p class="sub">每次寫入裁定都會落一行，這裡是全部記錄（含無效的）。點一行可載入該碼組。</p>
+     <div id="ovlist" class="scroll" style="max-height:40vh"><div class="empty">載入中…</div></div>
+   </div>
+
+   <div class="card">
      <h2>加詞</h2>
      <p class="sub">與輸入法裏的 <code>/add</code> 共用同一個暫存，攢批後一起入庫。</p>
      <textarea id="newword" placeholder="2–4 個漢字，多個用空格或換行分隔"></textarea>
@@ -1121,9 +1131,9 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
 
  <section id="pane-diag" role="tabpanel" hidden>
    <div class="card">
-     <h2>詞頻診斷</h2>
-     <p class="sub">只用詞典自身能算出的矛盾，不需語料。皆為「提示」而非「錯誤」——詞頻本就允許反直覺。</p>
-     <div class="diag-tabs" id="diagtabs"></div>
+     <h2>詞源排序衝突</h2>
+     <p class="sub">同一個四碼組裏，十個語源對「誰排前面」意見不一致的配對。衝突越多越靠前——混合分會把爭執平均掉，這些碼位最該由人拍板。</p>
+     <div class="diag-tabs" id="diagtabs" hidden></div>
      <div class="stats" id="diagdesc" style="margin-bottom:10px"></div>
      <div class="scroll" style="max-height:60vh">
        <table><thead><tr><th style="width:34%">詞／碼</th><th>細節</th><th style="width:90px"></th></tr></thead>
@@ -1487,7 +1497,7 @@ $('#save').onclick=()=>{
   if(!confirm('寫入次序裁定？\n\n'+SEQ.join('  ›  '))) return;
   api('/api/commit',{method:'POST',body:JSON.stringify({code:CODE,seq:SEQ})}).then(d=>{
     if(!d.ok) return toast((d.errors||['校驗未過']).join('；'),'err',6000);
-    toast(`已寫入（取代 ${d.replaced} 條既有裁定）`,'ok'); load(CODE); refreshPending(); loadRecent();
+    toast(`已寫入（取代 ${d.replaced} 條既有裁定）`,'ok'); load(CODE); refreshPending(); loadRecent(); loadOverrides();
   });
 };
 
@@ -1643,14 +1653,35 @@ function mapGo(prefix){
 }
 function openGroup(code){ CODE=code; $('#q').value=code; load(code); tab('order'); window.scrollTo(0,0); }
 
+function loadOverrides(){
+  api('/api/overrides').then(d=>{
+    const c=d.counts||{};
+    $('#ovcount').textContent=`（${c.total||0}）`;
+    const chips=[['ok','生效',c.ok],['pending','待重跑',c.pending],['invalid','無效',c.invalid]]
+      .filter(x=>x[2]).map(x=>`<span class="badge">${x[1]} ${x[2]}</span>`).join(' ');
+    $('#ovlist').innerHTML=(chips?`<div class="stats" style="margin-bottom:8px">${chips}</div>`:'')
+      +((d.rows||[]).length?d.rows.map(r=>{
+        const col=r.status==='ok'?'var(--ok)':r.status==='pending'?'var(--warn)':'var(--err)';
+        const tag=r.status==='ok'?'生效':r.status==='pending'?'待重跑':'無效';
+        return `<div class="ovrow clickable" data-c="${esc(r.code)}" title="${esc(r.why||'')}">
+          <code>${esc(r.code||'?')}</code>
+          <span style="flex:1">${esc(r.words.join(' › '))}</span>
+          <span style="color:${col};font-size:12px">${tag}${r.why?'·'+esc(r.why):''}</span>
+          <span class="mono" style="color:var(--fg-faint);font-size:12px">行 ${r.line}</span></div>`;
+      }).join(''):'<div class="empty">還沒調過序</div>');
+    [...document.querySelectorAll('#ovlist .ovrow')].forEach(el=>{
+      el.onclick=()=>{ if(el.dataset.c) openGroup(el.dataset.c); };
+    });
+  });
+}
+
 /* ───── 診斷 ───── */
 let DIAG=null, DCUR='F';
 function diagLoad(){
   api('/api/diag').then(d=>{
-    DIAG=d; $('#diagrows').dataset.loaded='1';
-    $('#diagtabs').innerHTML=Object.entries(d).map(([k,v])=>
-      `<button data-k="${k}" class="${k===DCUR?'on':''}">${v.name} <span class="muted">${v.n}</span></button>`).join('');
-    $('#diagtabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{DCUR=b.dataset.k;diagLoad();});
+    DIAG={F:d.F};                     // 此頁只留「詞源排序衝突」，其餘五類已撤
+    DCUR='F';
+    $('#diagrows').dataset.loaded='1';
     renderDiag();
   });
 }
@@ -1983,7 +2014,7 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='Escape' && $('#dlg').open) $('#dlg').close();
 });
-refreshPending(); loadRecent();
+refreshPending(); loadRecent(); loadOverrides();
 if(location.hash) applyHash(); else tab('order', false);
 </script></body></html>"""
 
