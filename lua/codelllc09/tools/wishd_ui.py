@@ -1062,6 +1062,7 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
 </style></head><body>
 
 <header>
+  <button id="back" class="iconbtn" title="返回上一頁（Alt+←）" aria-label="返回">←</button>
   <div class="brand"><span class="dot"></span>詞庫意願台</div>
   <div class="search"><input id="q" placeholder="碼（oooo）或詞（合適）" aria-label="查詢"></div>
   <button id="go" class="primary">查詢</button>
@@ -1311,7 +1312,8 @@ function busy(on,label){
 
 /* ───── 分頁籤 ───── */
 const TABS=['order','dict','map','diag','task','logs'];   // 由常用到少用；設置走齒輪
-function tab(which){
+function tab(which, push){
+  CURTAB=which;
   TABS.forEach(k=>{
     $('#tab-'+k).setAttribute('aria-selected', k===which);
     $('#pane-'+k).hidden = k!==which;
@@ -1324,15 +1326,31 @@ function tab(which){
   if(which==='map' && !$('#mapgrid').dataset.loaded) mapGo('');
   if(which==='diag' && !$('#diagrows').dataset.loaded) diagLoad();
   if(which==='logs'){ if(!$('#loglist').dataset.loaded){$('#loglist').dataset.loaded='1';logList();logLoad();} }
+  if(which!=='logs'){ clearInterval(LAUTO); LAUTO=null; $('#logauto').checked=false; }
   if(which==='set' && !$('#set-switches').dataset.loaded){$('#set-switches').dataset.loaded='1';setLoad();}
   if(which==='task' && !$('#taskgroups').dataset.loaded){$('#taskgroups').dataset.loaded='1';taskLoad();}
-  if(which!=='logs'){ clearInterval(LAUTO); LAUTO=null; $('#logauto').checked=false; }
+  if(push!==false){
+    const h='#'+which+((which==='order'&&CODE)?'/'+CODE:(which==='map'&&MPREFIX?'/'+MPREFIX:''));
+    if(location.hash!==h) history.pushState({tab:which,code:CODE},'',h);
+  }
+  $('#back').disabled = history.length<=1;
 }
-$('#tab-map').onclick=()=>tab('map');
-$('#tab-diag').onclick=()=>tab('diag');
-$('#tab-logs').onclick=()=>tab('logs');
-$('#tab-set').onclick=()=>tab('set');
-$('#tab-task').onclick=()=>tab('task');
+
+/* 前進/後退：只還原視圖；帶碼的 order、帶前綴的 map 重新載入 */
+function applyHash(){
+  const raw=location.hash.replace(/^#/,'')||'order';
+  const parts=raw.split('/');
+  const name=parts[0], arg=parts.slice(1).join('/');
+  if(name==='order'){
+    tab('order', false);
+    if(arg){ $('#q').value=arg; load(arg); }
+  } else if(name==='map'){
+    tab('map', false);
+    mapGo(arg||'');
+  } else tab(TABS.includes(name)?name:'order', false);
+}
+addEventListener('popstate', applyHash);
+let CURTAB='order';
 $('#tab-order').onclick=()=>tab('order');
 $('#tab-dict').onclick=()=>tab('dict');
 
@@ -1596,9 +1614,13 @@ function mapGo(prefix){
     $('#mapexact').innerHTML = (prefix && d.exact_words)
       ? `<button class="primary" id="mapexactbtn">打開碼組 ${prefix}（${d.exact_words} 詞）→ 調序</button>` : '';
     const b=$('#mapexactbtn'); if(b) b.onclick=()=>openGroup(prefix);
+    // 每鑽一層寫一條歷史 —— 瀏覽器後退即「返回上一級」
+    const h='#map'+(prefix?'/'+prefix:'');
+    if(location.hash!==h) history.pushState({tab:'map',prefix:prefix},'',h);
+    $('#back').disabled = history.length<=1;
   });
 }
-function openGroup(code){ tab('order'); $('#q').value=code; load(code); window.scrollTo(0,0); }
+function openGroup(code){ CODE=code; $('#q').value=code; load(code); tab('order'); window.scrollTo(0,0); }
 
 /* ───── 診斷 ───── */
 let DIAG=null, DCUR='A';
@@ -1695,6 +1717,7 @@ function startTaskPoll(){
         toast(j.state==='done'?('完成（'+(j.elapsed||sec)+'s）'):('失敗（rc='+(j.rc??'?')+'）'),
               j.state==='done'?'ok':'err',5000);
         refreshPending(); loadRecent();
+if(location.hash) applyHash(); else tab('order', false);
       }
     });
   },900);
@@ -1922,7 +1945,9 @@ THEMEBTN.onclick=()=>{
 };
 paintTheme();
 
+$('#back').onclick=()=>{ if(history.length>1) history.back(); else tab('order'); };
 document.addEventListener('keydown',e=>{
+  if(e.altKey && e.key==='ArrowLeft'){ e.preventDefault(); $('#back').click(); return; }
   if(e.altKey && /^[1-6]$/.test(e.key)){
     e.preventDefault(); tab(TABS[+e.key-1]); return;
   }
