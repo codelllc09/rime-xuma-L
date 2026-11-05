@@ -424,6 +424,7 @@ def diagnose(limit=60):
                            'ranks': [{'code': c, 'rank': n, 'of': tot} for n, tot, c in ranks]})
 
     sc = source_conflicts(topn=limit)
+    ov_codes = set(override_index().keys())   # 已裁定過的碼：界面默認沉底
     NM = {'a': 'jieba', 'b': 'wordfreq', 'c': 'THUOCL', 'd': 'BCC現代', 'e': 'SUBTLEX',
           'g': 'BCC文學', 'h': 'BCC口語', 'i': 'BCC近代', 'k': 'GoogleBooks', 'l': '語委'}
     out = {
@@ -431,9 +432,10 @@ def diagnose(limit=60):
               'desc': '四碼組內，各語源對誰排前面的意見不一致的配對數——越多越靠前。'
                       '混合分把爭執平均掉了，這類碼位最該由人拍板。'
                       '源代號：' + ' '.join(f'{k}={v}' for k, v in NM.items()),
-              'items': [dict(c, pairs=[dict(p, ga_names=[NM.get(x, x) for x in p['ga']],
-                                            gb_names=[NM.get(x, x) for x in p['gb']])
-                                       for p in c['pairs']])
+              'items': [dict(c, decided=c['code'] in ov_codes,
+                             pairs=[dict(p, ga_names=[NM.get(x, x) for x in p['ga']],
+                                         gb_names=[NM.get(x, x) for x in p['gb']])
+                                    for p in c['pairs']])
                         for c in sc['codes']]},
         'A': {'name': '同組同分（不同詞）', 'n': len(same_wt),
               'desc': '同一碼組內不同詞拿到完全相同的頻分——多半是缺頻回退到同一默認值，或異體並列',

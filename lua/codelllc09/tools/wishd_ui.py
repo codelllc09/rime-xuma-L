@@ -357,9 +357,16 @@ def api_learn():
         return {'error': f'解析失敗：{e}'}
 
 
-def api_diag():
-    """探測可疑詞頻：只用詞典自身能算出的矛盾，不需語料。"""
-    return wishd.diagnose()
+def api_diag(params=None):
+    """探測可疑詞頻：只用詞典自身能算出的矛盾，不需語料。
+
+    limit 只截「已排序清單」的長度，不影響統計數字（n 仍是全量）。
+    """
+    try:
+        lim = int((params or {}).get('limit', ['300'])[0])
+    except (TypeError, ValueError):
+        lim = 300
+    return wishd.diagnose(limit=max(20, min(lim, 3000)))
 
 
 def api_dict_stats():
@@ -806,7 +813,7 @@ class Handler(BaseHTTPRequestHandler):
         if u.path == '/api/learn':
             return self._send(200, json.dumps(api_learn(), ensure_ascii=False))
         if u.path == '/api/diag':
-            return self._send(200, json.dumps(api_diag(), ensure_ascii=False))
+            return self._send(200, json.dumps(api_diag(q), ensure_ascii=False))
         if u.path == '/api/dict/stats':
             return self._send(200, json.dumps(api_dict_stats(), ensure_ascii=False))
         if u.path == '/api/pending':
@@ -1141,6 +1148,21 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
      <p class="sub">同一個四碼組裏，十個語源對「誰排前面」意見不一致的配對。衝突越多越靠前——混合分會把爭執平均掉，這些碼位最該由人拍板。</p>
      <div class="diag-tabs" id="diagtabs" hidden></div>
      <div class="stats" id="diagdesc" style="margin-bottom:10px"></div>
+     <div class="row" id="diagbar" style="margin-bottom:10px;gap:8px">
+       <select id="diagfilter" aria-label="篩選">
+         <option value="all">全部</option>
+         <option value="todo">只看未裁定</option>
+         <option value="done">只看已裁定</option>
+       </select>
+       <select id="diagsort" aria-label="排序">
+         <option value="n">衝突多→少</option>
+         <option value="n-asc">衝突少→多</option>
+         <option value="of">組內詞數多→少</option>
+         <option value="code">碼 A→Z</option>
+       </select>
+       <span class="muted" id="diagcount" style="font-size:12.5px"></span>
+       <button id="diagmore" class="sm ghost">再多 300 組</button>
+     </div>
      <div class="scroll" style="max-height:60vh">
        <table class="diagtable"><thead><tr><th style="width:34%">詞／碼</th><th>細節</th><th style="width:90px"></th></tr></thead>
          <tbody id="diagrows"><tr><td colspan="3"><div class="empty">載入中…</div></td></tr></tbody></table>
@@ -1344,7 +1366,7 @@ function tab(which, push){
   $('#main').classList.toggle('dictmode', which!=='order');
   if(which==='dict' && !$('#drows').dataset.loaded) dictQuery(1);
   if(which==='map' && !$('#mapgrid').dataset.loaded) mapGo('');
-  if(which==='diag' && !$('#diagrows').dataset.loaded) diagLoad();
+  if(which==='diag') diagLoad();   // 裁定狀態隨時在變，進頁即重取
   if(which==='logs'){ if(!$('#loglist').dataset.loaded){$('#loglist').dataset.loaded='1';logList();logLoad();} }
   if(which!=='logs'){ clearInterval(LAUTO); LAUTO=null; $('#logauto').checked=false; }
   if(which==='set' && !$('#set-switches').dataset.loaded){$('#set-switches').dataset.loaded='1';setLoad();}
@@ -1682,9 +1704,9 @@ function loadOverrides(){
 }
 
 /* ───── 診斷 ───── */
-let DIAG=null, DCUR='F';
+let DIAG=null, DCUR='F', DIAGLIMIT=300;
 function diagLoad(){
-  api('/api/diag').then(d=>{
+  api('/api/diag?limit='+DIAGLIMIT).then(d=>{
     DIAG={F:d.F};                     // 此頁只留「詞源排序衝突」，其餘五類已撤
     DCUR='F';
     $('#diagrows').dataset.loaded='1';
@@ -1694,14 +1716,29 @@ function diagLoad(){
 function renderDiag(){
   const v=DIAG[DCUR];
   $('#diagdesc').textContent=v.desc;
-  const rows=v.items.map(it=>{
+  let items=v.items;
+  if(DCUR==='F'){
+    const f=$('#diagfilter').value, so=$('#diagsort').value;
+    if(f==='todo') items=items.filter(it=>!it.decided);
+    else if(f==='done') items=items.filter(it=>it.decided);
+    const cmp={n:(a,b)=>b.n-a.n, 'n-asc':(a,b)=>a.n-b.n,
+               of:(a,b)=>(b.of-a.of)||(b.n-a.n),
+               code:(a,b)=>a.code.localeCompare(b.code)}[so];
+    // 已裁定的不論哪種排序都沉底——那是「處理過」的記錄，不是待辦
+    items=[...items].sort((a,b)=>(a.decided===b.decided?0:(a.decided?1:-1))||cmp(a,b));
+    $('#diagcount').textContent=items.length<v.n
+      ? `顯示 ${items.length}／${v.n} 組（已載入前 ${DIAGLIMIT}）`
+      : `顯示 ${items.length}／${v.n} 組`;
+  }
+  const rows=items.map(it=>{
     if(DCUR==='F'){
       const jw=w=>`<a class="jump" data-jump="${esc(it.code)}" href="#order/${esc(it.code)}">${esc(w)}</a>`;
       const ps=it.pairs.slice(0,2).map(p=>
         `${jw(p.a)} vs ${jw(p.b)}　<span style="color:var(--warn)">${p.ga_names.join('·')}</span>`
         +` ↔ <span style="color:var(--primary)">${p.gb_names.join('·')}</span>`).join('<br>');
       return {main:`<a class="jump code" data-jump="${esc(it.code)}" href="#order/${esc(it.code)}">${esc(it.code)}</a>`
-                   +` 衝突 <b>${it.n}</b> 對／組內 ${it.of} 詞`,
+                   +` 衝突 <b>${it.n}</b> 對／組內 ${it.of} 詞`
+                   +(it.decided?' <span class="badge">已裁定</span>':''),
               det:ps, code:it.code};
     }
     if(DCUR==='A'){
@@ -1739,6 +1776,10 @@ $('#diagrows').addEventListener('click',e=>{
   const tr=e.target.closest('tr[data-c]');
   if(tr) openGroup(tr.dataset.c);
 });
+
+$('#diagmore').onclick=()=>{ DIAGLIMIT+=300; diagLoad(); };
+$('#diagfilter').onchange=()=>{ if(DIAG) renderDiag(); };
+$('#diagsort').onchange=()=>{ if(DIAG) renderDiag(); };
 
 /* ───── 任務中心 ───── */
 let TASKS=[], TPOLL=null;
