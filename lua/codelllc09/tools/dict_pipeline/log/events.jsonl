@@ -45,3 +45,5 @@
 {"ts": "2026-11-05T08:30:18", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "wbmh: 字典 > 慶典 > 序曲（Web UI）", "tracked": true}
 {"ts": "2026-11-05T08:35:13", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "vbte: 𪺓 > 比值 > 鍵值 > 比價 > 銀價（Web UI）", "tracked": true}
 {"ts": "2026-11-05T08:36:49", "actor": "wishd.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "a: 能力 > 能｜測試：詞組壓單字", "tracked": true}
+{"ts": "2026-11-05T08:40:00", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-9790c1e.md", "detail": "對賬 HEAD~1…9790c1e：新增0 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T08:40:04", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-9790c1e.md", "detail": "對賬 HEAD~1…9790c1e：新增0 注釋0 恢復0 消失0", "tracked": true}
