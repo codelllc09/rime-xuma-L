@@ -59,3 +59,4 @@
 {"ts": "2026-11-05T09:06:19", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-5bc7f54.md", "detail": "對賬 HEAD…5bc7f54：新增0 注釋0 恢復0 消失0", "tracked": true}
 {"ts": "2026-11-05T09:06:35", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-49a68f1.md", "detail": "對賬 HEAD~1…49a68f1：新增0 注釋0 恢復0 消失0", "tracked": true}
 {"ts": "2026-11-05T09:07:23", "actor": "wishd_ui.py", "action": "次序裁定", "path": "manual_overrides.txt", "detail": "ugug: 會合 > 會師 > 與會 > 懨懨 > 愈合 > 師師 > 怔怔 > 會會 > 鬼鬼 > 合會 > 師命 > 合合（Web UI）", "tracked": true}
+{"ts": "2026-11-05T09:10:06", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-d1ec911.md", "detail": "對賬 HEAD~1…d1ec911：新增0 注釋0 恢復0 消失0", "tracked": true}
