@@ -123,3 +123,5 @@
 {"ts": "2026-11-05T21:35:59", "actor": "cli", "action": "異地備份", "path": "yoga:D:/Backups/rime/rime-snapshot-20261105-213535.tar.gz", "detail": "快照 rime-snapshot-20261105-213535.tar.gz 投遞並校驗通過（HEAD 813717eff）", "tracked": true}
 {"ts": "2026-11-05T21:37:20", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 1904 歧義 0 無碼 0", "tracked": false}
 {"ts": "2026-11-05T21:41:27", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 1903 歧義 0 無碼 0", "tracked": false}
+{"ts": "2026-11-05T21:52:19", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-安卓日收.md", "detail": "對賬 HEAD~1…77fdef4：新增1 注釋0 恢復0 消失0", "tracked": true}
+{"ts": "2026-11-05T21:52:19", "actor": "cli", "action": "生成並清理", "path": "../tmp/詞表改動-安卓日收.md", "detail": "僅新增 安卓 wclk 一詞，口頭留痕", "tracked": true}
