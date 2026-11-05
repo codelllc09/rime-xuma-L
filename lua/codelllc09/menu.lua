@@ -19,16 +19,16 @@ local function translator(input, seg, env)
     local cur = S.current(g, ctx)
     for i, v in ipairs(g.values) do
       S.menu[#S.menu + 1] = { group_idx = S.category, value = i }
-      local c = Candidate('menu', seg.start, seg._end, v, i == cur and '✓ 現值' or '')
-      c.preedit = input .. '\t' .. g.name .. '：數字選值｜Esc/⌫ 返回'
+      local c = Candidate('menu', seg.start, seg._end, v, i == cur and '✓' or '')
+      c.preedit = input .. '\t' .. g.name .. '｜Esc 返回'
       yield(c)
     end
   else
     for gi, gr in ipairs(S.groups) do
       S.menu[#S.menu + 1] = { group_idx = gi }
       local c = Candidate('menu', seg.start, seg._end, gr.name,
-                          '現值 ' .. gr.values[S.current(gr, ctx)] .. ' ›')
-      c.preedit = input .. '\t' .. '設定：數字選分類'
+                          gr.values[S.current(gr, ctx)] .. ' ›')
+      c.preedit = input .. '\t' .. '設定'
       yield(c)
     end
   end

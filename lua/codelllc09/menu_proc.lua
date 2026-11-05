@@ -34,7 +34,7 @@ local function processor(key, env)
   end
 
   local idx
-  if keyname == 'space' or keyname == 'Return' or keyname == 'KP_Enter' then idx = 1
+  if keyname == 'space' or keyname == 'KP_Space' or keyname == 'Return' or keyname == 'KP_Enter' then idx = 1
   elseif keyname:match('^%d$') then idx = tonumber(keyname)
   elseif keyname == 'semicolon' then idx = 2
   elseif keyname == 'apostrophe' then idx = 3
