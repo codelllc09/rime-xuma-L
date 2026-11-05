@@ -83,7 +83,7 @@
         },
         {
           "count": 1,
-          "digest": "54ee4af4afd393ab65a14c7b7ac8d0ec829573ad934dc578d60132302a5e933d",
+          "digest": "974b32ac2f0d25f66c3cd92556f39c18af139c6509e96b6c6b96938aacc91461",
           "ignored_count": 0,
           "kind": "glob",
           "pattern": "xuma_L.schema.yaml"
