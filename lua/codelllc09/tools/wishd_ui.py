@@ -972,6 +972,10 @@ table.plain th{background:var(--surface)}
 .vrow .pct{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--fg-faint);text-align:right}
 .vrow .ln{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--fg-faint);text-align:right}
 .vrow .grip{color:var(--fg-faint);cursor:grab;user-select:none;text-align:center;line-height:1}
+.vrow.locked{opacity:.72;background:var(--surface-2)}
+.vrow.locked .grip{cursor:not-allowed;opacity:.35}
+.vrow.locked .word::after{content:"單";font-size:10px;margin-left:6px;padding:0 4px;border-radius:3px;
+  background:var(--border);color:var(--fg-muted);vertical-align:2px}
 .vrow .flags{display:flex;gap:4px;justify-content:flex-end;flex-wrap:nowrap;overflow:hidden}
 .badge{white-space:nowrap}
 .handle{color:var(--fg-faint);cursor:grab;user-select:none}
@@ -1378,7 +1382,9 @@ function renderGroup(d){
       +`<span>首位占比 <b>${share.toFixed(1)}%</b></span>`
       +(ratio?`<span>首位/次位 <b>${ratio.toFixed(ratio<10?2:0)}×</b></span>`:'')
       +(d.overrides.length?`<span style="color:var(--warn)">● 已調過（裁定 ${d.overrides.length} 條）</span>`
-        :`<span style="color:var(--fg-faint)">未調過</span>`);
+        :`<span style="color:var(--fg-faint)">未調過</span>`)
+      +(()=>{const n=d.members.filter(m=>[...m.w].length===1).length;
+             return n?`<span style="color:var(--fg-faint)">${n} 個單字不可調</span>`:'';})();
   } else $('#gstats').innerHTML='';
 
   const box=$('#rows'); box.innerHTML='';
@@ -1389,7 +1395,9 @@ function renderGroup(d){
     const w=parseFloat(m.wt)||0;
     const pct=sumW>0?(w/sumW*100):0;
     const el=document.createElement('div');
-    el.className='vrow'; el.draggable=true; el.tabIndex=0; el.dataset.w=m.w;
+    const isSingle=[...m.w].length===1;
+    el.className='vrow'+(isSingle?' locked':'');
+    el.draggable=!isSingle; el.tabIndex=0; el.dataset.w=m.w;
     // 線性刻度：柱長＝該詞頻分 / 組內最大。對數會把 8 倍差距壓成 1.2 倍，失真。
     const bw=w?Math.max(1.5,(w/maxW)*100):0;
     el.innerHTML=
@@ -1403,7 +1411,9 @@ function renderGroup(d){
       +`<div class="flags">${m.hp?'<span class="badge hp">手收</span>':''}`
       +`${ovWords.has(m.w)?'<span class="badge" style="color:var(--primary);border-color:var(--primary)">裁定</span>':''}`
       +`</div>`;
-    el.title=(m.tag?m.tag+'\n':'')+'行 '+m.line;
+    el.title=(isSingle?'單字不參與重排（管道逐字節繼承字碼區）\n':'')
+             +(m.tag?m.tag+'\n':'')+'行 '+m.line;
+    if(!isSingle){
     el.addEventListener('dragstart',()=>{DRAG=el;el.classList.add('dragging');});
     el.addEventListener('dragend',()=>{el.classList.remove('dragging');DRAG=null;reorder();});
     el.addEventListener('dragover',e=>{e.preventDefault();
@@ -1423,6 +1433,7 @@ function renderGroup(d){
       else if(e.key==='ArrowDown'&&el.nextElementSibling){
         el.nextElementSibling.after(el); e.preventDefault(); reorder(); el.focus();}
     });
+    }
     box.appendChild(el);
   });
   $('#ovs').innerHTML=d.overrides.length
@@ -1722,7 +1733,6 @@ function startTaskPoll(){
         toast(j.state==='done'?('完成（'+(j.elapsed||sec)+'s）'):('失敗（rc='+(j.rc??'?')+'）'),
               j.state==='done'?'ok':'err',5000);
         refreshPending(); loadRecent();
-if(location.hash) applyHash(); else tab('order', false);
       }
     });
   },900);
@@ -1962,6 +1972,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape' && $('#dlg').open) $('#dlg').close();
 });
 refreshPending(); loadRecent();
+if(location.hash) applyHash(); else tab('order', false);
 </script></body></html>"""
 
 

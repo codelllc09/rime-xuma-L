@@ -161,6 +161,14 @@ def check_order(code, seq, groups, words):
     if len(set.intersection(*[words[w] for w in seq])) == 0:
         err.append('這些詞沒有共同碼組')
         return False, err, []
+    # 單字不參與重排：管道只對「詞組」建 word2codes，單字區逐字節繼承。
+    # 含單字的裁定會被管道跳過（[overrides] 非同碼或未入庫，跳過），
+    # 用戶看到的現象是「拖過去了，應用後又彈回原位」。
+    single = [w for w in seq if len(w) == 1]
+    if single:
+        err.append('單字不參與重排：「' + '、'.join(single)
+                   + '」是單字，詞典的單字區由管道逐字節繼承，次序裁定只對詞組生效')
+        return False, err, []
     rest = sorted(members - set(seq))
     if rest:
         warn.append(f'同碼組另有 {len(rest)} 詞未列入（不受次序約束，可能插入其間）：'
@@ -339,7 +347,8 @@ def override_index():
             idx = {w: ranked.index(w) for w in ws if w in ranked}
             ok = all(idx[ws[i]] < idx[ws[i + 1]]
                      for i in range(len(ws) - 1) if ws[i] in idx and ws[i + 1] in idx)
-            out.setdefault(code, {'line': ln, 'words': ws, 'satisfied': ok})
+            out.setdefault(code, {'line': ln, 'words': ws, 'satisfied': ok,
+                                  'valid': all(len(w) >= 2 for w in ws)})
     return out
 
 
