@@ -101,3 +101,6 @@
 {"ts": "2026-11-05T18:01:53", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 645 歧義 0 無碼 0", "tracked": false}
 {"ts": "2026-11-05T18:02:32", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-外國人名精簡.md", "detail": "對賬 HEAD…b0b72e6：新增0 注釋0 恢復0 消失645", "tracked": true}
 {"ts": "2026-11-05T18:02:32", "actor": "cli", "action": "生成", "path": "../tmp/外國人名精簡對賬.md", "detail": "對賬 HEAD…工作區；重命名自默認輸出名", "tracked": true}
+{"ts": "2026-11-05T18:03:26", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-外國人名正式.md", "detail": "對賬 HEAD~1…e9aaa2f：新增1 注釋0 恢復0 消失645", "tracked": true}
+{"ts": "2026-11-05T18:03:56", "actor": "cli", "action": "更新", "path": "../tmp/外國人名精簡對賬.md", "detail": "正式版（HEAD~1…e9aaa2f）比快照版多一條新增：違和 dzro——快照後用戶 spool 日收搭車入庫；舊快照版已刪", "tracked": true}
+{"ts": "2026-11-05T18:03:56", "actor": "cli", "action": "刪除", "path": "../tmp/外國人名精簡對賬.md.bak2", "detail": "過時快照版（缺違和條目），以正式版替代", "tracked": true}
