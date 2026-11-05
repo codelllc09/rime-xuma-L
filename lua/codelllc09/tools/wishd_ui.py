@@ -311,6 +311,20 @@ def api_map(params):
             'children': sorted(kids.values(), key=lambda v: -v['words'])}
 
 
+def api_learn():
+    """跑 learn_weights.py 原型並返回 JSON。約 2 秒。"""
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(HERE, 'learn_weights.py'),
+                        '--json', '--iters', '1200'],
+                       capture_output=True, text=True, timeout=180)
+    if r.returncode != 0:
+        return {'error': (r.stderr or r.stdout)[-400:]}
+    try:
+        return json.loads(r.stdout)
+    except Exception as e:
+        return {'error': f'解析失敗：{e}'}
+
+
 def api_diag():
     """探測可疑詞頻：只用詞典自身能算出的矛盾，不需語料。"""
     return wishd.diagnose()
@@ -407,6 +421,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps(api_dict(q), ensure_ascii=False))
         if u.path == '/api/map':
             return self._send(200, json.dumps(api_map(q), ensure_ascii=False))
+        if u.path == '/api/learn':
+            return self._send(200, json.dumps(api_learn(), ensure_ascii=False))
         if u.path == '/api/diag':
             return self._send(200, json.dumps(api_diag(), ensure_ascii=False))
         if u.path == '/api/dict/stats':
@@ -698,6 +714,13 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
        <table><thead><tr><th style="width:34%">詞／碼</th><th>細節</th><th style="width:90px"></th></tr></thead>
          <tbody id="diagrows"><tr><td colspan="3"><div class="empty">載入中…</div></td></tr></tbody></table>
      </div>
+   </div>
+   <div class="card">
+     <h2>權重學習（原型）</h2>
+     <p class="sub">把「人工調序」當成成對偏好標籤，反推十個語源權重。只讀，不改任何檔案。</p>
+     <div class="row"><button id="learnbtn">跑一次擬合</button>
+       <span class="muted" style="font-size:12.5px">約 2 秒</span></div>
+     <div id="learnout" style="margin-top:12px"></div>
    </div>
  </section>
 
@@ -1129,6 +1152,31 @@ function renderDiag(){
     if(tr.dataset.c) tr.onclick=()=>openGroup(tr.dataset.c);
   });
 }
+
+/* ───── 權重學習原型 ───── */
+$('#learnbtn').onclick=()=>{
+  $('#learnbtn').disabled=true; $('#learnout').innerHTML='<div class="skel" style="width:60%"></div>';
+  api('/api/learn').then(d=>{
+    $('#learnbtn').disabled=false;
+    if(d.error){$('#learnout').innerHTML='<div class="err">'+esc(d.error)+'</div>';return;}
+    const pct=x=>x==null?'—':x+'%';
+    let h='<div class="stats" style="margin-bottom:10px">'
+      +`<span>標籤 <b>${d.pairs}</b> 對</span><span>參數 <b>${d.params}</b> 個</span>`
+      +`<span>當前滿足 <b>${d.baseline.ok}/${d.baseline.of}</b>（${pct(d.baseline.pct)}）</span>`
+      +`<span>擬合滿足 <b>${d.fitted.ok}/${d.fitted.of}</b>（${pct(d.fitted.pct)}）</span>`
+      +`<span style="color:var(--warn)">留一驗證 <b>${d.loo.ok}/${d.loo.of}</b>（${pct(d.loo.pct)}）</span></div>`;
+    h+='<table><thead><tr><th>語源</th><th class="num">當前</th><th class="num">擬合</th><th class="num">倍率</th></tr></thead><tbody>'
+      +d.sources.map(s=>{
+        const r=s.current? (s.learned/s.current):0;
+        return `<tr><td>${esc(s.name)}</td><td class="num">${s.current.toFixed(3)}</td>`
+          +`<td class="num">${s.learned.toFixed(4)}</td>`
+          +`<td class="num" style="color:${Math.abs(r-1)>2?'var(--warn)':'inherit'}">×${r.toFixed(2)}</td></tr>`;
+      }).join('')+'</tbody></table>';
+    if(d.pairs <= 2*d.params)
+      h+=`<div style="color:var(--warn);margin-top:10px;font-size:13px">⚠ 標籤 ${d.pairs} 對 &lt; 參數 ${d.params}×2 —— 模型不可辨識，擬合結果僅供觀察，不可採用。需數百對偏好樣本。</div>`;
+    $('#learnout').innerHTML=h;
+  });
+};
 
 /* ───── 待應用 ───── */
 function refreshPending(){
