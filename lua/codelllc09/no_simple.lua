@@ -58,8 +58,10 @@ local function filter(input, env)
   end
   -- add 段（/add 加詞菜單）直通：候選是功能文案與「人審即錄」的上屏原文；
   -- 簡形警示由 add_word 自身標注（⚠含簡形），人審決定收否，非簡閘門不越位攔 UI。
+  -- menu 段（/menu 設定菜單）同理直通：候選是功能文案（如「漢字→汉」含簡字示意），
+  -- 展示用途不應被非簡閘門攔（2026-11-05 實測漏攔補）
   local seg = env.engine.context.composition:back()
-  if seg and seg:has_tag('add') then
+  if seg and (seg:has_tag('add') or seg:has_tag('menu')) then
     for cand in input:iter() do yield(cand) end
     return
   end

@@ -28,7 +28,7 @@ local function filter(input, env)
   -- 加词菜单（/add 橫幅/動作項為 5-20 字符的功能文案，非詞組，長度過濾必誤殺）
   local comp = ctx.composition
   local seg = comp and comp:back()
-  if seg and (seg:has_tag('punct') or seg:has_tag('helper') or seg:has_tag('os_env') or seg:has_tag('add')) then
+  if seg and (seg:has_tag('punct') or seg:has_tag('helper') or seg:has_tag('os_env') or seg:has_tag('add') or seg:has_tag('menu')) then
     for cand in input:iter() do yield(cand) end
     return
   end
