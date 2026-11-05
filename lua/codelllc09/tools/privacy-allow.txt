@@ -7,3 +7,8 @@ identity	xuma_L.dict.yaml	11592b856ec2	用户裁定：词典编码列（字母�
 identity	xuma_L.dict.yaml	b134ce47a896	用户裁定：词典编码列（字母码）/权重列（频次数值）的数据值，非身份串；每次 push 人工复核
 identity	dangling	b134ce47a896	同 xuma_L.dict.yaml 條裁定：徐碼編碼列字母串／詞頻權重列數值的巧合；dangling=對賬 stash 快照殘留，不可達不隨 push
 identity	dangling	11592b856ec2	同 xuma_L.dict.yaml 條裁定：徐碼編碼列字母串／詞頻權重列數值的巧合；dangling=對賬 stash 快照殘留，不可達不隨 push
+identity	android/xuma_L.trime.yaml	11592b856ec2	用戶裁定 2026-11-05：該串（姓名縮寫）已公開於遠端提交署名，歷史不重寫；此爲 feat/tongwen 舊 blob（fa752ac 主題 author 欄）歷史殘留，尖端已改筆名（3f5db09）
+tracked_then_ignored	commits, e.g.	cbe9c59d3e91	feat/tongwen 歷史殘留（5c8c33f 曾放行後撤）；本地 WIP 分支未推送，尖端已退出版本庫（3f5db09）；用戶裁定 2026-11-05：歷史先不管
+tracked_then_ignored	commits, e.g.	f57ac09bb406	同 default.custom.yaml 條（3394850）；digest 釘路徑雜湊，pathsub 用穩定子串防漂
+priv_ip	81c77806	1adeccc704a1	安卓 deploy.sh 舊版殘留之內網 adb 位址（dangling 不可達不隨 push）；LOW 級私有網段，現行版本已無硬編碼；跟隨 2026-11-05「歷史殘留不重寫」處置
+ip_port	81c77806	197c34250fc2	同 priv_ip 條（帶 adb 埠號）；dangling 不可達不隨 push
