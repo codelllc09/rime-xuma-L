@@ -165,6 +165,8 @@ def api_dict(params):
 
     entries = wishd.load_entries()
     hp_add, hp_drop = wishd.load_handpicked_parts()
+    ovmap = override_codes()
+    ov_words = {w for v in ovmap.values() for w in v['words']}
 
     def code_ok(c):
         """碼長篩選。簡碼＝1–3 碼（含一簡/二簡/三碼），全碼＝4 碼。"""
@@ -194,7 +196,9 @@ def api_dict(params):
             return False
         if src == 'drop' and w not in hp_drop:
             return False
-        if src == 'plain' and (tag or w in hp_add or w in hp_drop):
+        if src == 'ov' and w not in ov_words:
+            return False
+        if src == 'plain' and (tag or w in hp_add or w in hp_drop or w in ov_words):
             return False
         return True
 
@@ -210,6 +214,7 @@ def api_dict(params):
             if not hit(w, c, tag):
                 continue
             rows.append({'w': w, 'codes': [c], 'primary': c, 'wt': wt, 'line': line,
+                         'ov': w in ov_words,
                          'lines': [line], 'tag': tag, 'sec': sn,
                          'hp': w in hp_add, 'dropped': w in hp_drop})
         if sort == 'weight':
@@ -250,6 +255,7 @@ def api_dict(params):
             if sec and prim[4] != sec:
                 continue
             rows.append({'w': w, 'codes': codes, 'primary': prim[0], 'wt': prim[1],
+                         'ov': w in ov_words,
                          'line': prim[2], 'lines': sorted({e[2] for e in ents}),
                          'tag': tag, 'sec': prim[4],
                          'hp': w in hp_add, 'dropped': w in hp_drop})
@@ -268,6 +274,27 @@ def api_dict(params):
     return {'total': total, 'page': page, 'size': size,
             'pages': max(1, (total + size - 1) // size),
             'grouped': grouped, 'rows': page_rows}
+
+
+_OVC = {'key': None, 'v': {}}
+
+
+def override_codes():
+    """帶 mtime 快取的裁定位集合（避免每次請求重算）。"""
+    import os as _os
+    p = wishd.OV
+    mt = _os.path.getmtime(p) if _os.path.exists(p) else 0
+    dm = _os.path.getmtime(wishd.DICT)
+    key = (mt, dm)
+    if _OVC['key'] != key:
+        _OVC['v'] = wishd.override_index()
+        _OVC['key'] = key
+    return _OVC['v']
+
+
+def api_override_codes():
+    ov = override_codes()
+    return {'n': len(ov), 'codes': ov}
 
 
 def api_map(params):
@@ -303,6 +330,9 @@ def api_map(params):
     mx = max(v['words'] for v in kids.values()) or 1
     mn = min(v['words'] for v in kids.values())
     span = (mx - mn) or 1
+    ov = override_codes()
+    for ch, v in kids.items():
+        v['ov'] = sum(1 for c in ov if c.startswith(prefix + ch))
     for v in kids.values():
         v['heat'] = round((v['words'] - mn) / span, 3)
     return {'prefix': prefix, 'depth': len(prefix),
@@ -421,6 +451,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps(api_dict(q), ensure_ascii=False))
         if u.path == '/api/map':
             return self._send(200, json.dumps(api_map(q), ensure_ascii=False))
+        if u.path == '/api/override-codes':
+            return self._send(200, json.dumps(api_override_codes(), ensure_ascii=False))
         if u.path == '/api/learn':
             return self._send(200, json.dumps(api_learn(), ensure_ascii=False))
         if u.path == '/api/diag':
@@ -605,6 +637,9 @@ code,.mono{font-family:var(--mono);font-size:12.5px}
 .cell.dark .N{opacity:.85}
 .cell.exact::after{content:"";position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;
   background:var(--ok)}
+.cell.hasov::before{content:"";position:absolute;top:6px;left:6px;width:6px;height:6px;border-radius:50%;
+  background:var(--warn);box-shadow:0 0 0 2px color-mix(in srgb,var(--warn) 30%,transparent)}
+.badge.ov{background:var(--warn-soft);color:var(--warn);border-color:transparent}
 .cell.empty{background:var(--surface-2);border-style:dashed;cursor:default;opacity:.5}
 .cell.empty:hover{transform:none;box-shadow:none}
 .crumbs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:13px}
@@ -740,7 +775,8 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--border-strong)
          <option value="3">三字</option><option value="4">四字</option><option value="other">五字以上</option></select>
        <select id="ds" aria-label="來源">
          <option value="">來源不限</option><option value="hp">手收</option><option value="tag">有標記</option>
-         <option value="drop">已標記棄用</option><option value="plain">無標記</option></select>
+         <option value="drop">已標記棄用</option><option value="ov">有裁定的詞</option>
+         <option value="plain">無標記</option></select>
        <select id="dso" aria-label="排序">
          <option value="line">按行號</option><option value="code">按編碼</option>
          <option value="weight">按頻分</option><option value="word">按詞形</option></select>
@@ -865,7 +901,8 @@ function renderGroup(d){
       +`<span>總頻分 <b>${sumW.toLocaleString()}</b></span>`
       +`<span>首位占比 <b>${share.toFixed(1)}%</b></span>`
       +(ratio?`<span>首位/次位 <b>${ratio.toFixed(ratio<10?2:0)}×</b></span>`:'')
-      +(d.overrides.length?`<span style="color:var(--primary)">已有裁定</span>`:'');
+      +(d.overrides.length?`<span style="color:var(--warn)">● 已調過（裁定 ${d.overrides.length} 條）</span>`
+        :`<span style="color:var(--fg-faint)">未調過</span>`);
   } else $('#gstats').innerHTML='';
 
   const box=$('#rows'); box.innerHTML='';
@@ -994,6 +1031,7 @@ function dictQuery(page){
       +'<td class="num">'+[...r.w].length+'</td>'
       +'<td>'+(r.hp?'<span class="badge hp">手收</span> ':'')
         +(r.dropped?'<span class="badge drop">待刪</span> ':'')
+        +(r.ov?'<span class="badge ov">裁定</span> ':'')
         +(r.tag?'<span class="badge">'+esc(r.tag.slice(0,14))+'</span>':'')+'</td>'
       +'<td class="num" title="'+(r.lines||[]).join(', ')+'">'
         +(r.lines&&r.lines.length>1?r.lines[0]+'+'+(r.lines.length-1):r.line)+'</td>'
@@ -1078,9 +1116,11 @@ function mapGo(prefix){
     }
     $('#crumbs').innerHTML=cr;
     $('#crumbs').querySelectorAll('a').forEach(a=>a.onclick=()=>mapGo(a.dataset.p));
+    const ovtot=d.children.reduce((a,c)=>a+(c.ov||0),0);
     $('#mapstats').innerHTML=`第 ${d.depth+1} 層　<b>${d.total_words.toLocaleString()}</b> 詞`
       +`　<b>${d.total_groups.toLocaleString()}</b> 個碼`
-      +(prefix?`　前綴本身是碼：<b>${d.exact_words}</b> 詞`:'');
+      +(prefix?`　前綴本身是碼：<b>${d.exact_words}</b> 詞`:'')
+      +(ovtot?`　<span style="color:var(--warn)">● 本層含 ${ovtot} 個調過的碼位</span>`:'');
     // 格子
     $('#mapgrid').innerHTML=d.children.map(c=>{
       const h=c.heat;                       // 0..1 線性
@@ -1088,7 +1128,8 @@ function mapGo(prefix){
       const dark=h>0.55;
       const empty=c.words? '':' empty';
       const bg=c.words?`background:color-mix(in srgb, var(--primary) ${pct}%, var(--surface))`:'';
-      return `<div class="cell${dark?' dark':''}${empty}" data-l="${c.letter}" data-n="${c.words}" style="${bg}">
+      return `<div class="cell${dark?' dark':''}${empty}${c.ov?' hasov':''}" data-l="${c.letter}" data-n="${c.words}"
+        data-ov="${c.ov||0}" title="${c.ov?c.ov+' 個碼位有裁定':''}" style="${bg}">
         <div class="L">${c.letter}</div><div class="N">${c.words?c.words.toLocaleString():'·'}</div></div>`;
     }).join('');
     $('#mapgrid').querySelectorAll('.cell').forEach(el=>{

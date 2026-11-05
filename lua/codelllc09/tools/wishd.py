@@ -318,6 +318,31 @@ def suspicious(groups, hp, limit=40):
     return out[:limit]
 
 
+# ── 裁定索引：哪些碼位被人工動過次序 ────────────────────────────
+def override_index():
+    """返回 {code: {'line': 行號, 'words': [...], 'satisfied': bool}}。
+
+    「調過詞頻」的唯一權威記錄就是 manual_overrides.txt——不管是在網頁、CLI
+    還是手改檔案寫進去的，都算。判定是否已滿足用詞典現序（= 上次管道生效的結果）。
+    """
+    groups, wc = load_dict()
+    out = {}
+    for ln, ws, raw in load_overrides():
+        if not all(w in wc for w in ws):
+            continue
+        shared = set.intersection(*[wc[w] for w in ws])
+        if not shared:
+            continue
+        for code in shared:
+            ranked = [r[0] for r in sorted(groups[code],
+                      key=lambda r: -(int(r[1]) if r[1].isdigit() else 0))]
+            idx = {w: ranked.index(w) for w in ws if w in ranked}
+            ok = all(idx[ws[i]] < idx[ws[i + 1]]
+                     for i in range(len(ws) - 1) if ws[i] in idx and ws[i + 1] in idx)
+            out.setdefault(code, {'line': ln, 'words': ws, 'satisfied': ok})
+    return out
+
+
 # ── 加詞（與 /add 共用 spool）────────────────────────────────────
 def load_spool():
     if not os.path.exists(SPOOL):
