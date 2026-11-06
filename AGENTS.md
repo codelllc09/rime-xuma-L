@@ -37,6 +37,9 @@
 - 方案本體改動 → 在 `main` 上做；需要時 `git switch ui && git merge main` 同步
 - 前端穩定後再 `git switch main && git merge ui` 合回
 - 兩分支的檔案幾乎不重疊（UI 只碰 `wishd*.py` 與本節），合併衝突極少
+- 安卓（同文）適配已獨立成倉 `~/Work/rime-tongwen`（2026-11-07 抽取自 `feat/tongwen@01d9b50`；
+  共享 schema／詞典／lua／台賬經 `RIME_DESKTOP_DIR` 指回本倉）；`feat/tongwen` 分支已刪，
+  歷史存鏡像快照 `20261107-004237-01d9b50e`，新倉詳情見其 `獨立化說明.md`
 
 
 三個意願通道（handpicked／manual_overrides／rejected）的**寫入校驗**收在

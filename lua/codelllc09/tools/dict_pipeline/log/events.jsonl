@@ -125,3 +125,6 @@
 {"ts": "2026-11-05T21:41:27", "actor": "gen_freq_dict.py", "action": "生成", "path": "xuma.addon.dict.yaml", "detail": "A源 24457 B源 49573 新增 1903 歧義 0 無碼 0", "tracked": false}
 {"ts": "2026-11-05T21:52:19", "actor": "diff_report.py", "action": "生成", "path": "../tmp/詞表改動-安卓日收.md", "detail": "對賬 HEAD~1…77fdef4：新增1 注釋0 恢復0 消失0", "tracked": true}
 {"ts": "2026-11-05T21:52:19", "actor": "cli", "action": "生成並清理", "path": "../tmp/詞表改動-安卓日收.md", "detail": "僅新增 安卓 wclk 一詞，口頭留痕", "tracked": true}
+{"ts": "2026-11-05T23:09:41", "actor": "cli", "action": "演練", "path": "drill", "detail": "快照 rime-snapshot-20261105-230841.tar.gz 還原並復跑門禁：通過；RTO 59s", "tracked": true}
+{"ts": "2026-11-07T00:53:05", "actor": "cli", "action": "生成", "path": "~/Work/rime-tongwen/tmp/tongwen-pkg-20261107-0053.zip", "detail": "同文部署包：manifest ce62d9a4 共 38 件", "tracked": false}
+{"ts": "2026-11-07T00:54:04", "actor": "cli", "action": "抽取獨立", "path": "~/Work/rime-tongwen", "detail": "feat/tongwen@01d9b50 全量抽取成獨立倉（快照 2c3f105＋雙根適配 8b258f0）；主倉共享 schema/詞典/lua 經 RIME_DESKTOP_DIR 指引；分支即將刪除，歷史存鏡像快照 20261107-004237-01d9b50e", "tracked": true}
