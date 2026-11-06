@@ -93,7 +93,11 @@ def battery_ignore():
 
 # ── ② 未來日期掃描 ──────────────────────────────────────────────
 def battery_dates():
-    today = datetime.date.today().isoformat()
+    # 作業時區取「今日」：台賬／文檔一律記本地（UTC+8）時間，而 CI runner 是 UTC——
+    # 不釘時區的話，本地午夜後推的提交會在 CI 上被誤判「未來日期」（2026-11-07 實錄）
+    import zoneinfo
+    today = datetime.datetime.now(
+        zoneinfo.ZoneInfo(os.environ.get('CONSISTENCY_TZ', 'Asia/Shanghai'))).date().isoformat()
     r = run(['git', 'grep', '-n', '-o', '-I', '-E',
              r'20[0-9]{2}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])', '--', '.'])
     future = []
