@@ -128,3 +128,4 @@
 {"ts": "2026-11-05T23:09:41", "actor": "cli", "action": "演練", "path": "drill", "detail": "快照 rime-snapshot-20261105-230841.tar.gz 還原並復跑門禁：通過；RTO 59s", "tracked": true}
 {"ts": "2026-11-07T00:53:05", "actor": "cli", "action": "生成", "path": "~/Work/rime-tongwen/tmp/tongwen-pkg-20261107-0053.zip", "detail": "同文部署包：manifest ce62d9a4 共 38 件", "tracked": false}
 {"ts": "2026-11-07T00:54:04", "actor": "cli", "action": "抽取獨立", "path": "~/Work/rime-tongwen", "detail": "feat/tongwen@01d9b50 全量抽取成獨立倉（快照 2c3f105＋雙根適配 8b258f0）；主倉共享 schema/詞典/lua 經 RIME_DESKTOP_DIR 指引；分支即將刪除，歷史存鏡像快照 20261107-004237-01d9b50e", "tracked": true}
+{"ts": "2026-11-07T00:55:58", "actor": "cli", "action": "歷史改寫", "path": "~/.config/ibus/rime", "detail": "歷史署名去本名縮寫：116 提交＋7 tag 的 本名縮寫→筆名 codelllc09（用戶指令 2026-11-07）；--name-callback 純改身份欄，樹零漂移；沙箱已演練；陳舊 already_ran 標記（11-05 事故清洗遺留）已按非延續語義清除；髒項=未跟蹤 uv.lock 無關｜前 112 提交/125 件 → 後 112/125；bundle pre-rewrite-20261107-005557.bundle", "tracked": true}
